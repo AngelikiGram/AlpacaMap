@@ -1,0 +1,78 @@
+{
+  "wikivoyage": {
+    "text": "New York features Central Park, Empire State, Times Square.",
+    "url": "https://en.wikivoyage.org/wiki/New_York_City",
+    "title": "New York City",
+    "nodes": [
+      {
+        "place": "Central Park",
+        "claim": "beautiful massive public park in center of Manhattan",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "features Central Park"
+      }
+    ]
+  },
+  "wikitravel": {
+    "text": "Use OMNY to pay subway fare. Tap phone or bank card.",
+    "url": "https://wikitravel.org/en/New_York_City",
+    "title": "New York City",
+    "nodes": [
+      {
+        "place": "NYC Subway",
+        "claim": "OMNY readers accept credit cards directly",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "tap contactless card or mobile wallet at turnstiles to pay",
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Use OMNY to pay subway fare"
+      }
+    ]
+  },
+  "wikipedia": {
+    "text": "New York City is the most populous city in the USA.",
+    "url": "https://en.wikipedia.org/wiki/New_York_City",
+    "title": "New York City",
+    "nodes": []
+  },
+  "reddit": {
+    "text": "[SOURCE:reddit r/travel]\nTKTS booth in Times Square has 50% discount Broadway tickets.",
+    "count": 1,
+    "nodes": [
+      {
+        "place": "Broadway Tickets",
+        "claim": "TKTS booth sells discounted same-day show tickets",
+        "claimType": "conditional",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "visit TKTS booth in Times Square or use TodayTix app",
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "TKTS booth in Times Square has 50% discount"
+      }
+    ]
+  },
+  "stackexchange": {
+    "text": "[SOURCE:stackexchange votes:42]\nJFK AirTrain to Jamaica and LIRR to Penn Station is fastest.",
+    "count": 1,
+    "nodes": [
+      {
+        "place": "JFK Airport Transfer",
+        "claim": "AirTrain combined with LIRR train is fastest route into town",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "take AirTrain to Jamaica and transfer to LIRR to Penn Station",
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "JFK AirTrain to Jamaica and LIRR to Penn Station is fastest"
+      }
+    ]
+  }
+}

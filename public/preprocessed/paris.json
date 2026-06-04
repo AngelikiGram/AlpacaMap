@@ -1,0 +1,112 @@
+{
+  "wikivoyage": {
+    "text": "Paris, capital of France, features Eiffel Tower and Louvre museum.",
+    "url": "https://en.wikivoyage.org/wiki/Paris",
+    "title": "Paris",
+    "nodes": [
+      {
+        "place": "Eiffel Tower",
+        "claim": "iconic historic landmark monument of Paris",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "features Eiffel Tower"
+      },
+      {
+        "place": "Louvre Museum",
+        "claim": "vast art museum holding world class collections",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Louvre museum"
+      }
+    ]
+  },
+  "wikitravel": {
+    "text": "Metro is great. Beware bracelet scammers near Sacre-Coeur.",
+    "url": "https://wikitravel.org/en/Paris",
+    "title": "Paris",
+    "nodes": [
+      {
+        "place": "Sacre-Coeur",
+        "claim": "friendship bracelet scammers target tourists near entrance",
+        "claimType": "conditional",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "avoid street vendors trying to tie threads to your wrist",
+        "sentiment": "negative",
+        "intensity": 0.8,
+        "snippet": "Beware bracelet scammers near Sacre-Coeur"
+      }
+    ]
+  },
+  "wikipedia": {
+    "text": "Paris is the capital of France. Set on the river Seine.",
+    "url": "https://en.wikipedia.org/wiki/Paris",
+    "title": "Paris",
+    "nodes": [
+      {
+        "place": "Paris",
+        "claim": "capital and main hub of France",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "neutral",
+        "intensity": 0.5,
+        "snippet": "capital of France"
+      }
+    ]
+  },
+  "reddit": {
+    "text": "[SOURCE:reddit r/travel]\nBook Eiffel Tower summit tickets 60 days early. Enter Louvre underground via Carousel to skip lines.",
+    "count": 2,
+    "nodes": [
+      {
+        "place": "Eiffel Tower",
+        "claim": "summit tickets sell out quickly when released",
+        "claimType": "temporal",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "book summit tickets 60 days in advance online",
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "Book Eiffel Tower summit tickets 60 days early"
+      },
+      {
+        "place": "Louvre Museum",
+        "claim": "main pyramid entrance has long security queues",
+        "claimType": "conditional",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "use Carousel du Louvre underground entrance to skip queues",
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "Enter Louvre underground via Carousel"
+      }
+    ]
+  },
+  "stackexchange": {
+    "text": "[SOURCE:stackexchange votes:12]\nMetro is safe but watch your bags closely on Line 1.",
+    "count": 1,
+    "nodes": [
+      {
+        "place": "Paris Metro Line 1",
+        "claim": "pickpockets operate on crowded subway trains",
+        "claimType": "conditional",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "keep bag zipped and in front of you",
+        "sentiment": "neutral",
+        "intensity": 0.7,
+        "snippet": "watch your bags closely on Line 1"
+      }
+    ]
+  }
+}

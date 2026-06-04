@@ -1,0 +1,123 @@
+{
+  "wikivoyage": {
+    "text": "Barcelona, capital of Catalonia, is Spain's second-largest city. Famous for Antoni Gaudi's architecture like the Sagrada Familia and Parc Guell.",
+    "url": "https://en.wikivoyage.org/wiki/Barcelona",
+    "title": "Barcelona",
+    "nodes": [
+      {
+        "place": "Sagrada Familia",
+        "claim": "extraordinary Basilica designed by Antoni Gaudi",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "book tickets weeks in advance online",
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Famous for Antoni Gaudi's architecture"
+      },
+      {
+        "place": "Parc Guell",
+        "claim": "scenic public park system with Gaudi design",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "Famous for Antoni Gaudi's architecture"
+      }
+    ]
+  },
+  "wikitravel": {
+    "text": "Explore Barri Gotic and La Rambla. Avoid pickpockets on La Rambla.",
+    "url": "https://wikitravel.org/en/Barcelona",
+    "title": "Barcelona",
+    "nodes": [
+      {
+        "place": "Gothic Quarter",
+        "claim": "charming old city center with narrow medieval streets",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "Explore Barri Gotic"
+      },
+      {
+        "place": "La Rambla",
+        "claim": "extremely high density of pickpockets",
+        "claimType": "conditional",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "keep bags closed and watch belongings closely",
+        "sentiment": "negative",
+        "intensity": 0.9,
+        "snippet": "Avoid pickpockets on La Rambla"
+      }
+    ]
+  },
+  "wikipedia": {
+    "text": "Barcelona is the capital of Catalonia community. Hosted 1992 Olympics.",
+    "url": "https://en.wikipedia.org/wiki/Barcelona",
+    "title": "Barcelona",
+    "nodes": [
+      {
+        "place": "Barcelona",
+        "claim": "capital of Catalonia autonomous community",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "neutral",
+        "intensity": 0.5,
+        "snippet": "capital of Catalonia community"
+      }
+    ]
+  },
+  "reddit": {
+    "text": "[SOURCE:reddit r/travel]\nTapas in Gracia are much cheaper and better than on La Rambla.\n\n---\n\n[SOURCE:reddit r/solotravel]\nWatch out for pickpockets at Barcelona Sants train station.",
+    "count": 2,
+    "nodes": [
+      {
+        "place": "Gracia",
+        "claim": "authentic tapas are cheaper and better than tourist traps",
+        "claimType": "evaluation",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "eat tapas in Gracia neighborhood instead of La Rambla",
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "Tapas in Gracia are much cheaper"
+      },
+      {
+        "place": "Barcelona Sants",
+        "claim": "pickpockets frequently target distracted travelers",
+        "claimType": "temporal",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "stay alert at the train station",
+        "sentiment": "negative",
+        "intensity": 0.8,
+        "snippet": "Watch out for pickpockets at Barcelona Sants"
+      }
+    ]
+  },
+  "stackexchange": {
+    "text": "[SOURCE:stackexchange votes:15]\nAerobus is the fastest transport option from airport to center.",
+    "count": 1,
+    "nodes": [
+      {
+        "place": "Aerobus",
+        "claim": "most reliable and fastest airport transfer option",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "take Aerobus instead of train or public bus",
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Aerobus is the fastest transport option"
+      }
+    ]
+  }
+}

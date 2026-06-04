@@ -1,0 +1,89 @@
+{
+  "wikivoyage": {
+    "text": "Tokyo is Japan's capital. Famous for Shibuya Crossing and Akihabara.",
+    "url": "https://en.wikivoyage.org/wiki/Tokyo",
+    "title": "Tokyo",
+    "nodes": [
+      {
+        "place": "Shibuya Crossing",
+        "claim": "world famous pedestrian scramble crossing",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "Shibuya Crossing"
+      }
+    ]
+  },
+  "wikitravel": {
+    "text": "Get a digital Suica card. Small ramen shops only take cash.",
+    "url": "https://wikitravel.org/en/Tokyo",
+    "title": "Tokyo",
+    "nodes": [
+      {
+        "place": "Tokyo Transport",
+        "claim": "Suica and Pasmo cards make train boarding instant",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "add a digital Suica card to Apple Wallet/Google Wallet",
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Get a digital Suica card"
+      }
+    ]
+  },
+  "wikipedia": {
+    "text": "Tokyo is the capital of Japan and its largest metropolitan area.",
+    "url": "https://en.wikipedia.org/wiki/Tokyo",
+    "title": "Tokyo",
+    "nodes": []
+  },
+  "reddit": {
+    "text": "[SOURCE:reddit r/travel]\nGo to Starbucks Tsutaya for Shibuya Crossing photo. Restaurants need cash.",
+    "count": 2,
+    "nodes": [
+      {
+        "place": "Shibuya Crossing",
+        "claim": "Starbucks Tsutaya floor 2 offers great aerial view of intersection",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "go to Starbucks or Shibuya Sky for crossing photo",
+        "sentiment": "positive",
+        "intensity": 0.7,
+        "snippet": "Go to Starbucks Tsutaya for Shibuya Crossing photo"
+      },
+      {
+        "place": "Tokyo Restaurants",
+        "claim": "many local ramen ticket machines accept cash only",
+        "claimType": "conditional",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "carry physical cash Yen bills and coins",
+        "sentiment": "neutral",
+        "intensity": 0.7,
+        "snippet": "Restaurants need cash"
+      }
+    ]
+  },
+  "stackexchange": {
+    "text": "[SOURCE:stackexchange votes:35]\nNarita Express to Shinjuku or Keisei Skyliner to Ueno.",
+    "count": 1,
+    "nodes": [
+      {
+        "place": "Narita Express",
+        "claim": "comfortable direct train option from Narita to Shinjuku",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "use NEX to Shinjuku, or Keisei Skyliner if heading to Ueno",
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "Narita Express to Shinjuku or Keisei Skyliner to Ueno"
+      }
+    ]
+  }
+}

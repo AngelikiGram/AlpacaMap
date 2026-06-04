@@ -1,0 +1,89 @@
+{
+  "wikivoyage": {
+    "text": "Rome features ruins like Colosseum and Pantheon.",
+    "url": "https://en.wikivoyage.org/wiki/Rome",
+    "title": "Rome",
+    "nodes": [
+      {
+        "place": "Colosseum",
+        "claim": "iconic ancient amphitheater of Roman Empire",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "features ruins like Colosseum"
+      }
+    ]
+  },
+  "wikitravel": {
+    "text": "Rome is the Eternal City. Water is free at public fountains (nasoni).",
+    "url": "https://wikitravel.org/en/Rome",
+    "title": "Rome",
+    "nodes": [
+      {
+        "place": "Rome Fountains",
+        "claim": "cold fresh drinking water is free from street fountains",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "bring a reusable bottle and refill at nasoni fountains",
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Water is free at public fountains (nasoni)"
+      }
+    ]
+  },
+  "wikipedia": {
+    "text": "Rome is the capital of Italy and Lazio region.",
+    "url": "https://en.wikipedia.org/wiki/Rome",
+    "title": "Rome",
+    "nodes": []
+  },
+  "reddit": {
+    "text": "[SOURCE:reddit r/travel]\nBuy Colosseum tickets 30 days early. Avoid restaurants with pictures.",
+    "count": 2,
+    "nodes": [
+      {
+        "place": "Colosseum",
+        "claim": "tickets on official website sell out in minutes",
+        "claimType": "temporal",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "check official tickets site exactly 30 days early or book tour",
+        "sentiment": "negative",
+        "intensity": 0.8,
+        "snippet": "Buy Colosseum tickets 30 days early"
+      },
+      {
+        "place": "Rome Dining",
+        "claim": "restaurants immediately next to sights are tourist traps",
+        "claimType": "conditional",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "avoid places with picture menus and hosts outside, walk 2 blocks away",
+        "sentiment": "negative",
+        "intensity": 0.8,
+        "snippet": "Avoid restaurants with pictures"
+      }
+    ]
+  },
+  "stackexchange": {
+    "text": "[SOURCE:stackexchange votes:28]\nVatican has strict dress code: knees and shoulders covered.",
+    "count": 1,
+    "nodes": [
+      {
+        "place": "Vatican Museum",
+        "claim": "security will deny entry if dress code is violated",
+        "claimType": "conditional",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "ensure knees and shoulders are covered before entering",
+        "sentiment": "neutral",
+        "intensity": 0.8,
+        "snippet": "strict dress code: knees and shoulders covered"
+      }
+    ]
+  }
+}

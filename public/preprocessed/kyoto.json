@@ -1,0 +1,116 @@
+{
+  "wikivoyage": {
+    "text": "Kyoto, former capital of Japan, is famous for classical Buddhist temples and Shinto shrines.",
+    "url": "https://en.wikivoyage.org/wiki/Kyoto",
+    "title": "Kyoto",
+    "nodes": [
+      {
+        "place": "Kyoto",
+        "claim": "former imperial capital of Japan",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "neutral",
+        "intensity": 0.5,
+        "snippet": "former capital of Japan"
+      }
+    ]
+  },
+  "wikitravel": {
+    "text": "Kyoto has top attractions: Kinkaku-ji temple and traditional Gion district.",
+    "url": "https://wikitravel.org/en/Kyoto",
+    "title": "Kyoto",
+    "nodes": [
+      {
+        "place": "Kinkaku-ji",
+        "claim": "iconic golden temple structure",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Kinkaku-ji temple"
+      },
+      {
+        "place": "Gion",
+        "claim": "traditional district famous for geisha culture and tea houses",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "traditional Gion district"
+      }
+    ]
+  },
+  "wikipedia": {
+    "text": "Kyoto is the capital of Kyoto Prefecture. Seat of Emperor historically.",
+    "url": "https://en.wikipedia.org/wiki/Kyoto",
+    "title": "Kyoto",
+    "nodes": [
+      {
+        "place": "Kyoto Prefecture",
+        "claim": "historical base of Japanese Emperors",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "neutral",
+        "intensity": 0.5,
+        "snippet": "Seat of Emperor historically"
+      }
+    ]
+  },
+  "reddit": {
+    "text": "[SOURCE:reddit r/travel]\nArrive at Fushimi Inari at 7:00 AM to beat massive crowds. Arashiyama Bamboo Grove is similar.",
+    "count": 2,
+    "nodes": [
+      {
+        "place": "Fushimi Inari",
+        "claim": "gets heavily overcrowded by tour buses by 9:30 AM",
+        "claimType": "temporal",
+        "knowledge_type": "volatile",
+        "conditions": {
+          "timeOfDay": "morning"
+        },
+        "advice": "arrive at 7:00 AM to enjoy crowd-free walk",
+        "sentiment": "negative",
+        "intensity": 0.9,
+        "snippet": "Arrive at Fushimi Inari at 7:00 AM to beat massive crowds"
+      },
+      {
+        "place": "Arashiyama Bamboo Grove",
+        "claim": "highly crowded during normal daylight hours",
+        "claimType": "temporal",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "visit early in morning or late afternoon",
+        "sentiment": "negative",
+        "intensity": 0.8,
+        "snippet": "Arashiyama Bamboo Grove is similar"
+      }
+    ]
+  },
+  "stackexchange": {
+    "text": "[SOURCE:stackexchange votes:22]\nKyoto bus is great but gets stuck in cherry blossom traffic. Use train lines.",
+    "count": 1,
+    "nodes": [
+      {
+        "place": "Kyoto Bus System",
+        "claim": "buses get gridlocked during cherry blossom season",
+        "claimType": "conditional",
+        "knowledge_type": "volatile",
+        "conditions": {
+          "season": "spring"
+        },
+        "advice": "use subway and train lines instead of buses during sakura season",
+        "sentiment": "neutral",
+        "intensity": 0.7,
+        "snippet": "gets stuck in cherry blossom traffic"
+      }
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "wikivoyage": {
+    "text": "Amsterdam is the capital. Sights: Rijksmuseum and Van Gogh Museum.",
+    "url": "https://en.wikivoyage.org/wiki/Amsterdam",
+    "title": "Amsterdam",
+    "nodes": [
+      {
+        "place": "Rijksmuseum",
+        "claim": "stunning Dutch national history and art museum",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Sights: Rijksmuseum"
+      }
+    ]
+  },
+  "wikitravel": {
+    "text": "Watch out for tram tracks when cycling. Book Anne Frank House months early.",
+    "url": "https://wikitravel.org/en/Amsterdam",
+    "title": "Amsterdam",
+    "nodes": [
+      {
+        "place": "Bicycle Renting",
+        "claim": "tram tracks can catch bicycle tires causing crashes",
+        "claimType": "conditional",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "cross tram tracks at a wide angle",
+        "sentiment": "neutral",
+        "intensity": 0.7,
+        "snippet": "Watch out for tram tracks when cycling"
+      }
+    ]
+  },
+  "wikipedia": {
+    "text": "Amsterdam is the capital of the Netherlands.",
+    "url": "https://en.wikipedia.org/wiki/Amsterdam",
+    "title": "Amsterdam",
+    "nodes": []
+  },
+  "reddit": {
+    "text": "[SOURCE:reddit r/travel]\nAnne Frank tickets release Tuesdays 10 AM. Stay out of red bike lanes.",
+    "count": 2,
+    "nodes": [
+      {
+        "place": "Anne Frank House",
+        "claim": "tickets sell out instantly upon release",
+        "claimType": "temporal",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "buy tickets online on Tuesday at 10 AM local time for following week",
+        "sentiment": "positive",
+        "intensity": 0.7,
+        "snippet": "Anne Frank tickets release Tuesdays 10 AM"
+      },
+      {
+        "place": "Amsterdam Bike Lanes",
+        "claim": "cyclists ride fast and will crash into pedestrians in their lanes",
+        "claimType": "conditional",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "do not stand or walk on red painted bike lanes",
+        "sentiment": "negative",
+        "intensity": 0.8,
+        "snippet": "Stay out of red bike lanes"
+      }
+    ]
+  },
+  "stackexchange": {
+    "text": "[SOURCE:stackexchange votes:20]\nUse OVpay to tap contactless bank card directly on trams.",
+    "count": 1,
+    "nodes": [
+      {
+        "place": "Amsterdam Public Transport",
+        "claim": "OVpay system lets you tap bank card directly",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "use your phone or debit card to tap on/off trams and buses",
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Use OVpay to tap contactless bank card"
+      }
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "wikivoyage": {
+    "text": "Sydney features Opera House, Harbour Bridge, Bondi Beach.",
+    "url": "https://en.wikivoyage.org/wiki/Sydney",
+    "title": "Sydney",
+    "nodes": [
+      {
+        "place": "Sydney Opera House",
+        "claim": "iconic sail shaped performing arts center on harbour",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "features Opera House"
+      }
+    ]
+  },
+  "wikitravel": {
+    "text": "Ferries are scenic and cheap. Take Manly ferry from Circular Quay.",
+    "url": "https://wikitravel.org/en/Sydney",
+    "title": "Sydney",
+    "nodes": [
+      {
+        "place": "Manly Ferry",
+        "claim": "ferry ride offers stunning harbour views for cheap",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "take Manly ferry from Circular Quay instead of expensive cruise",
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Take Manly ferry from Circular Quay"
+      }
+    ]
+  },
+  "wikipedia": {
+    "text": "Sydney is the state capital of New South Wales.",
+    "url": "https://en.wikipedia.org/wiki/Sydney",
+    "title": "Sydney",
+    "nodes": []
+  },
+  "reddit": {
+    "text": "[SOURCE:reddit r/travel]\nBondi to Coogee walk is beautiful. Bring sunscreen. Tap contactless for transport.",
+    "count": 2,
+    "nodes": [
+      {
+        "place": "Bondi to Coogee Walk",
+        "claim": "scenic cliffside walk connects several beaches",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "do the coastal walk and wear plenty of sunscreen",
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Bondi to Coogee walk is beautiful"
+      },
+      {
+        "place": "Sydney Transit",
+        "claim": "bank cards work for tap payment on all transit",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "tap contactless card directly on trains and ferries",
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "Tap contactless for transport"
+      }
+    ]
+  },
+  "stackexchange": {
+    "text": "[SOURCE:stackexchange votes:10]\nCircular Quay to Opera House is 10-minute flat walk.",
+    "count": 1,
+    "nodes": [
+      {
+        "place": "Sydney Opera House",
+        "claim": "very close proximity to Circular Quay station",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "walk 10 minutes along the flat harbour promenade",
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "Circular Quay to Opera House is 10-minute flat walk"
+      }
+    ]
+  }
+}

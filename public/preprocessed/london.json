@@ -1,0 +1,114 @@
+{
+  "wikivoyage": {
+    "text": "London is the capital of the UK. Sights include British Museum and Tower of London.",
+    "url": "https://en.wikivoyage.org/wiki/London",
+    "title": "London",
+    "nodes": [
+      {
+        "place": "British Museum",
+        "claim": "world class museum of history and art",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Sights include British Museum"
+      },
+      {
+        "place": "Tower of London",
+        "claim": "historic castle containing the Crown Jewels",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "Tower of London"
+      }
+    ]
+  },
+  "wikitravel": {
+    "text": "Free museums in London! Free access to British Museum, National Gallery.",
+    "url": "https://wikitravel.org/en/London",
+    "title": "London",
+    "nodes": [
+      {
+        "place": "London Museums",
+        "claim": "most major galleries and museums offer free admission",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "take advantage of free entry to British Museum and National Gallery",
+        "sentiment": "positive",
+        "intensity": 0.9,
+        "snippet": "Free museums in London"
+      }
+    ]
+  },
+  "wikipedia": {
+    "text": "London is the capital and largest city of the UK and England.",
+    "url": "https://en.wikipedia.org/wiki/London",
+    "title": "London",
+    "nodes": [
+      {
+        "place": "London",
+        "claim": "capital and largest metropolitan area of the UK",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": null,
+        "sentiment": "neutral",
+        "intensity": 0.5,
+        "snippet": "capital and largest city of the UK"
+      }
+    ]
+  },
+  "reddit": {
+    "text": "[SOURCE:reddit r/travel]\nBook a free timed entry slot for the British Museum online. Don't use Oyster cards, just tap contactless.",
+    "count": 2,
+    "nodes": [
+      {
+        "place": "British Museum",
+        "claim": "requires booking a free entry ticket online to avoid giant lines",
+        "claimType": "conditional",
+        "knowledge_type": "volatile",
+        "conditions": {},
+        "advice": "book a free timed entry slot online in advance",
+        "sentiment": "positive",
+        "intensity": 0.7,
+        "snippet": "Book a free timed entry slot for the British Museum"
+      },
+      {
+        "place": "London Tube",
+        "claim": "contactless payments are easier and same price as Oyster cards",
+        "claimType": "evaluation",
+        "knowledge_type": "stable",
+        "conditions": {},
+        "advice": "tap contactless card or phone instead of buying Oyster card",
+        "sentiment": "positive",
+        "intensity": 0.8,
+        "snippet": "Don't use Oyster cards, just tap contactless"
+      }
+    ]
+  },
+  "stackexchange": {
+    "text": "[SOURCE:stackexchange votes:18]\nHeathrow Terminal 5 can have very long queues. Arrive 3 hours early for international departures.",
+    "count": 1,
+    "nodes": [
+      {
+        "place": "Heathrow Airport",
+        "claim": "security queues can be extremely slow at Terminal 5",
+        "claimType": "temporal",
+        "knowledge_type": "volatile",
+        "conditions": {
+          "travelerType": "international"
+        },
+        "advice": "arrive 3 hours prior to departure",
+        "sentiment": "neutral",
+        "intensity": 0.7,
+        "snippet": "Arrive 3 hours early for international departures"
+      }
+    ]
+  }
+}
