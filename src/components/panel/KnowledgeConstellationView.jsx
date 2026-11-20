@@ -29,7 +29,7 @@ function makeRings(n) {
 }
 
 // Progressive elliptical layout: inner rings stay near-circular, outer rings
-// expand to fill the full canvas aspect ratio.  No more min(w,h) bottleneck.
+// expand to fill the full canvas aspect ratio. No more min(w,h) bottleneck.
 function forceLayout(places, w, h, { iterations = 22, maxNodeR = 22, gap = 40, centerPull = true } = {}) {
   const n = places.length;
   if (n === 0) return {};
@@ -48,12 +48,18 @@ function forceLayout(places, w, h, { iterations = 22, maxNodeR = 22, gap = 40, c
     const ringRx = hBase * ringAspect;
     const ringRy = hBase;
     for (let i = 0; i < rn && pi < n; i++, pi++) {
-      const angle = (i / rn) * 2 * Math.PI - Math.PI / 2;
+      // Stagger successive rings using a golden-angle shift to break straight radial spokes and create an organic constellation spiral
+      const ringOffset = ri * 2.39996; 
+      const angle = (i / rn) * 2 * Math.PI - Math.PI / 2 + ringOffset;
       const jitter = (pi % 2 === 0 ? 1 : -1) * 0.04;
+      const count = places[pi].nodes.length;
+      // Widen the size distribution dramatically: base starts at 8px, scaling up to 38px
+      const sizeMultiplier = maxNodeR / 22;
+      const r = Math.min(maxNodeR * 2.2, Math.log10(count + 1) * 22 * sizeMultiplier + 8);
       positions[places[pi].name.toLowerCase()] = {
         x: cx + ringRx * Math.cos(angle + jitter),
         y: cy + ringRy * Math.sin(angle + jitter),
-        r: Math.min(maxNodeR, Math.sqrt(places[pi].nodes.length) * (maxNodeR / 22) * 4.5 + (maxNodeR / 22) * 10),
+        r,
       };
     }
   });
@@ -102,7 +108,7 @@ function TimelineView({ nodes, w, h }) {
   const yearData = useMemo(() => {
     const m = {};
     nodes.forEach(n => {
-      const raw = n.source?.date || n.extractedAt;
+      const raw = n.date || n.source?.date || n.extractedAt;
       if (!raw) return;
       const yr = parseInt(raw.slice(0, 4), 10);
       if (!yr || yr < 2010 || yr > 2030) return;
@@ -116,7 +122,7 @@ function TimelineView({ nodes, w, h }) {
   }, [nodes]);
 
   const nodesWithDates = nodes.filter(n => {
-    const raw = n.source?.date || n.extractedAt;
+    const raw = n.date || n.source?.date || n.extractedAt;
     if (!raw) return false;
     const yr = parseInt(raw.slice(0, 4), 10);
     return yr >= 2010 && yr <= 2030;
@@ -323,44 +329,65 @@ function ConstellationSVG({ places, layout, placeColors, seqLinks, stars, city, 
         const gradId = 'cst-g3-' + p.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 18);
         const isHov = hov === p.name.toLowerCase();
         const isMatch = !isSearchActive || p.name.toLowerCase().includes(sq);
-        const r = isHov ? pos.r * 1.2 : pos.r;
+        const r = isHov ? pos.r * 1.25 : pos.r;
         const isCat = p.isCategory;
-        const baseOpacity = isCat ? 0.62 : 0.92;
+        
+        // Calculate positive ratio & warning presence to encode in other channels
+        const totalClaims = p.nodes.length;
+        const posClaims = p.nodes.filter(n => n.evaluation?.sentiment === 'positive').length;
+        const negClaims = p.nodes.filter(n => n.evaluation?.sentiment === 'negative').length;
+        const posRatio = totalClaims > 0 ? posClaims / totalClaims : 0.5;
+        
+        const hasWarning = p.nodes.some(n => {
+          const t = (n.claim || '').toLowerCase();
+          return t.includes('scam') || t.includes('avoid') || t.includes('pickpocket') || t.includes('beware') || t.includes('thief');
+        });
+
+        // Encode sentiment ratio in color opacity / glow intensity
+        const baseOpacity = isCat ? 0.55 : (0.75 + Math.abs(posRatio - 0.5) * 0.4);
         const opacity = isSearchActive
           ? (isMatch ? 1 : 0.08)
           : (isHov ? 1 : baseOpacity);
+          
         const rawLabel = isCat ? p.name.split(' · ')[1] || p.name : p.name;
         const label = rawLabel.length > 16 ? rawLabel.slice(0, 14) + '…' : rawLabel;
+
+        // Custom stroke for Warning nodes to encode details in outlines
+        let strokeColor = isMatch && isSearchActive ? 'white' : col;
+        let strokeWidth = isMatch && isSearchActive ? 2.5 : (isHov ? 2.4 : (hasWarning ? 2.0 : 1.4));
+        let strokeDash = isCat ? '4 2.5' : (hasWarning ? '2 2' : 'none');
 
         return (
           <g key={p.name} style={{ cursor: 'pointer' }}
             onMouseEnter={() => setHov(p.name.toLowerCase())}
             onMouseLeave={() => setHov(null)}
             onClick={() => onNodeClick && onNodeClick(p)}>
-            {/* Outer glow ring */}
-            <circle cx={pos.x} cy={pos.y} r={r + 9} fill="none" stroke={col} strokeWidth="1.2"
-              opacity={isHov ? 0.5 : 0.12}
-              style={isHov ? { transformOrigin: `${pos.x}px ${pos.y}px`, animation: 'cst-orbit 1.6s ease-out infinite' } : {}}/>
+            {/* Outer glow ring - larger for positive or warning highlights */}
+            <circle cx={pos.x} cy={pos.y} r={r + 8 + (hasWarning ? 3 : 0)} fill="none" 
+              stroke={hasWarning ? '#ef4444' : col} 
+              strokeWidth={hasWarning ? 1.5 : 1.1}
+              opacity={isHov ? 0.6 : (hasWarning ? 0.35 : 0.12)}
+              style={isHov || hasWarning ? { transformOrigin: `${pos.x}px ${pos.y}px`, animation: 'cst-orbit 2s ease-out infinite' } : {}}/>
             {/* Halo */}
-            <circle cx={pos.x} cy={pos.y} r={r + 5} fill={col} opacity={isHov ? 0.18 : 0.06}/>
+            <circle cx={pos.x} cy={pos.y} r={r + 4} fill={col} opacity={isHov ? 0.22 : 0.07}/>
             {/* Main sphere */}
             <circle cx={pos.x} cy={pos.y} r={r} fill={`url(#${gradId})`}
-              stroke={isMatch && isSearchActive ? 'white' : col}
-              strokeWidth={isMatch && isSearchActive ? 2.5 : (isHov ? 2.2 : 1.6)}
-              strokeDasharray={isCat ? '4 2.5' : 'none'}
+              stroke={strokeColor}
+              strokeWidth={strokeWidth}
+              strokeDasharray={strokeDash}
               opacity={opacity}/>
             {/* Specular highlight */}
-            <circle cx={pos.x - r * 0.3} cy={pos.y - r * 0.3} r={r * 0.2} fill="white" opacity="0.2" pointerEvents="none"/>
+            <circle cx={pos.x - r * 0.3} cy={pos.y - r * 0.3} r={r * 0.2} fill="white" opacity="0.22" pointerEvents="none"/>
             {/* Count */}
-            <text x={pos.x} y={pos.y + 4} textAnchor="middle" fill="white"
-              fontSize={r > 14 ? 11 : 9} fontWeight="800" fontFamily="Inter,sans-serif"
+            <text x={pos.x} y={pos.y + (r > 10 ? 3.5 : 2.5)} textAnchor="middle" fill="white"
+              fontSize={r > 14 ? 10.5 : (r > 9 ? 8.5 : 7.5)} fontWeight="900" fontFamily="Inter,sans-serif"
               opacity={opacity * 0.95} pointerEvents="none">
-              {p.nodes.length}
+              {totalClaims}
             </text>
             {/* Label */}
-            <text x={pos.x} y={pos.y + r + 14} textAnchor="middle"
-              fill={isHov || (isMatch && isSearchActive) ? col : 'rgba(255,255,255,0.55)'}
-              fontSize={isHov || (isMatch && isSearchActive) ? 10 : 9}
+            <text x={pos.x} y={pos.y + r + 13} textAnchor="middle"
+              fill={isHov || (isMatch && isSearchActive) ? (hasWarning ? '#fb923c' : col) : 'rgba(255,255,255,0.55)'}
+              fontSize={isHov || (isMatch && isSearchActive) ? 9.5 : 8.5}
               fontWeight={isHov || (isMatch && isSearchActive) ? '700' : '400'}
               fontFamily="Inter,sans-serif" opacity={opacity} pointerEvents="none">
               {label}
@@ -556,19 +583,29 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
   const totalPages = useMemo(() => Math.ceil(allPlaces.length / PAGE_SIZE), [allPlaces]);
 
   const layout = useMemo(
-    () => forceLayout(displayPlaces, dims.w, dims.h, { iterations: 22, maxNodeR: 22, gap: 40, centerPull: true }),
+    () => forceLayout(displayPlaces, dims.w, dims.h, { iterations: 22, maxNodeR: 28, gap: 40, centerPull: true }),
     [displayPlaces, dims]
   );
   const stars = useMemo(() => STARS.map(s => ({ cx: s.fx * dims.w, cy: s.fy * dims.h, r: s.r, op: s.op })), [dims]);
 
-  // Expanded view — skip O(n²) collision for large sets; ring placement already spreads them
+  const [expMinClaims, setExpMinClaims] = useState(1);
+
+  // Expanded view — filter by minimum claims, cap at top 200, increase spacing
+  const expandedPlaces = useMemo(() => {
+    if (!expanded) return [];
+    const filtered = allPlaces.filter(p => p.nodes.length >= expMinClaims);
+    // Sort by node count desc, cap at 200 for legibility
+    return filtered.slice(0, 200);
+  }, [expanded, allPlaces, expMinClaims]);
+
   const expandedLayout = useMemo(() => {
     if (!expanded) return {};
-    const maxR = allPlaces.length > 80 ? 13 : 18;
-    const gap  = allPlaces.length > 80 ? 26 : 34;
-    const iters = allPlaces.length > 150 ? 0 : 14;
-    return forceLayout(allPlaces, expandedDims.w - 40, expandedDims.h - 70, { iterations: iters, maxNodeR: maxR, gap, centerPull: false });
-  }, [expanded, allPlaces, expandedDims]);
+    const n = expandedPlaces.length;
+    const maxR = n > 120 ? 16 : n > 60 ? 20 : 26;
+    const gap  = n > 120 ? 48 : n > 60 ? 60 : 72;
+    const iters = n > 150 ? 0 : n > 80 ? 8 : 16;
+    return forceLayout(expandedPlaces, expandedDims.w - 40, expandedDims.h - 80, { iterations: iters, maxNodeR: maxR, gap, centerPull: false });
+  }, [expanded, expandedPlaces, expandedDims]);
 
   const expandedStars = useMemo(
     () => STARS.map(s => ({ cx: s.fx * expandedDims.w, cy: s.fy * expandedDims.h, r: s.r * 1.5, op: s.op })),
@@ -616,7 +653,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
         <button className={`cst-tab${viewMode === 'list' ? ' active' : ''}`} onClick={() => setViewMode('list')}>
           ≡ All Places {allPlaces.length > 0 && <span style={{ opacity: 0.55, fontSize: '0.6rem' }}>({allPlaces.length})</span>}
         </button>
-        <button className={`cst-tab${viewMode === 'timeline' ? ' active' : ''}`} onClick={() => setViewMode('timeline')}>⏱ Timeline</button>
+        <button className={`cst-tab${viewMode === 'timeline' ? ' active' : ''}`} onClick={() => setViewMode('timeline')}>⏱ Source Age</button>
         {viewMode === 'constellation' && (
           <>
             <div style={{ flex: 1 }}/>
@@ -628,6 +665,13 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
           </>
         )}
       </div>
+
+      {viewMode === 'constellation' && (
+        <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)', padding: '0 4px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span>✦</span>
+          <span>Most mentioned places are placed closer to the center, radiating outward to less mentioned ones.</span>
+        </div>
+      )}
 
       {viewMode === 'timeline' ? (
         <TimelineView nodes={nodes} w={w} h={h} />
@@ -726,21 +770,25 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
             .exp-input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:8px;padding:4px 10px;font-size:0.7rem;color:rgba(255,255,255,.75);outline:none;width:200px;font-family:Inter,sans-serif}
             .exp-input::placeholder{color:rgba(255,255,255,.25)}
             .exp-input:focus{border-color:rgba(139,92,246,.5)}
+            .exp-slider{-webkit-appearance:none;appearance:none;height:4px;background:rgba(139,92,246,.25);border-radius:4px;outline:none;cursor:pointer;accent-color:#8b5cf6;}
+            .exp-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#8b5cf6;cursor:pointer;}
           `}</style>
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '7px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
             <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', fontFamily: 'Inter,sans-serif' }}>
-              ⬤ <strong style={{ color: '#c4b5fd' }}>{allPlaces.length}</strong> places — {(city || '').split(',')[0]}
+              ⬤ <strong style={{ color: '#c4b5fd' }}>{expandedPlaces.length}</strong>
+              <span style={{ color: 'rgba(255,255,255,0.25)', marginLeft: '3px' }}>of {allPlaces.length} places shown</span>
+              <span style={{ color: 'rgba(255,255,255,0.18)', marginLeft: '6px' }}>— {(city || '').split(',')[0]}</span>
             </span>
             <input className="exp-input" placeholder="Search nodes…" value={expandedSearch} onChange={e => setExpandedSearch(e.target.value)}/>
             {expandedSearch && (
               <span style={{ fontSize: '0.65rem', color: '#a78bfa', fontFamily: 'Inter,sans-serif' }}>
-                {allPlaces.filter(p => p.name.toLowerCase().includes(expandedSearch.toLowerCase())).length} match
+                {expandedPlaces.filter(p => p.name.toLowerCase().includes(expandedSearch.toLowerCase())).length} match
               </span>
             )}
             <div style={{ flex: 1 }}/>
-            <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)', fontFamily: 'Inter,sans-serif' }}>Esc · click node for details</span>
+            <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)', fontFamily: 'Inter,sans-serif' }}>Esc · scroll to zoom · drag to pan</span>
             <button onClick={() => setExpanded(false)} style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '6px', color: 'rgba(255,255,255,0.55)', cursor: 'pointer', padding: '4px 12px', fontSize: '0.7rem', fontFamily: 'Inter,sans-serif' }}>
               ✕ Close
             </button>
@@ -764,7 +812,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
             )}
             <div style={{ transform: `scale(${expZoom}) translate(${expPan.x}px, ${expPan.y}px)`, transformOrigin: 'center center', width: '100%', height: '100%' }}>
               <ConstellationSVG
-                places={allPlaces}
+                places={expandedPlaces}
                 layout={expandedLayout}
                 placeColors={placeColors}
                 seqLinks={seqLinks}
@@ -774,9 +822,32 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
                 h={expandedDims.h - 12}
                 onNodeClick={p => setExpandedSelected(p)}
                 searchQuery={expandedSearch}
-                bottomHint={`${allPlaces.length} places · scroll to zoom · drag to pan · click for details`}
+                bottomHint={`${expandedPlaces.length} places shown · scroll to zoom · drag to pan · click for details`}
               />
             </div>
+          </div>
+
+          {/* Bottom filter bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '8px 18px', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.4)', flexShrink: 0, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', fontFamily: 'Inter,sans-serif', whiteSpace: 'nowrap' }}>Min mentions:</span>
+              <input type="range" className="exp-slider" min={1} max={Math.max(1, Math.ceil(allPlaces[Math.floor(allPlaces.length * 0.25)]?.nodes.length || 1))} value={expMinClaims}
+                onChange={e => { setExpMinClaims(Number(e.target.value)); setExpZoom(1); setExpPan({ x: 0, y: 0 }); }}
+                style={{ width: '120px' }}/>
+              <span style={{ fontSize: '0.65rem', fontWeight: '700', color: '#a78bfa', fontFamily: 'Inter,sans-serif', minWidth: '20px' }}>{expMinClaims}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              {[['#10b981','Positive'],['#f59e0b','Caution'],['#8b5cf6','Mixed']].map(([c, l]) => (
+                <div key={l} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: c, opacity: 0.85 }}/>
+                  <span style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontFamily: 'Inter,sans-serif' }}>{l}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ flex: 1 }}/>
+            <span style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.18)', fontFamily: 'Inter,sans-serif' }}>
+              Node size = mention count · Showing top {expandedPlaces.length} most-mentioned places
+            </span>
           </div>
 
           {/* Bottom-left info panel — shown when a node is clicked */}

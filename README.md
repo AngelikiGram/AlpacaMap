@@ -1,48 +1,56 @@
-# AlpacaMap
+# TravelScout
 
-An interactive, privacy-first travel planning app that runs entirely in your browser. Plan multi-city trips with real map data and generate personalized itineraries using local LLMs.
+An interactive, privacy-first travel planning app that runs entirely in your browser. It builds trips on top of OpenStreetMap data, surfacing conflicts and credibility differences across sources.
 
-`AlpacaMap` is a title choice, not a statement that the app specifically runs the Alpaca model. The name references the broader llama-family and local-LLM ecosystem that this project uses through `llama.cpp` and local model workflows.
+`TravelScout` relies on local models and on-device processing to ensure your data stays private.
 
-## What It Does
-- Builds trips on top of OpenStreetMap data.
-- Surfaces conflicts and credibility differences across sources.
-- Supports local LLM-based itinerary and knowledge workflows.
-- Includes validation scripts for conflict and novelty analysis.
+## Quick Start
 
-## Project Layout
-- `src/`: React application code.
-- `public/preprocessed/`: Static city data used by the app.
-- `scripts/generate_preprocessed.js`: Generates preprocessed city JSON.
-- `scripts/train_nlp.py`: Training pipeline for the NLP model.
-- `scripts/evaluate_extraction.py`: Evaluation for extraction/model output.
-- `scripts/validate_conflicts.py`: Conflict validation workflow.
-- `scripts/validate_novelty.py`: Novelty validation workflow.
-- `llama.cpp/`: Local LLM inference dependency.
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+3. Open the app at `http://localhost:5174/`
 
-## Quick start
+## Pretrained Models (Local LLM via Ollama)
+
+**No custom pretrained models need to be downloaded manually.** 
+The application interfaces directly with [Ollama](https://ollama.com/) for all local LLM inference. Ensure you have Ollama installed and running on your machine. The app will pull and use the standard models automatically (via `llama.cpp` bindings under the hood) when you invoke the AI planner or RouteSpace features.
+
+## Generating Knowledge Graphs (Data Ingestion)
+
+To fetch fresh data and generate the Knowledge Graph (KG) JSON for a specific city, you can use the preprocessing scripts:
 
 ```bash
-npm install
-npm run dev
+# Fetch and preprocess data for a single city
+node scripts/fetch_and_preprocess_all.js --city "London"
+
+# Or use the npm shorthand:
+npm run preprocess:city "London"
 ```
 
-Navigate to `http://localhost:5174/` to open the app.
+*Note: Fetching data for all cities (`npm run preprocess`) may take 5-10 minutes per city due to rate limits.*
 
-## Deploying Online
+## Setting up the Validation Process & Results
 
-The repository includes a GitHub Pages workflow in `.github/workflows/deploy.yml`. The frontend can be deployed as a static site.
+The validation pipeline reproduces the figures from the manuscript directly from the exported Knowledge Graph JSON data. 
 
-Important: GitHub Pages only hosts the static React app. Features that depend on local models, proxy routes, or local services such as `llama.cpp`, Ollama, or dev-server proxy endpoints will not work there unless you provide a separate backend.
+1. Ensure the Python dependencies are installed:
+   ```bash
+   pip install matplotlib numpy scipy
+   ```
+
+2. Generate the validation plots using an existing or newly generated knowledge graph:
+   ```bash
+   python scripts/generate_validation_plots.py --kg kg_London_2026-07-07.json --out validation/
+   ```
+
+The plots (e.g., credibility vs. age, appearance frequency histograms, sentiment distribution) will be outputted directly to the `validation/` folder.
 
 ## Notes for Contributors
-- `README_MINE.md` is ignored via `.gitignore` to let developers keep local notes.
 - Scripts and code related to local network and LLM training (`llama.cpp`, `train_nlp.py`, `evaluate_extraction.py`) must be kept intact.
-
-## Training
-
-```bash
-pip install nltk requests
-python scripts/train_nlp.py
-python scripts/train_nlp.py --cities 80
-```
+- If deploying online via GitHub Pages (`.github/workflows/deploy.yml`), be aware that the frontend will be a static site. Features dependent on local models (`llama.cpp`, Ollama) or proxy endpoints will not function without a separate backend.

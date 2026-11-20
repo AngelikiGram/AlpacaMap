@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { Utensils, Train, ShieldCheck, Landmark, ShoppingBag, MapPin, CloudRain, Lightbulb, Building2, ExternalLink, AlertTriangle } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Utensils, Train, ShieldCheck, Landmark, ShoppingBag, MapPin, CloudRain, Lightbulb, Building2, ExternalLink, AlertTriangle, Maximize2, X } from 'lucide-react';
 
 export const RADAR_CATEGORIES = [
   { key: 'Food & Drink',  abbr: 'F&D',  Icon: Utensils,    color: '#f97316', rx: /\b(food|eat|eating|drink|restaurant|cafe|coffee|beer|wine|cuisine|lunch|dinner|breakfast|bakery|pastry|meal|dining|cuisine|pub|bar)\b/i },
-  { key: 'Transport',     abbr: 'TRN',  Icon: Train,       color: '#0ea5e9', rx: /\b(transport|metro|bus|train|taxi|cab|airport|flight|station|tram|transfer|subway|transit|ferry|cycle|bike|walk|tube)\b/i },
+  { key: 'Transport',     abbr: 'TRN',  Icon: Train,       color: '#0ea5e9', rx: /\b(transport|metro|bus|train|taxi|cab|airport|flight|station|tram|transfer|subway|transit|ferry|cycle|bike|walk|tube|travel|passenger|passengers|commute|commuter|commuters|fare|fares|oyster|travelcard|capping|cap|caps|peak|off-peak|journey|journeys|line|lines|rail|railway|railways)\b/i },
   { key: 'Safety',        abbr: 'SAF',  Icon: ShieldCheck, color: '#ef4444', rx: /\b(safe|safety|danger|scam|pickpocket|hospital|health|police|emergency|avoid|crime|theft|thief|caution|risk|unsafe|beware)\b/i },
   { key: 'Culture',       abbr: 'CUL',  Icon: Landmark,    color: '#8b5cf6', rx: /\b(museum|church|temple|history|historical|art|gallery|festival|landmark|palace|architecture|monument|medieval|heritage|century|founded|roman|empire|dynasty|ancient|ruins|cathedral|castle|cultural)\b/i },
   { key: 'Shopping',      abbr: 'SHP',  Icon: ShoppingBag, color: '#ec4899', rx: /\b(shop|shopping|buy|souvenir|store|mall|boutique|price|cheap|expensive|bargain|retail|market)\b/i },
@@ -42,12 +43,20 @@ export function classifyNodeForRadar(node) {
   return 'Culture'; // default for general city/historical info
 }
 
-function RadarSVG({ data, hovKey, onHover, size = 260 }) {
+function RadarSVG({ data, hovKey, onHover, onClick, size = 260, dark = true }) {
   const N = data.length;
   const cx = size / 2, cy = size / 2;
   const R = size * 0.36;
-  const labelR = size * 0.465;
   const abbrR = size * 0.46;
+
+  const th = {
+    ring:   dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.10)',
+    spoke:  dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.10)',
+    label:  dark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.30)',
+    glyphBg: dark ? 'rgba(8,12,28,0.85)'    : 'rgba(245,245,250,0.95)',
+    glyphTxt: dark ? '#fff' : '#fff',
+    dot:    dark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.15)',
+  };
 
   const spoke = (i, r) => {
     const angle = (i / N) * 2 * Math.PI - Math.PI / 2;
@@ -66,22 +75,21 @@ function RadarSVG({ data, hovKey, onHover, size = 260 }) {
   return (
     <svg width={size} height={size} style={{ display: 'block', overflow: 'visible', flexShrink: 0 }}>
       <defs>
-        <radialGradient id="rdr-bg" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="rgba(139,92,246,0.06)"/>
+        <radialGradient id={`rdr-bg-${dark?'d':'l'}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={dark ? 'rgba(139,92,246,0.06)' : 'rgba(139,92,246,0.05)'}/>
           <stop offset="100%" stopColor="rgba(0,0,0,0)"/>
         </radialGradient>
       </defs>
-      <circle cx={cx} cy={cy} r={R} fill="url(#rdr-bg)"/>
+      <circle cx={cx} cy={cy} r={R} fill={`url(#rdr-bg-${dark?'d':'l'})`}/>
 
       {/* Grid rings */}
-      {rings.map(({ pct, points }, ri) => (
-        <polygon key={ri} points={poly(points)}
-          fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.8"/>
+      {rings.map(({ points }, ri) => (
+        <polygon key={ri} points={poly(points)} fill="none" stroke={th.ring} strokeWidth="0.8"/>
       ))}
       {/* Ring value labels */}
       {[25, 50, 75, 100].map((v, ri) => (
         <text key={ri} x={cx + 3} y={cy - R * v / 100 + 3}
-          fontSize="6" fill="rgba(255,255,255,0.2)" fontFamily="Inter,sans-serif">
+          fontSize={size > 300 ? 8 : 6} fill={th.label} fontFamily="Inter,sans-serif">
           {v}%
         </text>
       ))}
@@ -90,47 +98,48 @@ function RadarSVG({ data, hovKey, onHover, size = 260 }) {
       {data.map((_, i) => {
         const tip = spoke(i, R);
         return <line key={i} x1={cx} y1={cy} x2={tip.x.toFixed(1)} y2={tip.y.toFixed(1)}
-          stroke="rgba(255,255,255,0.08)" strokeWidth="0.8"/>;
+          stroke={th.spoke} strokeWidth="0.8"/>;
       })}
 
       {/* Coverage area */}
       <polygon points={poly(coveragePts)}
-        fill="#8b5cf6" fillOpacity="0.15" stroke="#8b5cf6" strokeWidth="1.8"
+        fill="#8b5cf6" fillOpacity={dark ? 0.15 : 0.12} stroke="#8b5cf6" strokeWidth="1.8"
         style={{ transition: 'all 0.35s' }}/>
 
       {/* Sentiment area */}
       <polygon points={poly(sentPts)}
-        fill="#10b981" fillOpacity="0.1" stroke="#10b981" strokeWidth="1.3"
+        fill="#10b981" fillOpacity={dark ? 0.10 : 0.08} stroke="#10b981" strokeWidth="1.3"
         strokeDasharray="4 3" style={{ transition: 'all 0.35s' }}/>
 
       {/* Coverage dots */}
       {coveragePts.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={hovKey === data[i].key ? 5 : 3.2}
+        <circle key={i} cx={p.x} cy={p.y} r={3.2}
           fill={hovKey === data[i].key ? data[i].color : '#8b5cf6'}
-          stroke="rgba(255,255,255,0.25)" strokeWidth="0.8"
-          style={{ transition: 'all 0.2s', cursor: 'pointer' }}
+          stroke={th.dot} strokeWidth="0.8"
+          opacity={hovKey && hovKey !== data[i].key ? 0.35 : 1}
+          style={{ transition: 'opacity 0.15s, fill 0.15s', cursor: 'pointer' }}
           onMouseEnter={() => onHover(data[i].key)}
-          onMouseLeave={() => onHover(null)}/>
+          onClick={() => onClick && onClick(data[i].key)}/>
       ))}
 
-      {/* Spoke-end category glyphs */}
+      {/* Spoke-end category glyphs — fixed size to avoid layout shift */}
       {data.map((d, i) => {
         const lp = spoke(i, abbrR);
         const isHov = hovKey === d.key;
-        const circR = isHov ? 12 : 9.5;
+        const circR = size > 300 ? 14 : 9.5;
+        const fs = size > 300 ? 8 : 5.8;
         return (
-          <g key={i} style={{ cursor: 'pointer' }}
-            onMouseEnter={() => onHover(d.key)} onMouseLeave={() => onHover(null)}>
+          <g key={i} style={{ cursor: 'pointer' }} onMouseEnter={() => onHover(d.key)} onClick={() => onClick && onClick(d.key)}>
             <circle cx={lp.x} cy={lp.y} r={circR}
-              fill={isHov ? d.color : 'rgba(8,12,28,0.85)'}
-              stroke={isHov ? d.color : `${d.color}60`}
-              strokeWidth={isHov ? 1.5 : 1}
-              style={{ transition: 'all 0.2s' }}/>
+              fill={isHov ? d.color : th.glyphBg}
+              stroke={isHov ? d.color : `${d.color}80`}
+              strokeWidth={isHov ? 2 : 1}
+              opacity={hovKey && !isHov ? 0.45 : 1}
+              style={{ transition: 'fill 0.15s, opacity 0.15s, stroke 0.15s' }}/>
             <text x={lp.x} y={lp.y} textAnchor="middle" dominantBaseline="central"
-              fontSize={isHov ? 6.5 : 5.8} fontWeight="800"
-              fontFamily="Inter,sans-serif"
+              fontSize={fs} fontWeight="800" fontFamily="Inter,sans-serif"
               fill={isHov ? '#fff' : d.color}
-              style={{ transition: 'all 0.15s', userSelect: 'none' }}>
+              style={{ userSelect: 'none' }}>
               {d.abbr}
             </text>
           </g>
@@ -143,16 +152,238 @@ function RadarSVG({ data, hovKey, onHover, size = 260 }) {
   );
 }
 
+function RadarModal({ radarData, stats, maxCount, nodes, onClose }) {
+  const [hovKey, setHovKey] = useState(null);
+  const [selectedCategoryKey, setSelectedCategoryKey] = useState(null);
+
+  const hov = hovKey ? RADAR_CATEGORIES.find(c => c.key === hovKey) : null;
+  const hovStats = hovKey ? stats[hovKey] : null;
+  const covered = radarData.filter(d => d.count > 0);
+  const top = covered.reduce((a, b) => a.count > b.count ? a : b, covered[0]);
+
+  const modalFilteredClaims = useMemo(() => {
+    if (!selectedCategoryKey) return [];
+    return nodes
+      .filter(n => classifyNodeForRadar(n) === selectedCategoryKey)
+      .sort((a, b) => (b.credibility || 0) - (a.credibility || 0));
+  }, [selectedCategoryKey, nodes]);
+
+  const selectedCat = selectedCategoryKey ? RADAR_CATEGORIES.find(c => c.key === selectedCategoryKey) : null;
+  const selectedStats = selectedCategoryKey ? stats[selectedCategoryKey] : null;
+
+  return createPortal(
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 99999,
+      background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      gap: '20px', padding: '20px', boxSizing: 'border-box'
+    }}>
+      {/* Container wrapper to hold both windows side-by-side if screen size permits */}
+      <div style={{ display: 'flex', gap: '20px', maxWidth: '1240px', width: '100%', justifyContent: 'center', height: '90vh' }}>
+        
+        {/* Main Radar Modal */}
+        <div onClick={e => e.stopPropagation()} style={{
+          background: '#fff', borderRadius: '18px', padding: '32px 36px', width: '780px',
+          maxHeight: '100%', overflowY: 'auto', fontFamily: 'Inter,sans-serif',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.35)',
+          position: 'relative', display: 'flex', flexDirection: 'column'
+        }}>
+          {/* Close */}
+          <button onClick={onClose} style={{
+            position: 'absolute', top: '16px', right: '16px',
+            background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: '50%',
+            width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}><X size={16} color="#444"/></button>
+
+          {/* Title */}
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ fontSize: '1.15rem', fontWeight: '800', color: '#1a1a2e', marginBottom: '4px' }}>
+              Knowledge Radar
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#888' }}>
+              Topic coverage across {nodes.length} claims
+              {top && <> · Most documented: <strong style={{ color: top.color }}>{top.key} ({top.count})</strong></>}
+            </div>
+          </div>
+
+          {/* Main layout */}
+          <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start', flex: 1 }}
+            onMouseLeave={() => setHovKey(null)}>
+            <RadarSVG data={radarData} hovKey={hovKey} onHover={setHovKey} onClick={setSelectedCategoryKey} size={380} dark={false}/>
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {/* Legend */}
+              <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                {[['#8b5cf6', 'Coverage'], ['#10b981', 'Positive %']].map(([col, lbl]) => (
+                  <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <svg width="20" height="6">
+                      <line x1="0" y1="3" x2="20" y2="3" stroke={col} strokeWidth={lbl==='Coverage'?'2':'1.5'} strokeDasharray={lbl==='Positive %'?'4 2':'none'}/>
+                    </svg>
+                    <span style={{ fontSize: '0.75rem', color: '#555' }}>{lbl}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Category list */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {radarData.sort((a,b) => b.count - a.count).map(d => {
+                  const isHov = hovKey === d.key;
+                  const isSelected = selectedCategoryKey === d.key;
+                  const bar = d.coverage;
+                  return (
+                    <div key={d.key}
+                      onMouseEnter={() => setHovKey(d.key)}
+                      onClick={() => setSelectedCategoryKey(isSelected ? null : d.key)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                        padding: '8px 12px', borderRadius: '8px', cursor: 'pointer',
+                        background: isSelected ? `${d.color}1a` : (isHov ? `${d.color}0d` : 'rgba(0,0,0,0.02)'),
+                        border: `1px solid ${isSelected ? d.color : (isHov ? d.color+'40' : 'rgba(0,0,0,0.06)')}`,
+                        transition: 'all 0.15s',
+                      }}>
+                      <d.Icon size={13} color={d.color} style={{ flexShrink: 0 }}/>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#222', width: '90px', flexShrink: 0 }}>{d.key}</span>
+                      <div style={{ flex: 1, height: '5px', background: 'rgba(0,0,0,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ width: `${bar}%`, height: '100%', background: d.color, borderRadius: '3px', transition: 'width 0.3s' }}/>
+                      </div>
+                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: d.color, minWidth: '28px', textAlign: 'right' }}>{d.count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Hover tooltip */}
+              {hov && hovStats && (
+                <div style={{ marginTop: '14px', padding: '10px 14px', background: `${hov.color}0d`, border: `1px solid ${hov.color}30`, borderRadius: '10px' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: '700', color: hov.color, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <hov.Icon size={13}/> {hov.key}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
+                    {[
+                      ['Claims', hovStats.count, '#7c3aed'],
+                      ['Positive', `${hovStats.count ? Math.round(hovStats.pos/hovStats.count*100) : 0}%`, '#059669'],
+                      ['Negative', hovStats.neg, '#dc2626'],
+                      ['Coverage', `${Math.round((hovStats.count/maxCount)*100)}%`, '#d97706'],
+                    ].map(([label, val, col]) => (
+                      <div key={label} style={{ background: 'rgba(0,0,0,0.03)', borderRadius: '6px', padding: '4px 8px' }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: col }}>{val}</div>
+                        <div style={{ fontSize: '0.6rem', color: '#999' }}>{label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {hovStats.sample && (
+                    <div style={{ marginTop: '8px', fontSize: '0.68rem', color: '#666', fontStyle: 'italic', lineHeight: 1.5 }}>
+                      "{hovStats.sample.slice(0,140)}{hovStats.sample.length>140?'…':''}"
+                    </div>
+                  )}
+                  <div style={{ marginTop: '8px', fontSize: '0.62rem', color: hov.color, fontWeight: '600', textAlign: 'center' }}>
+                    Click to view all {hovStats.count} claims
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Second White Popup Window on the Right (Claims detail) */}
+        {selectedCategoryKey && selectedCat && (
+          <div onClick={e => e.stopPropagation()} style={{
+            background: '#fff', borderRadius: '18px', padding: '32px 30px', width: '420px',
+            height: '100%', overflowY: 'auto', fontFamily: 'Inter,sans-serif',
+            boxShadow: '0 24px 80px rgba(0,0,0,0.35)',
+            borderLeft: `3px solid ${selectedCat.color}`,
+            position: 'relative', display: 'flex', flexDirection: 'column', boxSizing: 'border-box'
+          }}>
+            {/* Close */}
+            <button onClick={() => setSelectedCategoryKey(null)} style={{
+              position: 'absolute', top: '16px', right: '16px',
+              background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: '50%',
+              width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}><X size={16} color="#444"/></button>
+
+            {/* Header */}
+            <div style={{ borderBottom: '1px solid rgba(0,0,0,0.08)', paddingBottom: '16px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.15rem', fontWeight: '800', color: '#1a1a2e', marginBottom: '4px' }}>
+                <selectedCat.Icon size={20} color={selectedCat.color}/>
+                {selectedCategoryKey}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#888' }}>
+                {modalFilteredClaims.length} verified traveller claims
+              </div>
+            </div>
+
+            {/* Sentiment breakdown */}
+            {selectedStats && (
+              <div style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '10px', padding: '10px 12px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', height: '6px', borderRadius: '3px', overflow: 'hidden', gap: '1px', marginBottom: '8px' }}>
+                  {selectedStats.pos > 0 && <div style={{ flex: selectedStats.pos, background: '#10b981' }}/>}
+                  {selectedStats.neg > 0 && <div style={{ flex: selectedStats.neg, background: '#ef4444' }}/>}
+                  {selectedStats.count - selectedStats.pos - selectedStats.neg > 0 && <div style={{ flex: selectedStats.count - selectedStats.pos - selectedStats.neg, background: '#94a3b8' }}/>}
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  {[['#10b981', 'Positive', selectedStats.pos], ['#ef4444', 'Negative', selectedStats.neg], ['#94a3b8', 'Neutral', selectedStats.count - selectedStats.pos - selectedStats.neg]].map(([col, lbl, cnt]) => cnt > 0 && (
+                    <span key={lbl} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.62rem', color: '#555' }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: col, display: 'inline-block' }}/>
+                      <strong>{cnt}</strong> {lbl}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Claims list */}
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '2px' }}>
+              {modalFilteredClaims.map((n, i) => {
+                const sc = n.evaluation?.sentiment || 'neutral';
+                const col = sc === 'positive' ? '#10b981' : sc === 'negative' ? '#ef4444' : '#94a3b8';
+                return (
+                  <div key={i} style={{
+                    padding: '12px 14px', borderRadius: '10px', background: '#fff',
+                    border: `1px solid ${col}35`, borderLeft: `4px solid ${col}`,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                    position: 'relative'
+                  }}>
+                    <div style={{ fontSize: '0.78rem', color: '#222', lineHeight: 1.45, marginBottom: '6px' }}>{n.claim}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+                      {n.place && (
+                        <span style={{ fontSize: '0.65rem', color: '#666', fontWeight: '600' }}>
+                          📍 {n.place.split(' · ')[0]}
+                        </span>
+                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '0.62rem', fontWeight: '700', color: col, textTransform: 'capitalize' }}>
+                          {sc}
+                        </span>
+                        {n.source?.url && (
+                          <a href={n.source.url} target="_blank" rel="noreferrer" style={{ color: '#aaa', display: 'flex', alignItems: 'center' }}>
+                            <ExternalLink size={11}/>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 export default function KnowledgeRadarView({ nodes }) {
   const [hovKey, setHovKey] = useState(null);
   const [activeKey, setActiveKey] = useState(null);
   const [sinceYear, setSinceYear] = useState(null);
+  const [expanded, setExpanded] = useState(false);
 
   // Temporal filter — shows knowledge as it existed from a given year onward
   const temporalNodes = useMemo(() => {
     if (!sinceYear) return nodes;
     return nodes.filter(n => {
-      const d = n.source?.date || n.extractedAt;
+      const d = n.date || n.source?.date || n.extractedAt;
       if (!d) return true;
       return new Date(d).getFullYear() >= sinceYear;
     });
@@ -192,27 +423,52 @@ export default function KnowledgeRadarView({ nodes }) {
   const hov      = hovKey ? RADAR_CATEGORIES.find(c => c.key === hovKey) : null;
   const hovStats = hovKey ? stats[hovKey] : null;
 
+  // Count how many nodes fall in each exact year (for button labels)
+  const yearCounts = useMemo(() => {
+    const m = {};
+    nodes.forEach(n => {
+      const d = n.date || n.source?.date || n.extractedAt;
+      if (!d) return;
+      const y = new Date(d).getFullYear();
+      m[y] = (m[y] || 0) + 1;
+    });
+    return m;
+  }, [nodes]);
+
+  const YEARS = [2020, 2021, 2022, 2023, 2024, 2025];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontFamily: 'Inter,sans-serif' }}>
 
       {/* Temporal year filter */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
         <span style={{ fontSize: '0.54rem', color: 'rgba(255,255,255,0.28)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '2px' }}>Since</span>
-        {[null, 2020, 2021, 2022, 2023, 2024, 2025].map(y => (
-          <button key={y ?? 'all'} onClick={() => { setSinceYear(y); setActiveKey(null); }}
-            style={{
-              fontSize: '0.54rem', padding: '2px 7px', borderRadius: '8px', cursor: 'pointer',
-              background: sinceYear === y ? 'rgba(139,92,246,0.22)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${sinceYear === y ? '#8b5cf6' : 'rgba(255,255,255,0.1)'}`,
-              color: sinceYear === y ? '#c084fc' : 'rgba(255,255,255,0.35)',
-              fontFamily: 'Inter,sans-serif', fontWeight: sinceYear === y ? '700' : '400',
-            }}>{y ?? 'All'}</button>
-        ))}
-        {sinceYear && (
-          <span style={{ fontSize: '0.52rem', color: '#f59e0b', marginLeft: '4px' }}>
-            {temporalNodes.length} / {nodes.length} claims
-          </span>
-        )}
+        {[null, ...YEARS].map(y => {
+          // cumulative count for "since Y": nodes with date >= y
+          const cumCount = y == null ? nodes.length
+            : nodes.filter(n => {
+                const d = n.date || n.source?.date || n.extractedAt;
+                if (!d) return false;
+                return new Date(d).getFullYear() >= y;
+              }).length;
+          const isActive = sinceYear === y;
+          return (
+            <button key={y ?? 'all'}
+              onClick={() => { setSinceYear(y); setActiveKey(null); }}
+              title={y ? `${cumCount} claims with source date ≥ ${y}` : `All ${nodes.length} claims`}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                fontSize: '0.54rem', padding: '2px 6px 3px', borderRadius: '8px', cursor: 'pointer',
+                background: isActive ? 'rgba(139,92,246,0.22)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${isActive ? '#8b5cf6' : 'rgba(255,255,255,0.1)'}`,
+                color: isActive ? '#c084fc' : 'rgba(255,255,255,0.35)',
+                fontFamily: 'Inter,sans-serif', lineHeight: 1.2,
+              }}>
+              <span style={{ fontWeight: isActive ? '700' : '400' }}>{y ?? 'All'}</span>
+              <span style={{ fontSize: '0.44rem', color: isActive ? 'rgba(192,132,252,0.7)' : 'rgba(255,255,255,0.2)', fontWeight: '500' }}>{cumCount}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Summary strip */}
@@ -244,7 +500,13 @@ export default function KnowledgeRadarView({ nodes }) {
         background: 'rgba(6,8,20,0.7)', borderRadius: '12px',
         border: '1px solid rgba(255,255,255,0.06)',
         padding: '10px', display: 'flex', gap: '8px', alignItems: 'flex-start',
+        position: 'relative',
       }}>
+        <button onClick={() => setExpanded(true)} title="Full screen" style={{
+          position: 'absolute', top: '8px', right: '8px', zIndex: 2,
+          background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '6px', padding: '3px 5px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+        }}><Maximize2 size={11} color="rgba(255,255,255,0.45)"/></button>
         <RadarSVG data={radarData} hovKey={hovKey} onHover={k => { setHovKey(k); }} size={258}/>
 
         {/* Right panel */}
@@ -445,6 +707,16 @@ export default function KnowledgeRadarView({ nodes }) {
           </div>
         );
       })()}
+
+      {expanded && (
+        <RadarModal
+          radarData={radarData}
+          stats={stats}
+          maxCount={maxCount}
+          nodes={temporalNodes}
+          onClose={() => setExpanded(false)}
+        />
+      )}
     </div>
   );
 }

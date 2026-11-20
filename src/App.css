@@ -675,9 +675,31 @@
   padding: 0.7rem;
   margin-bottom: 0.9rem;
 }
-.weather-days { display: flex; gap: 0.35rem; }
+.weather-days {
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin; /* Firefox thin scrollbar */
+  scrollbar-color: rgba(59, 130, 246, 0.35) rgba(255, 255, 255, 0.05);
+}
+.weather-days::-webkit-scrollbar {
+  height: 5px; /* Thin slider height */
+  display: block;
+}
+.weather-days::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+.weather-days::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.4); /* Custom thumb slider */
+  border-radius: 10px;
+}
+.weather-days::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.65);
+}
 .weather-day {
-  flex: 1;
+  flex: 0 0 65px;
   display: flex;
   flex-direction: column;
   align-items: center;

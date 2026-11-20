@@ -1,8 +1,20 @@
 import { SENTINEL_NONE } from './utils';
 
-export const searchNominatim = async (query) => {
+export const searchNominatim = async (query, opts = {}) => {
+  const params = new URLSearchParams({
+    format: 'json',
+    q: query,
+    limit: opts.limit ?? 10,
+    addressdetails: 1,
+  });
+  if (opts.viewbox) {
+    // viewbox = { minLng, minLat, maxLng, maxLat }
+    const { minLng, minLat, maxLng, maxLat } = opts.viewbox;
+    params.set('viewbox', `${minLng},${maxLat},${maxLng},${minLat}`);
+    params.set('bounded', opts.bounded ? 1 : 0);
+  }
   const r = await fetch(
-    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`,
+    `https://nominatim.openstreetmap.org/search?${params}`,
     { headers: { 'Accept-Language': 'en', 'Accept': 'application/json' }, signal: AbortSignal.timeout(5000) }
   );
   return r.json();
@@ -59,9 +71,9 @@ export const fetchPlaceImage = async (osmTags, name, type, cityName) => {
 
   try {
     const q = [name, cityName].filter(Boolean).join(' ');
-    const j = await fetch(
-      `https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1&skip_disambig=1`
-    ).then(r => r.json());
+    const proxy = 'https://corsproxy.io/?url=';
+    const targetUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1&skip_disambig=1`;
+    const j = await fetch(`${proxy}${encodeURIComponent(targetUrl)}`).then(r => r.json());
     if (j?.Image && /^https?:\/\//.test(j.Image)) return j.Image;
   } catch {}
 

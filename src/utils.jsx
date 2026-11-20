@@ -47,19 +47,22 @@ export const SENTINEL_NONE = '__none__';
 export const getTypeDetails = (typeString) => {
   if (!typeString) return { icon:<Camera size={14}/>, color:'#0ea5e9', label:'Sight' };
   const t = typeString.toLowerCase();
-  if (t.includes('food') || t.includes('restaurant')) return { icon:<Utensils size={14}/>,    color:'#f59e0b', label:'Food'     };
-  if (t.includes('museum') || t.includes('art'))       return { icon:<Landmark size={14}/>,    color:'#dc2626', label:'Museums'  };
-  if (t.includes('park') || t.includes('nature'))      return { icon:<TreePine size={14}/>,    color:'#16a34a', label:'Parks'    };
-  if (t.includes('shop') || t.includes('mall'))        return { icon:<ShoppingBag size={14}/>, color:'#ec4899', label:'Shopping' };
-  if (t.includes('coffee') || t.includes('cafe'))      return { icon:<Coffee size={14}/>,      color:'#d97706', label:'Cafes'    };
-  if (t.includes('hiking') || t.includes('trail'))     return { icon:<MapPin size={14}/>,      color:'#16a34a', label:'Hiking'   };
-  if (t.includes('viewpoint') || t.includes('view'))   return { icon:<MountainSnow size={14}/>,color:'#0ea5e9', label:'Views'    };
-  if (t.includes('beach') || t.includes('coast'))      return { icon:<Droplets size={14}/>,    color:'#06b6d4', label:'Beaches'  };
-  if (t.includes('camping') || t.includes('camp'))     return { icon:<Tent size={14}/>,        color:'#84cc16', label:'Camping'  };
-  if (t.includes('historic') || t.includes('castle'))  return { icon:<Castle size={14}/>,      color:'#92400e', label:'Historic' };
-  if (t.includes('attraction') || t.includes('sight')) return { icon:<Camera size={14}/>,      color:'#0ea5e9', label:'Sights'   };
-  if (t.includes('custom') || t.includes('user'))      return { icon:<MapPin size={14}/>,      color:'#ef4444', label:'Custom'   };
-  if (t.includes('city'))                              return { icon:<Compass size={14}/>,     color:'#06b6d4', label:'City'     };
+  if (t.includes('food') || t.includes('restaurant') || t === 'pub' || t.includes('bar') || t.includes('nightlife')) return { icon:<Utensils size={14}/>,    color:'#f59e0b', label:'Food'     };
+  if (t.includes('cafe') || t.includes('coffee'))      return { icon:<Coffee size={14}/>,      color:'#d97706', label:'Cafes'    };
+  if (t.includes('museum'))                            return { icon:<Landmark size={14}/>,    color:'#dc2626', label:'Museums'  };
+  if (t.includes('gallery') || t.includes('art'))     return { icon:<Camera size={14}/>,      color:'#a855f7', label:'Art'      };
+  if (t.includes('church') || t.includes('cathedral') || t.includes('abbey') || t.includes('mosque') || t.includes('synagogue')) return { icon:<Landmark size={14}/>, color:'#7c3aed', label:'Religious' };
+  if (t.includes('historic') || t.includes('castle') || t.includes('ruins') || t.includes('monument') || t.includes('memorial')) return { icon:<Castle size={14}/>, color:'#92400e', label:'Historic' };
+  if (t.includes('viewpoint') || t.includes('view'))  return { icon:<MountainSnow size={14}/>,color:'#0284c7', label:'Views'    };
+  if (t.includes('park') || t.includes('garden') || t.includes('nature')) return { icon:<TreePine size={14}/>, color:'#16a34a', label:'Parks' };
+  if (t.includes('hiking') || t.includes('trail') || t.includes('peak') || t.includes('mountain')) return { icon:<MountainSnow size={14}/>, color:'#15803d', label:'Hiking' };
+  if (t.includes('beach') || t.includes('coast') || t.includes('bay'))    return { icon:<Droplets size={14}/>,    color:'#06b6d4', label:'Beaches'  };
+  if (t.includes('camping') || t.includes('camp'))    return { icon:<Tent size={14}/>,        color:'#84cc16', label:'Camping'  };
+  if (t.includes('shop') || t.includes('mall') || t.includes('market'))   return { icon:<ShoppingBag size={14}/>, color:'#ec4899', label:'Shopping' };
+  if (t.includes('attraction') || t.includes('sight') || t.includes('theatre') || t.includes('cinema') || t.includes('stadium')) return { icon:<Camera size={14}/>, color:'#0ea5e9', label:'Sights' };
+  if (t.includes('street') || t.includes('square') || t.includes('plaza') || t.includes('piazza')) return { icon:<MapPin size={14}/>, color:'#64748b', label:'Street' };
+  if (t.includes('custom') || t.includes('user'))     return { icon:<MapPin size={14}/>,      color:'#ef4444', label:'Custom'   };
+  if (t.includes('city'))                             return { icon:<Compass size={14}/>,     color:'#06b6d4', label:'City'     };
   return { icon:<Camera size={14}/>, color:'#0ea5e9', label:'Sight' };
 };
 
@@ -346,7 +349,24 @@ export const filterMarkersAdaptive = (recs, zoom = 14, aiPlan = null, limitMulti
   return result;
 };
 
-export const loadTrips  = () => { try { return JSON.parse(localStorage.getItem(TRIPS_KEY) || '[]'); } catch { return []; } };
+export const loadTrips = () => {
+  try {
+    const raw = localStorage.getItem(TRIPS_KEY);
+    if (!raw) return [{ id: 'default', name: INITIAL_TRIP.title, data: INITIAL_TRIP }];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return [{ id: 'default', name: INITIAL_TRIP.title, data: INITIAL_TRIP }];
+    }
+    // Migration: seed missing fields without wiping user data
+    if (parsed[0] && parsed[0].data && !parsed[0].data.knowledgeGraph) {
+      parsed[0].data.knowledgeGraph = { nodes:[], edges:[], lastUpdated:null };
+      localStorage.setItem(TRIPS_KEY, JSON.stringify(parsed));
+    }
+    return parsed;
+  } catch {
+    return [{ id: 'default', name: INITIAL_TRIP.title, data: INITIAL_TRIP }];
+  }
+};
 
 export const loadPrefs  = () => { try { return JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'); } catch { return {}; } };
 
@@ -431,8 +451,8 @@ export const TABS=[
   {id:'locations',  label:'Explore',    Icon:MapPin},
   {id:'tripmind',   label:'Planner',    Icon:Sparkles},
   {id:'routespace', label:'TripSpace',  Icon:Compass},
+  {id:'analytics',  label:'Insights',   Icon:Activity},
   {id:'knowledge',  label:'Knowledge',  Icon:Brain},
-  {id:'analyze',    label:'Overview',   Icon:Activity},
   {id:'calendar',   label:'Itinerary',  Icon:CalendarIcon},
   {id:'budget',     label:'Budget',     Icon:DollarSign},
   {id:'packing',    label:'Packing',    Icon:Package},
@@ -453,8 +473,17 @@ const overpassCache = {
 };
 
 // Restore cache from sessionStorage (survives page navigation, cleared on tab close)
-const OVERPASS_CACHE_KEY = 'alpacamap_overpass_v3';
+const OVERPASS_CACHE_KEY = 'alpacamap_overpass_v9';
 const OVERPASS_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
+// Purge all old versioned cache keys so stale data never bleeds through
+try {
+  for (let i = 0; i < sessionStorage.length; i++) {
+    const k = sessionStorage.key(i);
+    if (k && k.startsWith('alpacamap_overpass_') && k !== OVERPASS_CACHE_KEY) {
+      sessionStorage.removeItem(k); i--;
+    }
+  }
+} catch {}
 try {
   const saved = sessionStorage.getItem(OVERPASS_CACHE_KEY);
   if (saved) {
@@ -474,6 +503,45 @@ const persistCache = () => {
       elements: [...overpassCache.elements.entries()].slice(0, 8000),
     }));
   } catch {} // ignore quota errors
+};
+
+export const seedOverpassElements = (elements) => {
+  if (!elements || !Array.isArray(elements)) return;
+  for (const el of elements) {
+    if (el && el.id != null) {
+      overpassCache.elements.set(el.id, el);
+    }
+  }
+  if (elements.length > 0) {
+    let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
+    let hasCoords = false;
+    for (const el of elements) {
+      const lat = el.lat ?? el.center?.lat;
+      const lon = el.lon ?? el.center?.lon;
+      if (lat != null && lon != null) {
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+        if (lon < minLon) minLon = lon;
+        if (lon > maxLon) maxLon = lon;
+        hasCoords = true;
+      }
+    }
+    if (hasCoords) {
+      const allCats = [
+        'Restaurants', 'Coffee', 'Museums', 'Art', 'Parks', 'Shopping',
+        'Attractions', 'Hiking', 'Viewpoints', 'Beaches', 'Camping', 'Historic'
+      ];
+      // Mark this box as cached for all categories
+      overpassCache.queries.push({
+        south: minLat - 0.01,
+        north: maxLat + 0.01,
+        west: minLon - 0.01,
+        east: maxLon + 0.01,
+        categories: new Set(allCats)
+      });
+    }
+  }
+  persistCache();
 };
 
 let currentAbortController = null;
@@ -516,8 +584,8 @@ export const searchOverpass = async (center, radiusKm, categories) => {
   const west = lon - offsetLng;
   const east = lon + offsetLng;
 
-  // Pad by 50% so panning within the city rarely needs a new fetch
-  const pad = 0.5;
+  // Pad bounding box to cache surrounding areas, scaled down for larger radii to prevent timeouts
+  const pad = radiusKm > 8 ? 0.05 : (radiusKm > 4 ? 0.15 : 0.4);
   const qSouth = lat - offsetLat * (1 + pad);
   const qNorth = lat + offsetLat * (1 + pad);
   const qWest = lon - offsetLng * (1 + pad);
@@ -537,12 +605,12 @@ export const searchOverpass = async (center, radiusKm, categories) => {
     return result;
   };
 
-  // Only fetch categories not already cached for this exact bbox
+  // Only fetch categories not already cached — a cached query covers our area if its bbox contains our actual search bbox
   const uncachedCats = categories.filter(cat =>
     !overpassCache.queries.some(q =>
       q.categories?.has(cat) &&
-      q.south <= qSouth && q.north >= qNorth &&
-      q.west <= qWest && q.east >= qEast
+      q.south <= south && q.north >= north &&
+      q.west <= west && q.east >= east
     )
   );
 
@@ -550,86 +618,94 @@ export const searchOverpass = async (center, radiusKm, categories) => {
     return { elements: getCachedElements(), isFresh: true };
   }
 
-  // Abort previous request if in progress
-  if (currentAbortController) currentAbortController.abort();
+  // Create a new abort controller for this request (don't abort previous, allow parallel fetches to complete)
   currentAbortController = new AbortController();
   const signal = currentAbortController.signal;
 
   const bbox = `(${qSouth},${qWest},${qNorth},${qEast})`;
 
-  // Group tag pairs by key and use regex for multi-value keys — far fewer lines, faster Overpass
-  const byKey = new Map();
-  for (const cat of uncachedCats) {
+  // Parks/beaches/hiking are stored as way+relation in OSM — must use nwr.
+  // All other categories are nodes or ways → nw is sufficient and much faster.
+  // Splitting into two parallel queries prevents a slow nwr from blocking everything.
+  const AREA_CATS = new Set(['Parks', 'Hiking', 'Beaches', 'Camping', 'Viewpoints']);
+  const pointCats = uncachedCats.filter(c => !AREA_CATS.has(c));
+  const areaCats  = uncachedCats.filter(c =>  AREA_CATS.has(c));
+
+  // Build nw query (point categories, grouped by key for compactness)
+  const pointByKey = new Map();
+  for (const cat of pointCats) {
     for (const [k, v] of (OVERPASS_TAGS[cat] || [])) {
-      if (!byKey.has(k)) byKey.set(k, new Set());
-      byKey.get(k).add(v);
+      if (!pointByKey.has(k)) pointByKey.set(k, new Set());
+      pointByKey.get(k).add(v);
     }
   }
-  const lines = [...byKey.entries()].map(([k, vals]) => {
+  const nwLines = [...pointByKey.entries()].map(([k, vals]) => {
     const arr = [...vals];
     return arr.length === 1
       ? `  nw["${k}"="${arr[0]}"]["name"]${bbox};`
       : `  nw["${k}"~"^(${arr.join('|')})$"]["name"]${bbox};`;
-  }).join('\n');
+  });
 
-  const query = `[out:json][timeout:25];\n(\n${lines}\n);\nout center tags;`;
+  // Build nwr query (area categories, one line per tag pair)
+  const nwrLines = [];
+  for (const cat of areaCats) {
+    for (const [k, v] of (OVERPASS_TAGS[cat] || [])) {
+      nwrLines.push(`  nwr["${k}"="${v}"]["name"]${bbox};`);
+    }
+  }
 
+  // Only endpoints with CORS headers — others block browser requests
   const urls = [
-    OVERPASS_URL,
-    'https://lz4.overpass-api.de/api/interpreter',
-    'https://z.overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter'
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
   ];
 
-  const fetchPromise = (async () => {
+  const filterToView = els => els.filter(el => {
+    const lat = el.lat ?? el.center?.lat;
+    const lon = el.lon ?? el.center?.lon;
+    return lat >= south && lat <= north && lon >= west && lon <= east;
+  });
+
+  // Race all endpoints; resolve with first successful response
+  const raceOverpass = (query, cats, timeoutMs) => new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(new DOMException('Aborted', 'AbortError'));
     const controllers = [];
-    const fetchPromises = urls.map(url => new Promise(async (resolve, reject) => {
-      if (signal?.aborted) return reject(new DOMException('Aborted', 'AbortError'));
-      const localController = new AbortController();
-      controllers.push(localController);
-      const onParentAbort = () => localController.abort();
-      if (signal) signal.addEventListener('abort', onParentAbort);
-      const timeoutId = setTimeout(() => localController.abort(), 25000);
+    const promises = urls.map(url => new Promise(async (res, rej) => {
+      const ctrl = new AbortController();
+      controllers.push(ctrl);
+      const onAbort = () => ctrl.abort();
+      if (signal) signal.addEventListener('abort', onAbort);
+      const tid = setTimeout(() => ctrl.abort(), timeoutMs);
       try {
-        const res = await fetch(url, {
-          method: 'POST', body: query,
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          signal: localController.signal
-        });
-        clearTimeout(timeoutId);
-        if (signal) signal.removeEventListener('abort', onParentAbort);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.elements) {
-            for (const el of json.elements) overpassCache.elements.set(el.id, el);
-          }
-          overpassCache.queries.push({ south: qSouth, west: qWest, north: qNorth, east: qEast, categories: new Set(uncachedCats) });
+        const r = await fetch(url, { method: 'POST', body: query, headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctrl.signal });
+        clearTimeout(tid);
+        if (signal) signal.removeEventListener('abort', onAbort);
+        if (r.ok) {
+          const json = await r.json();
+          if (json.elements) for (const el of json.elements) overpassCache.elements.set(el.id, el);
+          overpassCache.queries.push({ south: qSouth, west: qWest, north: qNorth, east: qEast, categories: new Set(cats) });
           persistCache();
-          const filteredElements = (json.elements || []).filter(el => {
-            const elLat = el.lat ?? el.center?.lat;
-            const elLon = el.lon ?? el.center?.lon;
-            return elLat >= south && elLat <= north && elLon >= west && elLon <= east;
-          });
-          resolve({ elements: filteredElements });
-        } else {
-          reject(new Error(`Overpass status ${res.status} for ${url}`));
-        }
-      } catch (err) {
-        clearTimeout(timeoutId);
-        if (signal) signal.removeEventListener('abort', onParentAbort);
-        if (signal?.aborted) return reject(new DOMException('Aborted', 'AbortError'));
-        reject(err);
+          res(json.elements || []);
+        } else { rej(new Error(`${r.status}`)); }
+      } catch (e) {
+        clearTimeout(tid);
+        if (signal) signal.removeEventListener('abort', onAbort);
+        rej(e);
       }
     }));
+    Promise.any(promises)
+      .then(els => { for (const c of controllers) c.abort(); resolve(els); })
+      .catch(err => { for (const c of controllers) c.abort(); reject(err); });
+  });
 
-    try {
-      const result = await Promise.any(fetchPromises);
-      for (const ctrl of controllers) ctrl.abort();
-      return result;
-    } catch (err) {
-      for (const ctrl of controllers) ctrl.abort();
-      throw err || new Error('All Overpass servers failed');
-    }
+  const fetchPromise = (async () => {
+    const allLines = [...nwLines, ...nwrLines];
+    if (allLines.length === 0) return { elements: [] };
+    // Single combined query: nw for point categories + nwr for area categories.
+    // One request avoids the 4-connection overload that caused nw to time out.
+    const q = `[out:json][timeout:30];\n(\n${allLines.join('\n')}\n);\nout center tags;`;
+    const els = await raceOverpass(q, uncachedCats, 28000).then(filterToView).catch(() => []);
+    return { elements: els };
   })();
 
   return { elements: getCachedElements(), isFresh: false, fetchPromise };

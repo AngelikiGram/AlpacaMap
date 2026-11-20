@@ -142,25 +142,31 @@ export const ENTITY_PROFILES = {
 };
 
 export const INITIAL_TRIP = {
-  title: 'Euro Trip 2026',
+  title: 'Grand European Tour 2026',
   locations: [
-    { id: 1, name: 'Paris, France',       coords: [48.8566, 2.3522], zoomLevel: 14, places: [{ id: 101, name: 'Louvre Museum', type: 'museum', coords: [48.8606, 2.3376] }], recommendations: [] },
-    { id: 2, name: 'Zurich, Switzerland', coords: [47.3769, 8.5417], zoomLevel: 14, places: [], recommendations: [] },
+    { id: 1, name: 'London, United Kingdom', coords: [51.5074, -0.1278], zoomLevel: 13, places: [{ id: 100, name: 'British Museum', type: 'museum', coords: [51.5194, -0.1270] }], recommendations: [] },
+    { id: 2, name: 'Paris, France',          coords: [48.8566, 2.3522],  zoomLevel: 13, places: [{ id: 101, name: 'Louvre Museum', type: 'museum', coords: [48.8606, 2.3376] }], recommendations: [] },
+    { id: 3, name: 'Zurich, Switzerland',    coords: [47.3769, 8.5417],  zoomLevel: 13, places: [{ id: 102, name: 'Grossmünster', type: 'sight', coords: [47.3700, 8.5439] }], recommendations: [] },
+    { id: 4, name: 'Edinburgh, United Kingdom', coords: [55.9533, -3.1883], zoomLevel: 13, places: [{ id: 103, name: 'Edinburgh Castle', type: 'sight', coords: [55.9486, -3.1999] }], recommendations: [] },
   ],
-  routes: [{ id: 101, from: 1, to: 2, mode: 'train', path: [[48.8566, 2.3522], [47.3769, 8.5417]] }],
+  routes: [
+    { id: 101, from: 1, to: 2, mode: 'train',  path: [[51.5074, -0.1278], [48.8566, 2.3522]] },
+    { id: 102, from: 2, to: 3, mode: 'train',  path: [[48.8566, 2.3522], [47.3769, 8.5417]] },
+    { id: 103, from: 3, to: 4, mode: 'flight', path: [[47.3769, 8.5417], [55.9533, -3.1883]] }
+  ],
   itinerary: [
-    { id: 1, date: '2026-09-10', location: 'Paris',  events: [{ id: 11, time: '10:00', title: 'Flight Arrival CDG', type: 'flight' }] },
-    { id: 2, date: '2026-09-11', location: 'Paris',  events: [{ id: 12, time: '09:00', title: 'Louvre Museum', type: 'activity' }] },
-    { id: 3, date: '2026-09-12', location: 'Paris',  events: [] },
-    { id: 4, date: '2026-09-13', location: 'Zurich', events: [{ id: 13, time: '08:30', title: 'Train to Zurich', type: 'train' }, { id: 14, time: '14:00', title: 'Hotel check-in', type: 'hotel' }] },
+    { id: 1, date: '2026-09-10', location: 'London, United Kingdom',    events: [{ id: 11, time: '09:00', title: 'LHR Arrival & Check-in', type: 'flight' }, { id: 12, time: '14:00', title: 'British Museum visit', type: 'activity' }] },
+    { id: 2, date: '2026-09-11', location: 'Paris, France',             events: [{ id: 13, time: '08:00', title: 'Eurostar to Paris Gare du Nord', type: 'train' }, { id: 14, time: '15:00', title: 'Louvre Museum tour', type: 'activity' }] },
+    { id: 3, date: '2026-09-12', location: 'Zurich, Switzerland',       events: [{ id: 15, time: '09:30', title: 'TGV Lyria Train to Zurich HB', type: 'train' }, { id: 16, time: '17:00', title: 'Grossmünster & Limmat walk', type: 'activity' }] },
+    { id: 4, date: '2026-09-13', location: 'Edinburgh, United Kingdom',  events: [{ id: 17, time: '11:00', title: 'Flight LX824 to Edinburgh', type: 'flight' }, { id: 18, time: '16:00', title: 'Edinburgh Castle tour', type: 'activity' }] },
   ],
   notes: { general: 'Remember universal adapters.\nCall bank to authorize cards for Europe.', cities: {} },
   documents: { flights: [], trains: [], hotels: [], leisure: [] },
   budget: {
-    total: 3000, currency: 'EUR',
+    total: 5000, currency: 'EUR',
     expenses: [
-      { id: 1, name: 'Return Flights',     amount: 450, category: 'transport',     city: 'Paris, France' },
-      { id: 2, name: 'Hotel Paris (3n)',   amount: 320, category: 'accommodation', city: 'Paris, France' },
+      { id: 1, name: 'Flights & Rail Passes', amount: 850,  category: 'transport',     city: 'London, United Kingdom' },
+      { id: 2, name: 'Hotels (All Cities)',   amount: 1200, category: 'accommodation', city: 'Paris, France' },
     ],
   },
   packing: [

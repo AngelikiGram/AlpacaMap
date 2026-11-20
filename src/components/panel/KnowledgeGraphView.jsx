@@ -3,6 +3,77 @@ import { createPortal } from 'react-dom';
 import ForceGraph2D from 'react-force-graph-2d';
 import { X, ExternalLink, Maximize2 } from 'lucide-react';
 
+// Smart client-side AI/NLP key-phrase extractor to summarize travel claims cleanly on the map/graph
+function summarizeClaim(str) {
+  if (!str) return '';
+  
+  // 1. Clean up common wiki notation, symbols, list items, quotes
+  let clean = str.replace(/^[\s*"'•\-[-]+|[\s"'\]\-\:]+$/g, '').trim();
+  
+  // 2. Remove common filler phrases / introductory boilerplates case-insensitively
+  const boilerplates = [
+    /^(?:note|remember|please note|keep in mind|be aware|make sure|be sure|don't forget|it is worth noting|it's worth noting|it is recommended|highly recommended|for those looking for|for those looking to|good to know|the fact that)\s+(?:that|to|for|about)?\s*/i,
+    /^(?:there are|there is|this is|you can|you should|we recommend|visitors should|visitors can)\s+/i,
+    /^(?:the|a|an)\s+/i
+  ];
+  
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const pattern of boilerplates) {
+      const next = clean.replace(pattern, '');
+      if (next !== clean) {
+        clean = next;
+        changed = true;
+      }
+    }
+  }
+  
+  // 3. Match specific key travel terms and map to concise summaries if present (AI intent extraction)
+  const lower = clean.toLowerCase();
+  if (lower.includes('card-only') || lower.includes('only cards') || lower.includes('no cash')) {
+    return 'Card-only Payments';
+  }
+  if (lower.includes('cash only') || lower.includes('no cards') || lower.includes('only cash')) {
+    return 'Cash Only Required';
+  }
+  if (lower.includes('free entry') || lower.includes('free admission') || lower.includes('free to visit') || lower.includes('free of charge')) {
+    return 'Free Admission';
+  }
+  if (lower.includes('closed on') || lower.includes('closes on')) {
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const foundDay = days.find(d => lower.includes(d));
+    return `Closed ${foundDay ? foundDay.charAt(0).toUpperCase() + foundDay.slice(1) + 's' : 'Days'}`;
+  }
+  if (lower.includes('very busy') || lower.includes('extremely busy') || lower.includes('crowded')) {
+    if (lower.includes('weekend')) return 'Crowded Weekends';
+    if (lower.includes('morning')) return 'Crowded Mornings';
+    if (lower.includes('rush hour')) return 'Rush Hour Crowds';
+    return 'Highly Crowded';
+  }
+  if (lower.includes('book in advance') || lower.includes('booking in advance') || lower.includes('pre-book') || lower.includes('buy tickets online')) {
+    return 'Pre-booking Required';
+  }
+  if (lower.includes('underground') || lower.includes('tube station') || lower.includes('metro station')) {
+    if (lower.includes('closed')) return 'Tube Station Closed';
+    if (lower.includes('busy')) return 'Busy Tube Hub';
+    return 'Tube Station Info';
+  }
+
+  // Capitalize first letter
+  clean = clean.charAt(0).toUpperCase() + clean.slice(1);
+  
+  // 4. Truncate to word boundary (max 28 characters)
+  const maxLen = 28;
+  if (clean.length <= maxLen) return clean;
+  
+  const cutIdx = clean.lastIndexOf(' ', maxLen);
+  if (cutIdx > 8) {
+    return clean.slice(0, cutIdx) + '…';
+  }
+  return clean.slice(0, maxLen - 1) + '…';
+}
+
 // Build graph — savedPos pins existing nodes so expanding one place doesn't shuffle everything else
 function buildGraphData(claims, city, expandedPlaces, showAllClaims, savedPos = {}) {
   const nodes = [];
@@ -45,10 +116,15 @@ function buildGraphData(claims, city, expandedPlaces, showAllClaims, savedPos = 
     if (!seenPlaces.has(placeId)) {
       seenPlaces.add(placeId);
       const ps = savedPos[placeId];
+      const sInfo = placeSentiments[placeId] || { pos: 0, neg: 0 };
+      const posRatio = cnt > 0 ? sInfo.pos / cnt : 0.5;
+      const sentimentColor = posRatio > 0.6 ? '#10b981' : (posRatio < 0.3 ? '#f97316' : '#38bdf8');
+      
       nodes.push({
         id: placeId, label: placeName, type: 'place',
-        color: isContested ? '#fb923c' : '#38bdf8',
-        size: Math.min(9, 4 + Math.sqrt(cnt)), claimCount: cnt, isExpanded, isContested,
+        color: isContested ? '#fb923c' : sentimentColor,
+        sentimentColor,
+        size: Math.min(9, 4.5 + Math.sqrt(cnt) * 0.8), claimCount: cnt, isExpanded, isContested,
         x: ps?.x, y: ps?.y, fx: ps?.x, fy: ps?.y,
       });
       links.push({
@@ -60,14 +136,17 @@ function buildGraphData(claims, city, expandedPlaces, showAllClaims, savedPos = 
 
     if (isExpanded) {
       const sentiment = claim.evaluation?.sentiment || 'neutral';
-      const claimColor = sentiment === 'positive' ? '#6366f1' : sentiment === 'negative' ? '#f97316' : '#a1a1aa';
-      const edgeColor = sentiment === 'positive' ? 'rgba(99,102,241,0.4)' : sentiment === 'negative' ? 'rgba(249,115,22,0.4)' : 'rgba(161,161,170,0.2)';
+      const claimColor = sentiment === 'positive' ? '#10b981' : sentiment === 'negative' ? '#ef4444' : '#a1a1aa';
+      const edgeColor = sentiment === 'positive' ? 'rgba(16,185,129,0.3)' : sentiment === 'negative' ? 'rgba(239,68,68,0.3)' : 'rgba(161,161,170,0.18)';
       const relType = sentiment === 'positive' ? 'supports' : sentiment === 'negative' ? 'criticizes' : 'neutral';
       const ps = savedPos[placeId];
       const angle = Math.random() * 2 * Math.PI;
-      const dist = 45 + Math.random() * 25;
+      const dist = 8 + Math.random() * 5;
+      const cred = typeof claim.credibility === 'number' ? claim.credibility : 0.55;
+      const claimSize = 1.6 + cred * 2.8; // size represents credibility
+      
       nodes.push({
-        id: claim.id, label: claim.claim, type: 'claim', color: claimColor, size: 3.5, claim,
+        id: claim.id, label: claim.claim, type: 'claim', color: claimColor, size: claimSize, claim, sentiment,
         x: ps ? ps.x + Math.cos(angle) * dist : undefined,
         y: ps ? ps.y + Math.sin(angle) * dist : undefined,
       });
@@ -80,9 +159,14 @@ function buildGraphData(claims, city, expandedPlaces, showAllClaims, savedPos = 
         seenPlaces.add(nextId);
         const cnt2 = claimCount[nextId] || 1;
         const ns = savedPos[nextId];
+        const sInfo2 = placeSentiments[nextId] || { pos: 0, neg: 0 };
+        const posRatio2 = cnt2 > 0 ? sInfo2.pos / cnt2 : 0.5;
+        const sentimentColor2 = posRatio2 > 0.6 ? '#10b981' : (posRatio2 < 0.3 ? '#f97316' : '#38bdf8');
+        
         nodes.push({
-          id: nextId, label: claim.nextPlace, type: 'place', color: '#38bdf8',
-          size: Math.min(9, 4 + Math.sqrt(cnt2)), claimCount: cnt2,
+          id: nextId, label: claim.nextPlace, type: 'place', color: sentimentColor2,
+          sentimentColor: sentimentColor2,
+          size: Math.min(9, 4.5 + Math.sqrt(cnt2) * 0.8), claimCount: cnt2,
           isExpanded: showAllClaims || expandedPlaces.has(nextId),
           x: ns?.x, y: ns?.y, fx: ns?.x, fy: ns?.y,
         });
@@ -191,21 +275,35 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
   // Keep ref in sync so snapshotPositions/releaseAllPins always read live D3-modified nodes
   graphDataRef.current = graphData;
 
-  // Configure D3 forces for better space utilization
+  // Configure D3 forces for better space utilization (tighter coordinates)
   const configureForces = useCallback((fg, isExpanded = false) => {
     if (!fg) return;
-    const charge = isExpanded ? -700 : -450;
-    const hubDist = isExpanded ? 260 : 180;
-    const claimDist = isExpanded ? 110 : 75;
+    // If showAllClaims is on, there are way too many nodes. We must significantly reduce the repulsion (charge)
+    // and pull links tighter so everything fits on the screen cleanly without flying apart.
+    const charge = showAllClaims 
+      ? (isExpanded ? -65 : -45) 
+      : (isExpanded ? -120 : -80);
+
+    const hubDist = showAllClaims
+      ? (isExpanded ? 35 : 24)
+      : (isExpanded ? 64 : 42);
+
+    const claimDist = showAllClaims
+      ? (isExpanded ? 8 : 6)
+      : (isExpanded ? 13 : 9);
+
     fg.d3Force('charge').strength(charge);
-    fg.d3Force('link').distance(link => {
-      if (link.isSequence) return isExpanded ? 180 : 110;
-      if (link.source?.id === 'city-hub' || link.target?.id === 'city-hub') return hubDist;
-      return claimDist;
-    });
-    // Remove the default center force to let nodes spread freely
-    fg.d3Force('center', null);
-  }, []);
+    fg.d3Force('link')
+      .distance(link => {
+        if (link.isSequence) return showAllClaims ? (isExpanded ? 28 : 20) : (isExpanded ? 52 : 38);
+        if (link.source?.id === 'city-hub' || link.target?.id === 'city-hub') return hubDist;
+        return claimDist;
+      })
+      .strength(link => {
+        if (link.source?.id === 'city-hub' || link.target?.id === 'city-hub') return 0.75;
+        return 1.0;
+      });
+  }, [showAllClaims]);
 
   useEffect(() => { configureForces(fgRef.current, false); }, [graphData, configureForces]);
   useEffect(() => { configureForces(expandedFgRef.current, true); }, [expanded, configureForces]);
@@ -230,19 +328,21 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
     if (node.type === 'place') {
       // Snapshot positions BEFORE graphData changes — pins existing nodes in place
       snapshotPositions();
+      const isAlreadySelected = selectedPlace?.id === node.id;
       setExpandedPlaces(prev => {
         const next = new Set(prev);
         if (next.has(node.id)) next.delete(node.id);
         else next.add(node.id);
         return next;
       });
-      setSelectedPlace(node);
+      setSelectedPlace(isAlreadySelected ? null : node);
       setSelectedClaim(null);
     } else if (node.type === 'claim' && node.claim) {
-      setSelectedClaim(node.claim);
+      const isAlreadySelected = selectedClaim?.id === node.claim.id;
+      setSelectedClaim(isAlreadySelected ? null : node.claim);
       setSelectedPlace(null);
     }
-  }, [snapshotPositions]);
+  }, [snapshotPositions, selectedPlace, selectedClaim]);
 
   // Search: zoom to first matching node (debounced)
   useEffect(() => {
@@ -291,6 +391,7 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
 
   // Canvas renderer — uses refs so it never causes graph re-mount
   const nodeCanvasObject = useCallback((node, ctx, globalScale) => {
+    if (node.x == null || node.y == null || isNaN(node.x) || isNaN(node.y)) return;
     const sq = graphSearchRef.current;
     const isSearchActive = sq.length > 0;
     const isMatch = !isSearchActive || node.label.toLowerCase().includes(sq.toLowerCase());
@@ -298,44 +399,100 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
 
     const size = node.size || 4;
 
-    // glow behind hubs
+    // A. Node Glow backdrops
     if (node.type === 'city') {
-      ctx.beginPath(); ctx.arc(node.x, node.y, size + 4, 0, 2 * Math.PI);
-      ctx.fillStyle = 'rgba(192,132,252,0.12)'; ctx.fill();
+      const grad = ctx.createRadialGradient(node.x, node.y, 1, node.x, node.y, size + 6);
+      grad.addColorStop(0, 'rgba(192,132,252,0.3)');
+      grad.addColorStop(1, 'rgba(192,132,252,0)');
+      ctx.beginPath(); ctx.arc(node.x, node.y, size + 6, 0, 2 * Math.PI);
+      ctx.fillStyle = grad; ctx.fill();
     } else if (node.type === 'place') {
-      ctx.beginPath(); ctx.arc(node.x, node.y, size + 3, 0, 2 * Math.PI);
-      ctx.fillStyle = node.isExpanded ? 'rgba(240,171,252,0.15)' : 'rgba(56,189,248,0.1)';
-      ctx.fill();
+      const grad = ctx.createRadialGradient(node.x, node.y, 1, node.x, node.y, size + 4);
+      const col = node.isExpanded ? '240,171,252' : (node.isContested ? '251,146,60' : '56,189,248');
+      grad.addColorStop(0, `rgba(${col},0.24)`);
+      grad.addColorStop(1, `rgba(${col},0)`);
+      ctx.beginPath(); ctx.arc(node.x, node.y, size + 4, 0, 2 * Math.PI);
+      ctx.fillStyle = grad; ctx.fill();
     }
 
-    // main circle
+    // B. Main node body (clean flat look)
+    const bodyColor = node.color;
+
     ctx.beginPath(); ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
-    ctx.fillStyle = node.isExpanded && node.type === 'place' ? '#f0abfc' : node.color;
+    ctx.fillStyle = bodyColor;
     ctx.fill();
 
-    // border for hubs
+    // Node outer stroke rings
     if (node.type === 'city' || node.type === 'place') {
-      ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.2 / globalScale; ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.72)';
+      ctx.lineWidth = 1.4 / globalScale;
+      ctx.stroke();
     }
 
-    // search-match highlight ring
+    // Search matches
     if (isMatch && isSearchActive && (node.type === 'place' || node.type === 'city')) {
-      ctx.beginPath(); ctx.arc(node.x, node.y, size + 2.5, 0, 2 * Math.PI);
-      ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2 / globalScale; ctx.stroke();
+      ctx.beginPath(); ctx.arc(node.x, node.y, size + 3, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 2.2 / globalScale;
+      ctx.stroke();
     }
 
-    // labels
-    const showLabel = node.type === 'city' || node.type === 'place' || globalScale > 2.8;
+    // C. Label pills
+    const showLabel = node.type === 'city' || node.type === 'place' || globalScale > 2.2;
     if (showLabel) {
-      const label = (node.label || '').slice(0, 24);
-      const fontSize = node.type === 'city' ? 11 / globalScale : node.type === 'place' ? 8.5 / globalScale : 6 / globalScale;
+      const label = node.type === 'claim' ? summarizeClaim(node.label) : (node.label || '').slice(0, 24);
+      // Simulation-space font sizes (scale naturally with D3 zoom)
+      const fontSize = node.type === 'city' ? 5.2 : node.type === 'place' ? 3.8 : 2.8;
       ctx.font = `${node.type === 'city' ? 'bold ' : ''}${fontSize}px Inter, sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       const tw = ctx.measureText(label).width;
-      ctx.fillStyle = 'rgba(9,9,11,0.78)';
-      ctx.fillRect(node.x - tw / 2 - 2, node.y - size - fontSize - 3, tw + 4, fontSize + 3);
+      
+      const padX = 1.6;
+      const padY = 0.8;
+      const rectW = tw + padX * 2;
+      const rectH = fontSize + padY * 2;
+      const rx = node.x - rectW / 2;
+      const ry = node.y - size - rectH - 1.2;
+      const radius = 1.0;
+
+      // Draw premium rounded pill in simulation-space
+      ctx.beginPath();
+      ctx.moveTo(rx + radius, ry);
+      ctx.lineTo(rx + rectW - radius, ry);
+      ctx.quadraticCurveTo(rx + rectW, ry, rx + rectW, ry + radius);
+      ctx.lineTo(rx + rectW, ry + rectH - radius);
+      ctx.quadraticCurveTo(rx + rectW, ry + rectH, rx + rectW - radius, ry + rectH);
+      ctx.lineTo(rx + radius, ry + rectH);
+      ctx.quadraticCurveTo(rx, ry + rectH, rx, ry + rectH - radius);
+      ctx.lineTo(rx, ry + radius);
+      ctx.quadraticCurveTo(rx, ry, rx + radius, ry);
+      ctx.closePath();
+      
+      ctx.fillStyle = 'rgba(10, 10, 18, 0.76)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 0.35;
+      ctx.stroke();
+
+      // Label text
       ctx.fillStyle = node.type === 'city' ? '#e9d5ff' : node.type === 'place' ? (node.isExpanded ? '#f5d0fe' : '#e0f2fe') : '#e4e4e7';
-      ctx.fillText(label, node.x, node.y - size - 4);
+      ctx.fillText(label, node.x, ry + rectH / 2);
+    }
+
+    // D. Internal Node Value Encodings (Smarter Visuals)
+    if (node.type === 'place' && node.claimCount > 0 && size >= 5.2) {
+      // Draw total claim count directly inside the place node
+      ctx.font = `800 ${size * 0.9}px Inter, sans-serif`;
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(node.claimCount, node.x, node.y);
+    } else if (node.type === 'claim' && node.sentiment && size >= 2.5) {
+      // Draw sentiment indicators inside claim nodes
+      ctx.font = `800 ${size * 0.9}px Inter, sans-serif`;
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const sym = node.sentiment === 'positive' ? '✓' : (node.sentiment === 'negative' ? '!' : '•');
+      ctx.fillText(sym, node.x, node.y);
     }
 
     ctx.globalAlpha = 1;
@@ -348,7 +505,23 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
     nodeLabel: generateTooltip,
     nodeVal: n => n.size,
     onNodeClick: handleNodeClick,
-    linkColor: l => l.color || 'rgba(255,255,255,0.07)',
+    onBackgroundClick: () => {
+      setSelectedPlace(null);
+      setSelectedClaim(null);
+    },
+    linkColor: l => {
+      if (expanded) {
+        if (l.isSequence) return '#fb7185';
+        if (l.relType === 'supports') return 'rgba(99,102,241,0.22)';
+        if (l.relType === 'criticizes') return 'rgba(249,115,22,0.22)';
+        return 'rgba(15, 23, 42, 0.07)';
+      } else {
+        if (l.isSequence) return '#fb7185';
+        if (l.relType === 'supports') return 'rgba(99,102,241,0.3)';
+        if (l.relType === 'criticizes') return 'rgba(249,115,22,0.3)';
+        return 'rgba(255,255,255,0.06)';
+      }
+    },
     linkWidth: l => l.isSequence ? 2 : 1,
     linkDirectionalParticles: l => l.isSequence ? 3 : 0,
     linkDirectionalParticleSpeed: 0.007,
@@ -361,24 +534,40 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
   return (
     <div ref={containerRef} style={{ width: '100%', height: '450px', background: '#09090b', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden', position: 'relative' }}>
       {/* Legend */}
-      <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, background: 'rgba(0,0,0,0.7)', padding: '7px 11px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', pointerEvents: 'none' }}>
-        <div style={{ fontSize: '0.56rem', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '5px' }}>Nodes</div>
-        {[['#c084fc','City Hub'], ['#38bdf8','Place'], ['#fb923c','Contested Place'], ['#f0abfc','Place (expanded)'], ['#6366f1','Positive'], ['#f97316','Negative'], ['#a1a1aa','Neutral']].map(([c, l]) => (
-          <div key={l} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.59rem', color: '#e4e4e7', marginBottom: '2px' }}>
-            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: c, flexShrink: 0 }}/>{l}
+      <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, background: 'rgba(0,0,0,0.85)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', pointerEvents: 'none', width: '265px', fontFamily: 'Inter,sans-serif' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#e4e4e7', marginBottom: '4px' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#38bdf8', flexShrink: 0 }}/>
+          <strong>Places</strong> (Colored by sentiment)
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#e4e4e7', marginBottom: '6px', whiteSpace: 'nowrap' }}>
+          <div style={{ display: 'flex', gap: '2px', alignItems: 'center', flexShrink: 0 }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}/>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444' }}/>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#a1a1aa' }}/>
           </div>
-        ))}
-        <div style={{ fontSize: '0.56rem', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '6px 0 4px' }}>Edges</div>
-        {[
-          ['rgba(99,102,241,0.7)', 'supports (positive)'],
-          ['rgba(249,115,22,0.7)', 'criticizes (negative)'],
-          ['rgba(251,146,60,0.7)', 'contested'],
-          ['#fb7185', 'visit sequence'],
-        ].map(([c, l]) => (
-          <div key={l} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.59rem', color: '#e4e4e7', marginBottom: '2px' }}>
-            <span style={{ width: '16px', height: '2px', background: c, flexShrink: 0, borderRadius: '1px' }}/>{l}
-          </div>
-        ))}
+          <strong style={{ marginLeft: '2px' }}>Claims:</strong> ✓ Pos / ! Neg / • Neu
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#e4e4e7', marginBottom: '3px' }}>
+          <span style={{ width: '14px', height: '2px', background: 'rgba(99,102,241,0.85)', flexShrink: 0 }}/>
+          <strong>Indigo Edge:</strong> Positive claim link
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#e4e4e7', marginBottom: '3px' }}>
+          <span style={{ width: '14px', height: '2px', background: 'rgba(249,115,22,0.85)', flexShrink: 0 }}/>
+          <strong>Orange Edge:</strong> Negative/Caution link
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#e4e4e7', marginBottom: '3px' }}>
+          <span style={{ width: '14px', height: '2px', background: 'rgba(255,255,255,0.22)', flexShrink: 0 }}/>
+          <strong>Grey Edge:</strong> Neutral/Hub link
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#e4e4e7', marginBottom: '4px' }}>
+          <span style={{ width: '14px', height: '2px', background: '#fb7185', flexShrink: 0 }}/>
+          <strong>Route Sequence Edge</strong>
+        </div>
+        <div style={{ fontSize: '0.52rem', color: '#a1a1aa', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '8px', paddingTop: '6px' }}>
+          <span style={{ fontWeight: 'bold', color: '#38bdf8' }}>All Claims Mode:</span>
+          <div style={{ marginTop: '2px' }}>• OFF: Click place to expand claims</div>
+          <div>• ON: Show all claims on graph</div>
+        </div>
       </div>
 
       {/* Controls (top-right) */}
@@ -446,26 +635,69 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
 
       {/* ── Fullscreen expanded modal ── */}
       {expanded && createPortal(
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(2,3,12,0.98)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
-            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', fontFamily: 'Inter,sans-serif' }}>
-              Force Graph · <strong style={{ color: '#38bdf8' }}>{placeCount}</strong> places · <strong style={{ color: '#818cf8' }}>{claims.length}</strong> claims — {city}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderBottom: '1px solid #e4e4e7', background: '#ffffff', flexShrink: 0 }}>
+            <span style={{ fontSize: '0.78rem', color: '#475569', fontFamily: 'Inter,sans-serif' }}>
+              Force Graph · <strong style={{ color: '#0ea5e9' }}>{placeCount}</strong> places · <strong style={{ color: '#6366f1' }}>{claims.length}</strong> claims — {city}
             </span>
             <input value={expandedSearch} onChange={e => setExpandedSearch(e.target.value)}
               placeholder="🔍 Find node…"
-              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '7px', padding: '4px 10px', fontSize: '0.68rem', color: 'rgba(255,255,255,0.75)', outline: 'none', width: '180px', fontFamily: 'Inter,sans-serif' }}/>
+              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '7px', padding: '4px 10px', fontSize: '0.68rem', color: '#1e293b', outline: 'none', width: '180px', fontFamily: 'Inter,sans-serif' }}/>
             <button onClick={() => setShowAllClaims(s => !s)}
-              style={{ background: showAllClaims ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.07)', border: `1px solid ${showAllClaims ? 'rgba(99,102,241,0.38)' : 'rgba(255,255,255,0.14)'}`, borderRadius: '6px', color: showAllClaims ? '#818cf8' : 'rgba(255,255,255,0.45)', cursor: 'pointer', padding: '4px 10px', fontSize: '0.65rem', fontFamily: 'Inter,sans-serif' }}>
+              style={{ background: showAllClaims ? 'rgba(99,102,241,0.12)' : '#f1f5f9', border: `1px solid ${showAllClaims ? '#818cf8' : '#cbd5e1'}`, borderRadius: '6px', color: showAllClaims ? '#4f46e5' : '#475569', cursor: 'pointer', padding: '4px 10px', fontSize: '0.65rem', fontFamily: 'Inter,sans-serif' }}>
               {showAllClaims ? '⬤ All claims on' : '○ All claims off'}
             </button>
             <div style={{ flex: 1 }}/>
-            <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)', fontFamily: 'Inter,sans-serif' }}>Scroll=zoom · Drag=pan · Click place=expand</span>
-            <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)', fontFamily: 'Inter,sans-serif' }}>Esc to close</span>
-            <button onClick={() => setExpanded(false)} style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '6px', color: 'rgba(255,255,255,0.55)', cursor: 'pointer', padding: '4px 12px', fontSize: '0.7rem', fontFamily: 'Inter,sans-serif' }}>✕ Close</button>
+            <span style={{ fontSize: '0.62rem', color: '#64748b', fontFamily: 'Inter,sans-serif' }}>Scroll=zoom · Drag=pan · Click place=expand · Esc to close</span>
+            <button onClick={() => setExpanded(false)} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#475569', cursor: 'pointer', padding: '4px 12px', fontSize: '0.7rem', fontFamily: 'Inter,sans-serif' }}>✕ Close</button>
           </div>
-          <div style={{ flex: 1, background: '#09090b', position: 'relative' }}>
+          
+          {/* Main Visualizer Area */}
+          <div style={{ flex: 1, background: '#ffffff', position: 'relative' }}>
+            {/* Light Theme Legend */}
+            <div style={{ position: 'absolute', top: '15px', left: '15px', zIndex: 10, background: 'rgba(255,255,255,0.92)', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', pointerEvents: 'none', width: '265px', fontFamily: 'Inter,sans-serif' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#334155', marginBottom: '4px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#38bdf8', flexShrink: 0 }}/>
+                <strong>Places</strong> (Colored by sentiment)
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#334155', marginBottom: '6px', whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', gap: '2px', alignItems: 'center', flexShrink: 0 }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}/>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444' }}/>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#a1a1aa' }}/>
+                </div>
+                <strong style={{ marginLeft: '2px' }}>Claims:</strong> ✓ Pos / ! Neg / • Neu
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#334155', marginBottom: '3px' }}>
+                <span style={{ width: '14px', height: '2px', background: 'rgba(99,102,241,0.85)', flexShrink: 0 }}/>
+                <strong>Indigo Edge:</strong> Positive claim link
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#334155', marginBottom: '3px' }}>
+                <span style={{ width: '14px', height: '2px', background: 'rgba(249,115,22,0.85)', flexShrink: 0 }}/>
+                <strong>Orange Edge:</strong> Negative/Caution link
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#334155', marginBottom: '3px' }}>
+                <span style={{ width: '14px', height: '2px', background: 'rgba(15, 23, 42, 0.22)', flexShrink: 0 }}/>
+                <strong>Grey Edge:</strong> Neutral/Hub link
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#334155', marginBottom: '4px' }}>
+                <span style={{ width: '14px', height: '2px', background: '#fb7185', flexShrink: 0 }}/>
+                <strong>Route Sequence Edge</strong>
+              </div>
+              <div style={{ fontSize: '0.55rem', color: '#64748b', borderTop: '1px solid #e2e8f0', marginTop: '8px', paddingTop: '6px' }}>
+                <span style={{ fontWeight: 'bold', color: '#0ea5e9' }}>All Claims Mode:</span>
+                <div style={{ marginTop: '2px' }}>• OFF: Click place to expand claims</div>
+                <div>• ON: Show all claims on graph</div>
+              </div>
+            </div>
+
             <ForceGraph2D ref={expandedFgRef} graphData={graphData} width={expandedDims.w} height={expandedDims.h} {...sharedProps} cooldownTicks={80} d3AlphaDecay={0.04} d3VelocityDecay={0.4} onEngineStop={releaseAllPins}/>
-            <ClaimCard claim={selectedClaim} onClose={() => setSelectedClaim(null)} onNavigate={resolvePlaceNav}/>
+            
+            {/* Claim details card overlay */}
+            <div style={{ zIndex: 20, position: 'absolute', bottom: '0', left: '0', right: '0' }}>
+              <ClaimCard claim={selectedClaim} onClose={() => setSelectedClaim(null)} onNavigate={resolvePlaceNav}/>
+            </div>
           </div>
         </div>,
         document.body

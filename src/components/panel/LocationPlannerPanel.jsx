@@ -5,11 +5,11 @@ import { renderToString } from 'react-dom/server';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, ZoomControl, Polyline, Circle, Polygon, ScaleControl, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 
-import { Navigation, MapPin, Calendar as CalendarIcon, Search, Compass, ChevronRight, FileText, Plus, ArrowLeft, Trash2, Loader2, SlidersHorizontal, X, Info, Upload, BookOpen, ExternalLink, ChevronDown, ChevronUp, DollarSign, Package, Check, Pencil, Layers, FolderOpen, Save, Clock, Phone, Globe, Accessibility, Utensils, Coffee, Landmark, TreePine, ShoppingBag, Camera, MountainSnow, Tent, Castle, Plane, Train, Bed, Activity, Bus, Ship, CreditCard, Droplets, Car, Moon, Satellite, Eye, Sparkles } from 'lucide-react';
+import { Navigation, MapPin, Calendar as CalendarIcon, Search, Compass, ChevronRight, FileText, Plus, ArrowLeft, Trash2, Loader2, SlidersHorizontal, X, Info, Upload, BookOpen, ExternalLink, ChevronDown, ChevronUp, DollarSign, Package, Check, Pencil, Layers, FolderOpen, Save, Clock, Phone, Globe, Accessibility, Utensils, Coffee, Landmark, TreePine, ShoppingBag, Camera, MountainSnow, Tent, Castle, Plane, Train, Bed, Activity, Bus, Ship, CreditCard, Droplets, Car, Moon, Satellite, Eye, Sparkles, Building } from 'lucide-react';
 
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend } from 'recharts';
 
-import { CITY_PALETTE, getCityColor, MAP_LAYERS, SENTINEL_NONE, getTypeDetails, createDayStopIcon, createGlyphIcon, createCityIcon, classifyWeather, detectOSMCategory, processOverpassResults, scorePlaceQuality, nameSim, semanticDedup, getZoomParams, filterMarkersAdaptive, loadTrips, loadPrefs, saveTrips, savePrefs, detectLocationType, createSearchResultIcon, getAllMapPoints, buildArc, getDistanceKm, INITIAL_TRIP, TRIPS_KEY, PREFS_KEY, TABS, wmoIcon, formatDur, searchOverpass, getCachedElementsInView } from "../../utils.jsx";
+import { CITY_PALETTE, getCityColor, MAP_LAYERS, SENTINEL_NONE, getTypeDetails, createDayStopIcon, createGlyphIcon, createCityIcon, classifyWeather, detectOSMCategory, processOverpassResults, scorePlaceQuality, nameSim, semanticDedup, getZoomParams, filterMarkersAdaptive, loadTrips, loadPrefs, saveTrips, savePrefs, detectLocationType, createSearchResultIcon, getAllMapPoints, buildArc, getDistanceKm, INITIAL_TRIP, TRIPS_KEY, PREFS_KEY, TABS, wmoIcon, formatDur, searchOverpass, getCachedElementsInView, seedOverpassElements } from "../../utils.jsx";
 import { searchNominatim, fetchPlaceImage } from "../../api.js";
 import { OVERPASS_URL, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS, CATEGORY_ZOOM_PRIORITY, SEARCH_KEYWORDS, INTEREST_CATEGORIES, LOCATION_TYPE_PRESETS, EVENT_TYPES, TRANSPORT_ICON, EVT_EMOJI, DOC_SECTIONS, BUDGET_CATEGORIES, PACKING_TEMPLATES, ENTITY_PROFILES } from "../../config.jsx";
 
@@ -137,14 +137,16 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
   const findRecsRef  = useRef(null);
   const panTimerRef  = useRef(null);
   const lastSearchCenterRef = useRef(null);
+  const preloadTimerRef = useRef(null);
   const [cityWeather, setCityWeather] = useState(null);
   const [expandedPlaces, setExpandedPlaces] = useState({});
+  const [catPages, setCatPages] = useState({});  // cat.value → number of pages shown (each page = base limit)
 
-  const isPresetChangeRef = useRef(false);
+  const lastActiveCityIdRef = useRef(null);
 
   useEffect(()=>{
     if(activeCity){
-      isPresetChangeRef.current = true;
+      lastActiveCityIdRef.current = activeCity.id;
       const locType=detectLocationType(activeCity.name);
       const preset=LOCATION_TYPE_PRESETS[locType];
       setAiInterests(preset);
@@ -157,11 +159,15 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
 
   // Re-search when user manually changes interest chips (not triggered by preset-on-city-change)
   useEffect(() => {
-    if (isPresetChangeRef.current) { isPresetChangeRef.current = false; return; }
     if (!activeCity || !mapBounds) return;
+    // If the city just changed, do not run duplicate searches (handled by main load/map bounds effect)
+    if (lastActiveCityIdRef.current !== activeCity.id) {
+      lastActiveCityIdRef.current = activeCity.id;
+      return;
+    }
     lastSearchCenterRef.current = null;
     findRecsRef.current?.();
-  }, [currentInterestsStr]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentInterestsStr, activeCity?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setCityWeather(null);
@@ -172,6 +178,28 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
       .then(d => {
         if (d.daily) setCityWeather(classifyWeather([{code:d.daily.weather_code[0], max:Math.round(d.daily.temperature_2m_max[0])}]));
       }).catch(() => {});
+  }, [activeCity?.id]);
+
+  useEffect(() => {
+    if (!activeCity) return;
+    const slug = activeCity.name.split(',')[0].toLowerCase().replace(/\s+/g, '_');
+    
+    fetch(`./preprocessed/osm_${slug}.json`)
+      .then(r => {
+        if (!r.ok) throw new Error('No fallback file');
+        return r.json();
+      })
+      .then(data => {
+        if (data && Array.isArray(data.elements) && data.elements.length > 0) {
+          console.log(`Seeding ${data.elements.length} offline OSM elements for ${activeCity.name}`);
+          seedOverpassElements(data.elements);
+          // Refresh recommendations list immediately with the newly seeded cached elements
+          findRecsRef.current?.();
+        }
+      })
+      .catch(() => {
+        // Safe to ignore — will fall back to live Overpass query
+      });
   }, [activeCity?.id]);
 
   // Keep latest handleFindRecs accessible without stale closures
@@ -185,12 +213,38 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
   // Initial search when city is first selected and has no results yet
   useEffect(() => {
     if (activeCity && mapBounds && activeCity.recommendations.length === 0) {
-      // Always set a non-null anchor so the pan effect doesn't immediately re-trigger
       const c = mapCenter ?? { lat: activeCity.coords[0], lng: activeCity.coords[1] };
       lastSearchCenterRef.current = { lat: c.lat, lng: c.lng, radius: searchRadius };
       handleFindRecs();
     }
   }, [activeCity?.id, mapBounds != null]);
+
+  // Background preloader — silently fetch ALL categories into cache so Parks/Historic
+  // are instant when the user enables them, without blocking the main search
+  useEffect(() => {
+    clearTimeout(preloadTimerRef.current);
+    if (!activeCity?.coords || !mapBounds) return;
+    preloadTimerRef.current = setTimeout(async () => {
+      const ALL_CATS = Object.keys(OVERPASS_TAGS);
+      const locType = detectLocationType(activeCity.name);
+      const preset = new Set(LOCATION_TYPE_PRESETS[locType] || []);
+      const bgCats = ALL_CATS.filter(c => !preset.has(c)); // categories NOT in the default preset
+      if (bgCats.length === 0) return;
+      const center = mapCenter
+        ? [mapCenter.lat, mapCenter.lng]
+        : activeCity.coords;
+      // Fetch each background category one at a time to avoid hammering Overpass
+      for (const cat of bgCats) {
+        try {
+          const { fetchPromise } = await searchOverpass(center, searchRadius, [cat]);
+          if (fetchPromise) await fetchPromise;
+        } catch { /* silent — background preload failures are OK */ }
+        // Small gap between background requests to be polite to servers
+        await new Promise(r => setTimeout(r, 800));
+      }
+    }, 3000); // wait 3s so the main search completes first
+    return () => clearTimeout(preloadTimerRef.current);
+  }, [activeCity?.id, mapBounds != null]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-search as the map pans to a new area or radius changes (Google Maps style)
   // Note: aiInterests changes do NOT re-query because we always fetch ALL_CATEGORIES;
@@ -200,7 +254,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
     clearTimeout(panTimerRef.current);
     panTimerRef.current = setTimeout(() => {
       const ref = lastSearchCenterRef.current;
-      const moved = !ref || getDistanceKm(mapCenter.lat, mapCenter.lng, ref.lat, ref.lng) > 3.0;
+      const moved = !ref || getDistanceKm(mapCenter.lat, mapCenter.lng, ref.lat, ref.lng) > Math.min(1.5, searchRadius * 0.4);
       const radiusChanged = ref?.radius !== searchRadius;
       if (moved || radiusChanged) {
         lastSearchCenterRef.current = { lat: mapCenter.lat, lng: mapCenter.lng, radius: searchRadius };
@@ -262,8 +316,29 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
     if (reqId !== requestCountRef.current) return;
     if (!results.length) return;
     results.sort((a,b)=>(b._qualityScore||0)-(a._qualityScore||0));
-    const ranked = results.map((item,i)=>({...item,rankNumber:i<5?i+1:null}));
-    setTripData(prev=>({...prev,locations:prev.locations.map(c=>c.id!==activeCity.id?c:{...c,recommendations:ranked,...(rawCount!=null?{_pipelineStats:{raw:rawCount,deduped:dedupedCount}}:{})})}));
+
+    // Determine which category types are in this new result set
+    const updatedTypes = new Set(results.map(r => r.type));
+
+    setTripData(prev => {
+      const loc = prev.locations.find(c => c.id === activeCity.id);
+      if (!loc) return prev;
+
+      // Keep existing recs for categories NOT in this update, add/replace those that are
+      const existingForOtherCats = (loc.recommendations || []).filter(r => !updatedTypes.has(r.type));
+      const merged = [...existingForOtherCats, ...results];
+      merged.sort((a,b) => (b._qualityScore||0) - (a._qualityScore||0));
+      const ranked = merged.map((item, i) => ({...item, rankNumber: i < 5 ? i + 1 : null}));
+
+      return {
+        ...prev,
+        locations: prev.locations.map(c => c.id !== activeCity.id ? c : {
+          ...c,
+          recommendations: ranked,
+          ...(rawCount != null ? {_pipelineStats:{raw:rawCount,deduped:dedupedCount}} : {})
+        })
+      };
+    });
   };
 
   const applyWeather = (resList) => {
@@ -284,7 +359,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
 
   const handleFindRecs=async()=>{
     if(!activeCity||!mapBounds)return;
-    const cats = aiInterests; // Query only selected interest categories instead of everything
+    const cats = aiInterests;
     if (cats.length === 0) {
       setTripData(prev=>({...prev,locations:prev.locations.map(c=>c.id!==activeCity.id?c:{...c,recommendations:[]})}));
       setIsSearching(false);
@@ -293,10 +368,8 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
     }
     const reqId = ++requestCountRef.current;
     const currentCenter = mapCenter ? [mapCenter.lat, mapCenter.lng] : activeCity.coords;
-    // Always non-null so pan effect distance check works correctly
     lastSearchCenterRef.current = { lat: currentCenter[0], lng: currentCenter[1], radius: searchRadius, interests: currentInterestsStr };
 
-    // Radius-based bounds for both cache lookup and network query
     const latDeg = (searchRadius || 5) / 111.0;
     const lonDeg = (searchRadius || 5) / (111.0 * Math.cos(currentCenter[0] * Math.PI / 180));
     const searchBounds = {
@@ -315,111 +388,47 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
       applyResults(phase1, reqId, null, null);
     }
 
-    const needsSpinner = cachedEls.length === 0;
     setIsSearching(true);
-    setLlmStatus(needsSpinner ? 'Querying OpenStreetMap…' : '');
+    setLlmStatus('Querying OpenStreetMap…');
 
-    try{
+    // Single call for all categories — searchOverpass builds compact grouped queries internally
+    // (nw for point types, nwr for area types) so firing multiple batches only causes rate-limiting
+    let anyLoaded = false;
+    try {
       let data = await searchOverpass(currentCenter, searchRadius, cats);
       if (reqId !== requestCountRef.current) return;
-      if (!activeCity) return;
 
       if (data.fetchPromise) {
         data = await data.fetchPromise;
         if (reqId !== requestCountRef.current) return;
-        if (!activeCity) return;
       }
 
-      let results = processOverpassResults(data, cats, currentCenter, searchRadius, osmHardCap);
+      const results = processOverpassResults(data, cats, currentCenter, searchRadius, osmHardCap);
       results.forEach(r => scorePlaceQuality(r, tripData.aiPlan));
       applyWeather(results);
       const rawCount = results.length;
-      const dedupedCount = semanticDedup([...results], 0.05).length;
-
+      const dedupedCount = results.length;
       if (results.length > 0) {
+        anyLoaded = true;
         applyResults(results, reqId, rawCount, dedupedCount);
-        setLlmStatus('');
-      } else if (needsSpinner) {
-        setLlmStatus('No OSM data found in view.');
-        setTimeout(()=>{ if (reqId === requestCountRef.current) setLlmStatus(''); },3000);
       }
-    }catch(err){
+    } catch (err) {
       if (reqId !== requestCountRef.current) return;
-
-      // Treat our own abort (including AggregateError where all sub-errors are AbortErrors) as silent cancel
       const isAbort = err.name === 'AbortError' ||
         (err instanceof AggregateError && err.errors?.every(e => e.name === 'AbortError'));
-      if (isAbort) {
-        setIsSearching(false);
-        setLlmStatus('');
-        return;
-      }
-      console.error("OVERPASS_ERROR:", err);
-      setLlmStatus('Overpass error — retrying with Nominatim…');
-      // Fallback to Nominatim
-      try{
-        const limitCats = aiInterests.slice(0, 3);
-        const results = [];
-        for (const cat of limitCats) {
-          if (reqId !== requestCountRef.current) return;
-          const kw = (SEARCH_KEYWORDS[cat] || [cat])[0];
-          const { south, west, north, east } = mapBounds;
-          const vb = `${west},${north},${east},${south}`;
-          
-          // Timeout of 5 seconds per category query to Nominatim to prevent hanging
-          const localController = new AbortController();
-          const timeoutId = setTimeout(() => localController.abort(), 5000);
+      if (!isAbort) console.warn('Overpass fetch failed:', err.message);
+    }
 
-          try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(kw)}&viewbox=${vb}&bounded=1&limit=30&addressdetails=1`, {
-              headers: { 'Accept-Language': 'en' },
-              signal: localController.signal
-            });
-            clearTimeout(timeoutId);
-
-            if (reqId !== requestCountRef.current) return;
-            if (res.status === 429) {
-              console.warn(`Nominatim rate limit exceeded for: ${cat}`);
-              continue;
-            }
-            const json = await res.json();
-            if (reqId !== requestCountRef.current) return;
-            if (Array.isArray(json)) {
-              const mapped = json.map(r => ({
-                id: r.place_id,
-                name: r.name || r.display_name.split(',')[0],
-                type: cat,
-                coords: [parseFloat(r.lat), parseFloat(r.lon)]
-              })).filter(r => r.name && getDistanceKm(currentCenter[0], currentCenter[1], parseFloat(r.lat), parseFloat(r.lon)) <= searchRadius);
-              results.push(...mapped);
-            }
-          } catch (e) {
-            clearTimeout(timeoutId);
-            console.error(`Nominatim error for ${cat}:`, e);
-          }
-          // Sleep for 1.1 seconds to stay under Nominatim's 1 req/sec limit
-          await new Promise(r => setTimeout(r, 1100));
-        }
-        if (reqId !== requestCountRef.current) return;
-        if (!activeCity) return;
-        const flat = results.map((it, i) => ({ ...it, rankNumber: i < 5 ? i + 1 : null }));
-
-        if(flat.length>0) setTripData(prev=>({...prev,locations:prev.locations.map(c=>c.id!==activeCity.id?c:{...c,recommendations:flat})}));
-        setLlmStatus('');
-      }catch{
-        if (reqId === requestCountRef.current) {
-          setLlmStatus('Search failed.');
-          setTimeout(()=>{
-            if (reqId === requestCountRef.current) setLlmStatus('');
-          },3000);
-        }
-      }
-    } finally {
-      if (reqId === requestCountRef.current) {
-        setIsSearching(false);
+    if (reqId === requestCountRef.current) {
+      setIsSearching(false);
+      setLlmStatus(anyLoaded ? '' : (cachedEls.length > 0 ? '' : 'No OSM data found in view.'));
+      if (!anyLoaded && cachedEls.length === 0) {
+        setTimeout(()=>{ if (reqId === requestCountRef.current) setLlmStatus(''); }, 3000);
       }
     }
   };
+
+
 
   const deleteCity=(cityId,e)=>{
     e.stopPropagation();
@@ -573,7 +582,6 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
             <button key={cat.value} type="button" className={`chip ${isOn ? 'active' : ''}`}
               style={{ background: isOn ? cityColor : 'transparent', borderColor: isOn ? 'transparent' : undefined }}
               onClick={() => {
-                isPresetChangeRef.current = false;
                 setAiInterests(prev => {
                   const next = prev.includes(cat.value) ? prev.filter(v => v !== cat.value) : [...prev, cat.value];
                   // After state update, scroll to the category section if adding
@@ -607,7 +615,8 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
 
           {[...INTEREST_CATEGORIES]
             .filter(cat => activeCity.recommendations.some(r => r.type === cat.value))
-            .filter(cat => aiInterests.length === 0 || aiInterests.includes(cat.value))
+            // Filter by visibleCategories choice (matching the map selection logic)
+            .filter(cat => visibleCategories.length === 0 || visibleCategories.includes(cat.value))
             // Sort: show categories in the order they were added to aiInterests (last added at the end)
             .sort((a, b) => {
               const ia = aiInterests.indexOf(a.value);
@@ -619,17 +628,29 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
               return ia - ib;
             })
             .map(cat => {
-              let recsForCat = activeCity.recommendations.filter(r => r.type === cat.value && r.name.toLowerCase().includes(recFilterText.toLowerCase()));
-              recsForCat = recsForCat.sort((a, b) => (b._qualityScore || 0) - (a._qualityScore || 0) || (a.distanceKm - b.distanceKm));
-              // Use the same limit as the map (categoryDisplayLimit * mapMarkerLimitFactor)
-              const limit = Math.max(1, Math.round(categoryDisplayLimit * mapMarkerLimitFactor));
-              recsForCat = recsForCat.slice(0, limit);
+              const allForCat = activeCity.recommendations.filter(r => r.type === cat.value && r.name.toLowerCase().includes(recFilterText.toLowerCase()));
+              const sorted = allForCat.sort((a, b) => (b._qualityScore || 0) - (a._qualityScore || 0) || (a.distanceKm - b.distanceKm));
+              const baseLimit = Math.max(1, Math.round(categoryDisplayLimit * mapMarkerLimitFactor));
+              const pages = catPages[cat.value] || 1;
+              const shownLimit = baseLimit * pages;
+              let recsForCat = sorted.slice(0, shownLimit);
               recsForCat.forEach((r, i) => { r.rankNumber = i + 1; });
               if (recsForCat.length === 0) return null;
               const {icon, color} = getTypeDetails(cat.value);
+              const totalCount = sorted.length;
+              const hasMore = shownLimit < totalCount;
               return (
                 <div key={cat.value} id={`cat-section-${cat.value}`} style={{marginBottom:'1.5rem'}}>
-                  <div style={{fontSize:'0.8rem',fontWeight:'600',marginBottom:'0.5rem',display:'flex',alignItems:'center',gap:'0.4rem',color}}>{icon} {cat.label} <span style={{color:'var(--text-secondary)',fontWeight:'400',fontSize:'0.7rem'}}>({recsForCat.length})</span></div>
+                  <div style={{fontSize:'0.8rem',fontWeight:'600',marginBottom:'0.5rem',display:'flex',alignItems:'center',gap:'0.4rem',color}}>
+                    {icon} {cat.label}
+                    <span style={{color:'var(--text-secondary)',fontWeight:'400',fontSize:'0.7rem'}}>({recsForCat.length}/{totalCount})</span>
+                    {pages > 1 && (
+                      <button onClick={() => setCatPages(prev => ({...prev, [cat.value]: 1}))}
+                        style={{marginLeft:'auto',fontSize:'0.65rem',color:'var(--text-secondary)',background:'transparent',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'10px',padding:'1px 8px',cursor:'pointer',fontWeight:'600',flexShrink:0}}>
+                        Show less
+                      </button>
+                    )}
+                  </div>
                   <div className="rec-card-row">
                     {recsForCat.map(rec => {
                       const isSaved = activeCity.places.some(p => p.id === rec.id || p.name === rec.name);
@@ -690,6 +711,12 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
                       );
                     })}
                   </div>
+                  {hasMore && (
+                    <button onClick={() => setCatPages(prev => ({...prev, [cat.value]: (prev[cat.value] || 1) + 1}))}
+                      style={{marginTop:'8px',width:'100%',padding:'6px',fontSize:'0.7rem',fontWeight:'600',color,background:'transparent',border:`1px solid ${color}30`,borderRadius:'8px',cursor:'pointer'}}>
+                      Load {Math.min(baseLimit, totalCount - shownLimit)} more · {totalCount - shownLimit} remaining
+                    </button>
+                  )}
                 </div>
               );
             })}

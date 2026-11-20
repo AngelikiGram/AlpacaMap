@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Sparkles, Compass, MapPin, SlidersHorizontal, Route, Info, Layers, Search, Check, ChevronLeft, ChevronRight, Play, Pause, RefreshCw, X, ArrowRight, HelpCircle, ChevronUp, ChevronDown, Trash2, Plus, Loader2 } from 'lucide-react';
 import { getDistanceKm, scorePlaceQuality, getTypeDetails } from '../../utils';
 import { ENTITY_PROFILES, PACKING_TEMPLATES, INTEREST_CATEGORIES } from '../../config';
@@ -110,14 +111,17 @@ function JourneyRhythm({ stops, height = 11 }) {
   );
 }
 
+
 // ── Journey Rhythm Color Legend ──────────────────────────────────────────────
 function RhythmLegend({ stopsArrays }) {
   const typeSeen = new Map();
   (stopsArrays || []).forEach(stops => {
     (stops || []).forEach(stop => {
-      if (stop?.type && !typeSeen.has(stop.type)) {
+      if (stop?.type) {
         const { color, label } = getTypeDetails(stop.type);
-        typeSeen.set(stop.type, { color, label });
+        if (!typeSeen.has(label)) {
+          typeSeen.set(label, { color, label });
+        }
       }
     });
   });
@@ -125,7 +129,7 @@ function RhythmLegend({ stopsArrays }) {
   return (
     <div style={{ display:'flex', flexWrap:'wrap', gap:'3px 10px', marginTop:'5px', marginBottom:'2px' }}>
       {[...typeSeen.values()].map(({ color, label }) => (
-        <span key={label} style={{ display:'flex', alignItems:'center', gap:'4px', fontSize:'0.59rem', color:'rgba(255,255,255,0.48)' }}>
+        <span key={label} style={{ display:'flex', alignItems:'center', gap:'4px', fontSize:'0.59rem', color:'var(--text-secondary)' }}>
           <span style={{ width:8, height:8, borderRadius:'2px', background:color, display:'inline-block', flexShrink:0 }}/>
           {label}
         </span>
@@ -326,6 +330,8 @@ export function RouteSpacePanel({
   triggerPlaceInfo,
   aiInterests = [],
   onSwitchToCalendar,
+  showRouteOnMap = true,
+  setShowRouteOnMap,
 }) {
   const [themeText, setThemeText] = useState(() => localStorage.getItem('routespace_theme') || 'Compact loops, local cafes, and scenic views');
   const [categoryReqs, setCategoryReqs] = useState(() => JSON.parse(localStorage.getItem('routespace_cat_reqs')) || {});
@@ -340,8 +346,51 @@ export function RouteSpacePanel({
     } catch { return []; }
   });
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+
+  const [viewMode, setViewMode] = useState('places');
+  const [brushActive, setBrushActive] = useState(false);
+  const [brushStart, setBrushStart] = useState(null);
+  const [brushEnd, setBrushEnd] = useState(null);
+  const [brushedIds, setBrushedIds] = useState(new Set());
+  const [sparseFocusActive, setSparseFocusActive] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [justGenerated, setJustGenerated] = useState(false);
+  const [legendFilters, setLegendFilters] = useState(new Set());
+
+  useEffect(() => {
+    setBrushedIds(new Set());
+    setBrushStart(null);
+    setBrushEnd(null);
+    setSparseFocusActive(false);
+    setLegendFilters(new Set());
+  }, [viewMode, isFullscreen]);
+
+  useEffect(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, [isFullscreen]);
+
   const [contextMenuRoute, setContextMenuRoute] = useState(null);
-  
+  const svgContainerRef = useRef(null);
+
+  useEffect(() => {
+    const el = svgContainerRef.current;
+    if (!el) return;
+    const preventDefaultWheel = (e) => {
+      e.preventDefault();
+      const scale = e.deltaY < 0 ? 1.15 : 0.85;
+      setZoom(prev => Math.max(0.5, Math.min(8, prev * scale)));
+    };
+    el.addEventListener('wheel', preventDefaultWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', preventDefaultWheel);
+    };
+  }, [isFullscreen]);
 
   const [hoveredRoute, setHoveredRoute] = useState(null);
   const [activeClusterTab, setActiveClusterTab] = useState(null);
@@ -355,7 +404,6 @@ export function RouteSpacePanel({
   const [clusterPopup, setClusterPopup] = useState(null);
   const [minStops, setMinStops] = useState(() => Number(localStorage.getItem('routespace_min_stops') || '3'));
   const [maxStops, setMaxStops] = useState(() => Number(localStorage.getItem('routespace_max_stops') || '5'));
-  const [viewMode, setViewMode] = useState('places');
   const [hoveredPlace, setHoveredPlace] = useState(null);
   const [showGenome, setShowGenome] = useState(false);
   const [showMutationStudio, setShowMutationStudio] = useState(false);
@@ -414,7 +462,7 @@ export function RouteSpacePanel({
       row.map((val, f) => (val - means[f]) / stds[f])
     );
 
-    const { assignments } = runMultiKMeans(standardizedFeatures, 5);
+    const { assignments } = runMultiKMeans(standardizedFeatures, 4);
 
     // 2. Map coordinates dynamically in a Polar coordinate system
     let radialValues = [];
@@ -441,67 +489,106 @@ export function RouteSpacePanel({
       return (Math.abs(hash) % 1000) / 1000;
     };
 
+    // 2D scatter: X = novelty (popular ↔ local), Y = selected axis (compact ↔ wide/costly)
+    // Normalise both axes across all candidates
+    const noveltyValues = candidates.map(c => c.novelty);
+    const minNovelty = Math.min(...noveltyValues);
+    const maxNovelty = Math.max(...noveltyValues);
+    const noveltySpan = (maxNovelty - minNovelty) || 1;
+
     const mapped = candidates.map((c, idx) => {
       const cluster = assignments[idx];
-      
-      // Radial position: normalize value and map to radius between 25 and 85
+
+      // X: novelty 0→1 mapped to [-105, 105], low novelty = popular (left)
+      const normNovelty = (c.novelty - minNovelty) / noveltySpan;
+      const baseX = -105 + normNovelty * 210;
+
+      // Y: selected axis, normalised to [-88, 88]; invert so low value = top
       const normVal = (radialValues[idx] - minVal) / valSpan;
-      const r = 25 + normVal * 60; // radius range [25, 85]
+      const baseY = 88 - normVal * 176;
 
-      // Angular position: sector center angle based on cluster + jitter
-      const baseAngle = (cluster * 2 * Math.PI) / 5 + Math.PI / 5;
-      const jitterAngle = (getDeterministicJitter(c.id) - 0.5) * 0.45 * (2 * Math.PI / 5);
-      const angle = baseAngle + jitterAngle;
+      // Deterministic jitter to separate overlapping points (±8px)
+      const jx = (getDeterministicJitter(c.id) - 0.5) * 16;
+      const jy = (getDeterministicJitter(c.id.split('').reverse().join('')) - 0.5) * 16;
 
-      // Cartesian coordinates inside a 200x200 viewBox centered at 0,0
-      const x = r * Math.cos(angle);
-      const y = r * Math.sin(angle);
+      const x = Math.max(-118, Math.min(118, baseX + jx));
+      const y = Math.max(-102, Math.min(102, baseY + jy));
 
       return {
         ...c,
         cluster,
         x,
         y,
-        r,
-        angle
+        r: 40, // kept for compat, not used for layout
+        angle: 0,
       };
     });
 
     // 3. Heuristically define properties & labels for the clusters
-    const clustersData = Array.from({ length: 5 }, (_, idx) => {
+    // Compute per-cluster stats first so we can rank relative to each other
+    const rawStats = Array.from({ length: 4 }, (_, idx) => {
       const members = mapped.filter(c => c.cluster === idx);
-      
-      const avgDistance = members.reduce((sum, m) => sum + m.totalDistance, 0) / (members.length || 1);
-      const avgCost = members.reduce((sum, m) => sum + m.cost, 0) / (members.length || 1);
-      const avgStops = members.reduce((sum, m) => sum + m.stopCount, 0) / (members.length || 1);
-      const avgNovelty = members.reduce((sum, m) => sum + m.novelty, 0) / (members.length || 1);
-      const avgPopularity = members.reduce((sum, m) => sum + m.popularity, 0) / (members.length || 1);
+      const n = members.length || 1;
+      return {
+        idx,
+        members,
+        avgDistance:   members.reduce((s, m) => s + m.totalDistance, 0) / n,
+        avgCost:       members.reduce((s, m) => s + m.cost,          0) / n,
+        avgStops:      members.reduce((s, m) => s + m.stopCount,     0) / n,
+        avgNovelty:    members.reduce((s, m) => s + m.novelty,       0) / n,
+        avgPopularity: members.reduce((s, m) => s + m.popularity,    0) / n,
+        avgTheme:      members.reduce((s, m) => s + (m.themeDensity||0), 0) / n,
+      };
+    });
 
-      // Heuristic cluster labels based on metrics
-      let label = `Diverse Explorer ${['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'][idx]}`;
-      let desc = "Balanced path across mixed spots";
-      if (avgNovelty > 0.6 && avgDistance > 2.0) {
-        label = "Peripheral Hidden Gems";
-        desc = "Obscure neighborhoods and local spots";
-      } else if (avgDistance < 1.5 && avgPopularity > 11) {
-        label = "Compact Central Classics";
-        desc = "Core sights, highly efficient timing";
-      } else if (avgStops >= 4.8 && avgDistance > 2.5) {
-        label = "Scenic High-Density Loops";
-        desc = "Densely packed viewpoints & walking trails";
-      } else if (avgCost < 10) {
-        label = "Low-Cost Outdoors";
-        desc = "Free viewpoints, parks, and walking loops";
-      } else if (avgPopularity > 13) {
-        label = "Premium Sights & Culture";
-        desc = "Iconic museum and historic architecture loops";
-      } else if (avgDistance >= 1.5 && avgDistance <= 2.5 && avgPopularity <= 11) {
-        label = "Balanced Discovery";
-        desc = "Mix of known landmarks and local spots";
-      } else if (avgStops < 4.0) {
-        label = "Leisurely City Walk";
-        desc = "Relaxed pace with fewer stops";
+    // Rank each cluster's metrics (0 = lowest, 3 = highest)
+    const rankBy = (key, invert = false) => {
+      const sorted = [...rawStats].sort((a, b) => invert ? b[key] - a[key] : a[key] - b[key]);
+      const rankMap = new Map(sorted.map((s, i) => [s.idx, i]));
+      return rankMap;
+    };
+    const rankDist   = rankBy('avgDistance');
+    const rankCost   = rankBy('avgCost');
+    const rankStops  = rankBy('avgStops');
+    const rankNovel  = rankBy('avgNovelty');
+    const rankPop    = rankBy('avgPopularity');
+    const rankTheme  = rankBy('avgTheme');
+
+    // Assign labels based on RELATIVE rank across the 4 clusters
+    const usedLabels = new Set();
+    const LABELS = [
+      { label: 'Famous Sights',        desc: 'Iconic museums and historic architecture',       test: s => rankPop.get(s.idx) >= 3 },
+      { label: 'Hidden Gems',          desc: 'Off-the-beaten-path spots and local favourites', test: s => rankNovel.get(s.idx) >= 3 && rankPop.get(s.idx) <= 1 },
+      { label: 'Short Walks',          desc: 'Core sights in a tight, walkable area',         test: s => rankDist.get(s.idx) <= 1 && rankPop.get(s.idx) >= 1 },
+      { label: 'Long Loops',           desc: 'Many stops spread across a wide area',          test: s => rankStops.get(s.idx) >= 2 && rankDist.get(s.idx) >= 2 },
+      { label: 'Budget Sights',        desc: 'Free parks, viewpoints, and walking routes',    test: s => rankCost.get(s.idx) <= 1 },
+      { label: 'Theme Focused',        desc: 'Concentrated around one type of experience',    test: s => rankTheme.get(s.idx) >= 2 },
+      { label: 'Relaxed Walks',        desc: 'Relaxed pace with a handful of stops',          test: s => rankStops.get(s.idx) <= 1 },
+      { label: 'Balanced Walks',       desc: 'Mix of landmarks and neighbourhood spots',      test: () => true },
+    ];
+
+    const assignLabel = (s) => {
+      for (const { label, desc, test } of LABELS) {
+        if (!usedLabels.has(label) && test(s)) {
+          usedLabels.add(label);
+          return { label, desc };
+        }
       }
+      return { label: 'Mixed Walks', desc: 'Balanced path across mixed spots' };
+    };
+
+    // Sort clusters by most-distinctive first so unique labels go to the right cluster
+    const sortedStats = [...rawStats].sort((a, b) =>
+      Math.max(rankPop.get(b.idx), rankNovel.get(b.idx), rankDist.get(b.idx)) -
+      Math.max(rankPop.get(a.idx), rankNovel.get(a.idx), rankDist.get(a.idx))
+    );
+    const labelMap = new Map();
+    for (const s of sortedStats) {
+      labelMap.set(s.idx, assignLabel(s));
+    }
+
+    const clustersData = rawStats.map(({ idx, members, avgDistance, avgCost, avgStops, avgNovelty, avgPopularity }) => {
+      const { label, desc } = labelMap.get(idx);
 
       // Find medoid (closest candidate to centroid of cluster members in polar space)
       let medoid = members[0] || null;
@@ -533,7 +620,17 @@ export function RouteSpacePanel({
 
     return { clusteredCandidates: mapped, clusters: clustersData };
   }, [candidates, radiusMode]);
-  
+
+  const filteredCandidates = useMemo(() => {
+    if (brushedIds.size === 0) return clusteredCandidates;
+    if (viewMode === 'routes') {
+      return clusteredCandidates.filter(c => brushedIds.has(c.id));
+    } else {
+      return clusteredCandidates.filter(c =>
+        c.stops.some(stop => brushedIds.has(stop.name))
+      );
+    }
+  }, [clusteredCandidates, brushedIds, viewMode]);  
   const [showStabilitySection, setShowStabilitySection] = useState(false);
 
   const updateRouteWithStops = useCallback((newStops) => {
@@ -744,6 +841,12 @@ export function RouteSpacePanel({
 
   const sliderMatchIds = useMemo(() => new Set(sliderTopMatches.map(m => m.id)), [sliderTopMatches]);
 
+  useEffect(() => {
+    if (sliderTopMatches && sliderTopMatches.length > 0) {
+      setRouteSpaceRoute(sliderTopMatches[0]);
+    }
+  }, [sliderTopMatches, setRouteSpaceRoute]);
+
   // Quick O(1) lookup: stop name → 'anchor' | 'alternative' | 'outlier'
   const stabilityLookup = useMemo(() => {
     const map = {};
@@ -840,26 +943,125 @@ export function RouteSpacePanel({
     return pool;
   }, [activeCity]);
 
-  // Compute geographic positions for Places constellation view
   const placesConstellation = useMemo(() => {
     if (placesPool.length === 0) return [];
-    const lats = placesPool.map(p => p.coords[0]);
-    const lons = placesPool.map(p => p.coords[1]);
+    
+    // In sparse focus mode, only calculate bounds and project selected brushed items
+    const activePool = (sparseFocusActive && brushedIds.size > 0 && viewMode === 'places')
+      ? placesPool.filter(p => brushedIds.has(p.name))
+      : placesPool;
+
+    if (activePool.length === 0) return [];
+
+    const lats = activePool.map(p => p.coords[0]);
+    const lons = activePool.map(p => p.coords[1]);
     const minLat = Math.min(...lats), maxLat = Math.max(...lats);
     const minLon = Math.min(...lons), maxLon = Math.max(...lons);
-    const latSpan = (maxLat - minLat) || 0.01;
-    const lonSpan = (maxLon - minLon) || 0.01;
-    const scaleX = 220 / lonSpan;
-    const scaleY = 180 / latSpan;
-    const scale = Math.min(scaleX, scaleY) * 0.88;
+    const latSpan = (maxLat - minLat) || 0.001;
+    const lonSpan = (maxLon - minLon) || 0.001;
+    const scaleX = 270 / lonSpan;
+    const scaleY = 220 / latSpan;
+    const scale = Math.min(scaleX, scaleY) * 0.98;
     const centerLat = (minLat + maxLat) / 2;
     const centerLon = (minLon + maxLon) / 2;
-    return placesPool.map(p => ({
-      ...p,
-      px: (p.coords[1] - centerLon) * scale,
-      py: -(p.coords[0] - centerLat) * scale,
-    }));
-  }, [placesPool]);
+    
+    const arr = activePool.map(p => {
+      const q = scorePlaceQuality(p);
+      return {
+        ...p,
+        px: (p.coords[1] - centerLon) * scale,
+        py: -(p.coords[0] - centerLat) * scale,
+        qualityScore: typeof q === 'number' ? q : 5,
+      };
+    });
+    
+    arr.centerLon = centerLon;
+    arr.centerLat = centerLat;
+    arr.scale = scale;
+    return arr;
+  }, [placesPool, sparseFocusActive, brushedIds, viewMode]);
+
+  const presentCategories = useMemo(() => {
+    const seen = new Set();
+    placesConstellation.forEach(p => {
+      seen.add(getTypeDetails(p.type).label);
+    });
+    return seen;
+  }, [placesConstellation]);
+
+  const brushedPlaces = useMemo(() => {
+    if (viewMode !== 'places' || brushedIds.size === 0) return [];
+    return placesConstellation.filter(p => brushedIds.has(p.name));
+  }, [placesConstellation, brushedIds, viewMode]);
+
+  const getSvgCoords = useCallback((e, containerEl) => {
+    if (!containerEl) return { x: 0, y: 0 };
+    const rect = containerEl.getBoundingClientRect();
+    const pctX = (e.clientX - rect.left) / rect.width;
+    const pctY = (e.clientY - rect.top) / rect.height;
+    const svgX = -145 + pctX * 290;
+    const svgY = -120 + pctY * 240;
+    return {
+      x: (svgX - pan.x) / zoom,
+      y: (svgY - pan.y) / zoom
+    };
+  }, [pan, zoom]);
+
+  const handleMouseDown = useCallback((e) => {
+    if (e.button !== 0) return;
+    const container = svgContainerRef.current;
+    if (brushActive || e.shiftKey) {
+      const coords = getSvgCoords(e, container);
+      setBrushStart(coords);
+      setBrushEnd(coords);
+    } else {
+      setIsPanning(true);
+      setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    }
+  }, [pan, brushActive, getSvgCoords]);
+
+  const handleMouseMove = useCallback((e) => {
+    const container = svgContainerRef.current;
+    if (brushStart) {
+      const coords = getSvgCoords(e, container);
+      setBrushEnd(coords);
+    } else if (isPanning) {
+      setPan({
+        x: e.clientX - panStart.x,
+        y: e.clientY - panStart.y
+      });
+    }
+  }, [isPanning, panStart, brushStart, getSvgCoords]);
+
+  const handleMouseUp = useCallback(() => {
+    if (brushStart && brushEnd) {
+      const x1 = Math.min(brushStart.x, brushEnd.x);
+      const x2 = Math.max(brushStart.x, brushEnd.x);
+      const y1 = Math.min(brushStart.y, brushEnd.y);
+      const y2 = Math.max(brushStart.y, brushEnd.y);
+      const dist = Math.sqrt((brushStart.x - brushEnd.x) ** 2 + (brushStart.y - brushEnd.y) ** 2);
+      if (dist > 3) {
+        const selected = new Set();
+        if (viewMode === 'routes') {
+          clusteredCandidates.forEach(c => {
+            if (c.x >= x1 && c.x <= x2 && c.y >= y1 && c.y <= y2) {
+              selected.add(c.id);
+            }
+          });
+        } else {
+          placesConstellation.forEach(p => {
+            if (p.px >= x1 && p.px <= x2 && p.py >= y1 && p.py <= y2) {
+              selected.add(p.name);
+            }
+          });
+        }
+        setBrushedIds(selected);
+      }
+      setBrushStart(null);
+      setBrushEnd(null);
+    }
+    setIsPanning(false);
+  }, [brushStart, brushEnd, viewMode, clusteredCandidates, placesConstellation]);
 
   // Generate route candidates procedurally
   const generateRouteSpace = useCallback(() => {
@@ -1509,9 +1711,14 @@ export function RouteSpacePanel({
           <Compass size={15} className="spin" style={{ color:'var(--accent-primary)' }}/> TripSpace
           {candidates.length > 0 && <span style={{ fontSize:'0.65rem', color:'var(--text-secondary)', fontWeight:'400', marginLeft:'4px' }}>{candidates.length} routes · {clusters.length} clusters</span>}
         </div>
-        <button className="btn-icon" onClick={() => setShowHelp(h => !h)} style={{ padding:'3px' }}>
-          <HelpCircle size={13} style={{ color: showHelp ? 'var(--accent-primary)' : 'var(--text-secondary)' }}/>
-        </button>
+        <div style={{ display:'flex', alignItems:'center', gap:'5px' }}>
+          <button className="btn-primary" onClick={() => setIsFullscreen(true)} style={{ fontSize:'0.64rem', padding:'3px 8px', borderRadius:'6px', display:'flex', alignItems:'center', gap:'3px', background:'rgba(139,92,246,0.18)', border:'1px solid rgba(139,92,246,0.3)', color:'#c4b5fd', cursor:'pointer' }}>
+            ⛶ Expand
+          </button>
+          <button className="btn-icon" onClick={() => setShowHelp(h => !h)} style={{ padding:'3px' }}>
+            <HelpCircle size={13} style={{ color: showHelp ? 'var(--accent-primary)' : 'var(--text-secondary)' }}/>
+          </button>
+        </div>
       </div>
       {showHelp && (
         <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'10px', padding:'10px 12px', fontSize:'0.71rem', color:'var(--text-secondary)', lineHeight:1.5 }}>
@@ -1553,20 +1760,20 @@ export function RouteSpacePanel({
         </div>
 
         {/* Category constraints */}
-        {aiInterests.length > 0 ? (
+        {INTEREST_CATEGORIES.length > 0 ? (
           <>
             <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
               <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.06)' }}/>
               <span style={{ fontSize:'0.57rem', color:'var(--text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', whiteSpace:'nowrap' }}>per-route constraints</span>
               <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.06)' }}/>
             </div>
-            <div style={{ display:'flex', flexDirection:'column', gap:'5px' }}>
-              {aiInterests.map(catVal => {
-                const catInfo = INTEREST_CATEGORIES.find(c => c.value === catVal);
-                const label = catInfo ? catInfo.label : catVal;
+            <div style={{ display:'flex', flexDirection:'column', gap:'5px', maxHeight:'180px', overflowY:'auto', paddingRight:'4px' }}>
+              {INTEREST_CATEGORIES.map(catInfo => {
+                const catVal = catInfo.value;
+                const label = catInfo.label;
                 const val = categoryReqs[catVal] || 0;
                 return (
-                  <div key={catVal} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'rgba(0,0,0,0.18)', padding:'7px 10px', borderRadius:'7px', border:'1px solid rgba(255,255,255,0.05)' }}>
+                  <div key={catVal} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'rgba(0,0,0,0.18)', padding:'7px 10px', borderRadius:'7px', border:'1px solid rgba(255,255,255,0.05)', flexShrink:0 }}>
                     <span style={{ fontSize:'0.72rem', color:'var(--text-primary)', minWidth:'64px' }}>{label}</span>
                     <div style={{ display:'flex', alignItems:'center', gap:'8px', marginLeft:'10px' }}>
                       <span style={{ fontSize:'0.63rem', color: val === 0 ? 'rgba(255,255,255,0.28)' : '#a5b4fc', minWidth:'32px', textAlign:'right', fontWeight: val > 0 ? '700' : '400' }}>
@@ -1598,13 +1805,13 @@ export function RouteSpacePanel({
           </>
         ) : (
           <div style={{ fontSize:'0.65rem', color:'var(--text-secondary)', fontStyle:'italic', textAlign:'center', padding:'2px 0' }}>
-            Activate categories in Explore to add per-route constraints
+            No categories available.
           </div>
         )}
 
         {/* Live recipe summary */}
         {(() => {
-          const activeConstraints = aiInterests.filter(c => (categoryReqs[c] || 0) > 0);
+          const activeConstraints = INTEREST_CATEGORIES.map(c => c.value).filter(c => (categoryReqs[c] || 0) > 0);
           if (!themeText && activeConstraints.length === 0) return null;
           return (
             <div style={{ display:'flex', flexWrap:'wrap', gap:'4px', padding:'6px 8px', background:'rgba(0,0,0,0.22)', borderRadius:'8px', border:'1px solid rgba(255,255,255,0.05)' }}>
@@ -1690,37 +1897,95 @@ export function RouteSpacePanel({
             {/* Geographic grid */}
             <line x1="-130" y1="0" x2="130" y2="0" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5"/>
             <line x1="0" y1="-110" x2="0" y2="110" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5"/>
-            {placesConstellation.map((p, i) => {
-              const { color } = getTypeDetails(p.type);
-              const isHov = hoveredPlace?.name === p.name;
-              const r = Math.max(2.5, Math.min(5.5, (p.qualityScore || 2) * 0.5));
+
+            {/* Active Route Path Overlay */}
+            {routeSpaceRoute && (
+              <g opacity="0.8">
+                {routeSpaceRoute.stops.map((stop, sIdx) => {
+                  if (sIdx === 0) return null;
+                  const prev = routeSpaceRoute.stops[sIdx - 1];
+                  const p1 = placesConstellation.find(pl => pl.name.toLowerCase() === prev.name.toLowerCase()) || { px: (prev.coords[1] - placesConstellation.centerLon) * placesConstellation.scale, py: -(prev.coords[0] - placesConstellation.centerLat) * placesConstellation.scale };
+                  const p2 = placesConstellation.find(pl => pl.name.toLowerCase() === stop.name.toLowerCase()) || { px: (stop.coords[1] - placesConstellation.centerLon) * placesConstellation.scale, py: -(stop.coords[0] - placesConstellation.centerLat) * placesConstellation.scale };
+                  return (
+                    <g key={`path-${sIdx}`}>
+                      <line
+                        x1={p1.px} y1={p1.py}
+                        x2={p2.px} y2={p2.py}
+                        stroke="rgba(139, 92, 246, 0.75)"
+                        strokeWidth="1.8"
+                        strokeDasharray="3,3"
+                      />
+                      {/* Arrow marker indicator */}
+                      <circle cx={(p1.px + p2.px)/2} cy={(p1.py + p2.py)/2} r="1.5" fill="#c084fc"/>
+                    </g>
+                  );
+                })}
+              </g>
+            )}
+
+            {[...placesConstellation]
+              .sort((a, b) => {
+                const aInRoute = routeSpaceRoute && routeSpaceRoute.stops.some(s => s.name.toLowerCase() === a.name.toLowerCase());
+                const bInRoute = routeSpaceRoute && routeSpaceRoute.stops.some(s => s.name.toLowerCase() === b.name.toLowerCase());
+                if (aInRoute && !bInRoute) return 1;
+                if (!aInRoute && bInRoute) return -1;
+
+                const aFiltered = legendFilters.size > 0 && !legendFilters.has(getTypeDetails(a.type).label);
+                const bFiltered = legendFilters.size > 0 && !legendFilters.has(getTypeDetails(b.type).label);
+                if (aFiltered && !bFiltered) return -1;
+                if (!aFiltered && bFiltered) return 1;
+                return 0;
+              })
+              .map((p, i) => {
+                const { color } = getTypeDetails(p.type);
+                const isHov = hoveredPlace?.name === p.name;
+                
+                // Find index in active route if exists
+                const activeStopIdx = routeSpaceRoute ? routeSpaceRoute.stops.findIndex(s => s.name.toLowerCase() === p.name.toLowerCase()) : -1;
+                const isInActiveRoute = activeStopIdx !== -1;
+                
+                const r = isInActiveRoute ? 4.5 : Math.max(2.5, Math.min(5.5, (p.qualityScore || 5) * 0.5));
+                
+                const isFiltered = legendFilters.size > 0 && !legendFilters.has(getTypeDetails(p.type).label);
               return (
-                <g key={p.name || i} style={{ cursor:'pointer' }}
+                <g key={p.name || i} style={{ cursor: isFiltered ? 'default' : 'pointer', pointerEvents: isFiltered ? 'none' : 'auto' }}
                   onMouseEnter={() => setHoveredPlace(p)}
                   onMouseLeave={() => setHoveredPlace(null)}
-                  onClick={() => triggerPlaceInfo(p)}>
+                  onClick={() => triggerPlaceInfo(p)}
+                  opacity={isFiltered ? 0.15 : 0.88}>
                   {isHov && <circle cx={p.px} cy={p.py} r={r+5} fill={color+'20'} filter="url(#glow-star)"/>}
-                  <circle cx={p.px} cy={p.py} r={r} fill={color} stroke={isHov ? '#ffffff' : 'rgba(255,255,255,0.3)'} strokeWidth={isHov ? 1 : 0.5} opacity={0.9}/>
+                  
+                  {/* Glowing background ring for stops on the active route */}
+                  {isInActiveRoute && (
+                    <circle cx={p.px} cy={p.py} r={r + 3} fill="rgba(139, 92, 246, 0.3)" stroke="#c084fc" strokeWidth="0.5" filter="url(#glow-star)"/>
+                  )}
+
+                  <circle cx={p.px} cy={p.py} r={r} fill={isInActiveRoute ? '#8b5cf6' : color} stroke={isHov || isInActiveRoute ? '#ffffff' : 'rgba(255,255,255,0.3)'} strokeWidth={isHov || isInActiveRoute ? 1 : 0.5} opacity={0.9}/>
+                  
+                  {/* Stop Number Badge */}
+                  {isInActiveRoute && (
+                    <text x={p.px} y={p.py + 1.8} fill="#ffffff" fontSize="5" fontWeight="900" textAnchor="middle">
+                      {activeStopIdx + 1}
+                    </text>
+                  )}
                 </g>
               );
             })}
             </>)}
 
             {viewMode === 'routes' && (<>
-            {/* Concentric Orbit Circles */}
-            <circle cx="0" cy="0" r="30" stroke="rgba(96, 165, 250, 0.12)" strokeWidth="1" strokeDasharray="3,4" fill="none" />
-            <circle cx="0" cy="0" r="60" stroke="rgba(96, 165, 250, 0.12)" strokeWidth="1" strokeDasharray="3,4" fill="none" />
-            <circle cx="0" cy="0" r="90" stroke="rgba(96, 165, 250, 0.12)" strokeWidth="1" strokeDasharray="3,4" fill="none" />
-
-            {/* Orbit Circle Text Labels */}
-            <text x="4" y="-32" fill="rgba(255, 255, 255, 0.25)" fontSize="5.5" fontWeight="600" letterSpacing="0.05em">
-              {radiusMode === 'walk' ? 'COMPACT (<2km)' : radiusMode === 'budget' ? 'BUDGET (<€30)' : 'GENERAL'}
+            {/* 2D scatter axis grid */}
+            <line x1="-130" y1="0" x2="130" y2="0" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6"/>
+            <line x1="0" y1="-108" x2="0" y2="108" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6"/>
+            {/* X axis labels: novelty */}
+            <text x="-125" y="115" fill="rgba(255,255,255,0.3)" fontSize="5" fontWeight="600" textAnchor="start">◀ Popular</text>
+            <text x="125" y="115" fill="rgba(255,255,255,0.3)" fontSize="5" fontWeight="600" textAnchor="end">Local ▶</text>
+            {/* Y axis labels: selected mode */}
+            <text x="5" y="-100" fill="rgba(255,255,255,0.3)" fontSize="5" fontWeight="600" textAnchor="start">
+              {radiusMode === 'budget' ? 'Low cost ▲' : radiusMode === 'theme' ? 'General ▲' : 'Compact ▲'}
             </text>
-            <text x="4" y="-62" fill="rgba(255, 255, 255, 0.25)" fontSize="5.5" fontWeight="600" letterSpacing="0.05em">
-              {radiusMode === 'walk' ? 'BALANCED (2-5km)' : radiusMode === 'budget' ? 'STANDARD (€30-€70)' : 'ALIGNED'}
-            </text>
-            <text x="4" y="-92" fill="rgba(255, 255, 255, 0.25)" fontSize="5.5" fontWeight="600" letterSpacing="0.05em">
-              {radiusMode === 'walk' ? 'WIDER PATH (5km+)' : radiusMode === 'budget' ? 'PREMIUM (€70+)' : 'DEDICATED'}
+            <text x="5" y="112" fill="rgba(255,255,255,0.3)" fontSize="5" fontWeight="600" textAnchor="start">
+              {radiusMode === 'budget' ? '▼ Expensive' : radiusMode === 'theme' ? '▼ Thematic' : '▼ Wide walk'}
             </text>
 
             {/* Cluster halos */}
@@ -1732,59 +1997,25 @@ export function RouteSpacePanel({
               const maxR = members.reduce((max, m) => Math.max(max, Math.sqrt((m.x-mx)**2+(m.y-my)**2)), 0);
               return (
                 <ellipse key={`halo-${idx}`} cx={mx} cy={my}
-                  rx={Math.max(9, maxR + 6)} ry={Math.max(9, maxR + 6)}
-                  fill={cls.color + '10'} stroke={cls.color + '28'} strokeWidth="0.8" strokeDasharray="2,3"/>
+                  rx={Math.max(9, maxR + 8)} ry={Math.max(9, maxR + 8)}
+                  fill={cls.color + '10'} stroke={cls.color + '25'} strokeWidth="0.8" strokeDasharray="2,3"/>
               );
             })}
 
-            {/* Sector Spoke Dividers (5 sectors) */}
-            {[0, 1, 2, 3, 4].map(idx => {
-              const angle = (idx * 2 * Math.PI) / 5;
-              const x = 95 * Math.cos(angle);
-              const y = 95 * Math.sin(angle);
-              return (
-                <line
-                  key={`spoke-${idx}`}
-                  x1="0"
-                  y1="0"
-                  x2={x}
-                  y2={y}
-                  stroke="rgba(255, 255, 255, 0.04)"
-                  strokeWidth="0.75"
-                />
-              );
-            })}
-
-            {/* Sector Cluster Name Labels at Edge */}
+            {/* Cluster centroid labels */}
             {clusters.map((cls, idx) => {
-              const angle = (idx * 2 * Math.PI) / 5 + Math.PI / 5;
-              const x = 100 * Math.cos(angle);
-              const y = 100 * Math.sin(angle);
-
-              let textAnchor = 'middle';
-              if (x > 15) textAnchor = 'start';
-              if (x < -15) textAnchor = 'end';
-
-              // Split label into two short lines
+              const members = clusteredCandidates.filter(c => c.cluster === idx);
+              if (members.length === 0) return null;
+              const mx = members.reduce((s, m) => s + m.x, 0) / members.length;
+              const my = members.reduce((s, m) => s + m.y, 0) / members.length;
               const words = cls.label.split(' ');
               const half = Math.ceil(words.length / 2);
-              const line1 = words.slice(0, half).join(' ');
-              const line2 = words.slice(half).join(' ');
-
               return (
-                <text
-                  key={`label-${idx}`}
-                  x={x}
-                  y={y}
-                  fill="rgba(127,142,163,0.6)"
-                  fontSize="5"
-                  fontWeight="700"
-                  textAnchor={textAnchor}
-                  dominantBaseline="middle"
-                  style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}
-                >
-                  <tspan x={x} dy="-3.5">{line1}</tspan>
-                  {line2 && <tspan x={x} dy="7">{line2}</tspan>}
+                <text key={`lbl-${idx}`} x={mx} y={my - Math.max(9, members.reduce((max, m) => Math.max(max, Math.sqrt((m.x-mx)**2+(m.y-my)**2)), 0) + 12)}
+                  fill={cls.color} fontSize="4.5" fontWeight="700" textAnchor="middle" opacity="0.75"
+                  style={{ textTransform:'uppercase', letterSpacing:'0.05em' }}>
+                  <tspan x={mx} dy="0">{words.slice(0, half).join(' ')}</tspan>
+                  {words.length > half && <tspan x={mx} dy="5.5">{words.slice(half).join(' ')}</tspan>}
                 </text>
               );
             })}
@@ -1935,131 +2166,75 @@ export function RouteSpacePanel({
           );
         })()}
 
-        <div style={{ display: 'none' }}>
-          {clusters.map(cls => (
-            <div key={cls.id}>
-              <div 
-                onClick={() => setActiveClusterTab(activeClusterTab === cls.id ? null : cls.id)}
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', cursor: 'pointer' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: cls.color }} />
-                  <div style={{ minWidth: 0 }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)' }}>{cls.label}</span>
-                    <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {cls.desc}
-                    </span>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>
-                    <strong>{cls.membersCount}</strong> experience plans
-                  </span>
-                  <ChevronRight size={13} style={{ transform: activeClusterTab === cls.id ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s', opacity: 0.5 }} />
-                </div>
-              </div>
-
-              {activeClusterTab === cls.id && (
-                <div style={{ padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.04)', background: 'rgba(0,0,0,0.12)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                    <span>Average Strategy Metrics:</span>
-                    <span>Stops: <strong>{cls.avgStops.toFixed(1)}</strong> · Dist: <strong>{cls.avgDistance.toFixed(1)} km</strong> · Cost: <strong>€{Math.round(cls.avgCost)}</strong></span>
-                  </div>
-
-                  {/* Cluster characterization list */}
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.04)', fontSize: '0.7rem' }}>
-                    <div style={{ fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px', fontSize: '0.64rem' }}>
-                      This cluster is defined by:
-                    </div>
-                    <ul style={{ margin: '3px 0 0 0', paddingLeft: '1rem', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '2px', listStyleType: 'disc' }}>
-                      {(() => {
-                        if (candidates.length === 0) return <li>No cluster data</li>;
-                        const avgD = candidates.reduce((sum, c) => sum + c.totalDistance, 0) / candidates.length;
-                        const avgC = candidates.reduce((sum, c) => sum + c.cost, 0) / candidates.length;
-                        const avgN = candidates.reduce((sum, c) => sum + c.novelty, 0) / candidates.length;
-                        const avgP = candidates.reduce((sum, c) => sum + c.popularity, 0) / candidates.length;
-                        const avgT = candidates.reduce((sum, c) => sum + c.themeDensity, 0) / candidates.length;
-                        const avgS = candidates.reduce((sum, c) => sum + c.spread, 0) / candidates.length;
-
-                        const bullets = [];
-                        if (cls.avgDistance > avgD * 1.15) bullets.push('extended walking scale');
-                        else if (cls.avgDistance < avgD * 0.85) bullets.push('short walking distance');
-
-                        const members = clusteredCandidates.filter(c => c.cluster === cls.id);
-                        const avgClsNovelty = members.reduce((sum, c) => sum + c.novelty, 0) / (members.length || 1);
-                        const avgClsPopularity = members.reduce((sum, c) => sum + c.popularity, 0) / (members.length || 1);
-                        const avgClsSpread = members.reduce((sum, c) => sum + c.spread, 0) / (members.length || 1);
-                        const avgClsTheme = members.reduce((sum, c) => sum + c.themeDensity, 0) / (members.length || 1);
-
-                        if (avgClsSpread > avgS * 1.15) bullets.push('high spatial dispersion');
-                        else if (avgClsSpread < avgS * 0.85) bullets.push('low spatial dispersion');
-
-                        if (avgClsPopularity > avgP * 1.1) bullets.push('high landmark density');
-                        else if (avgClsPopularity < avgP * 0.9) bullets.push('off-the-beaten-path focus');
-
-                        if (avgClsTheme > avgT * 1.1) bullets.push('high theme match');
-                        else if (avgClsTheme < avgT * 0.9) bullets.push('low theme match');
-
-                        if (avgClsNovelty > avgN * 1.15) bullets.push('high local novelty');
-                        else if (avgClsNovelty < avgN * 0.85) bullets.push('low local novelty');
-
-                        if (bullets.length === 0) bullets.push('balanced average profile');
-                        return bullets.map((b, i) => (
-                          <li key={i} style={{ textTransform: 'capitalize' }}>{b}</li>
-                        ));
-                      })()}
-                    </ul>
-                  </div>
-
-                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '6px' }}>
-                    <div style={{ fontSize: '0.66rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>
-                      Representative Family Experience (Medoid)
-                    </div>
-                    {cls.medoid && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '6px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-primary)', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>{cls.medoid.name}</span>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          <button 
-                            className="btn-primary" 
-                            style={{ fontSize: '0.62rem', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '2px' }}
-                            onClick={() => {
-                              setRouteSpaceRoute(cls.medoid);
-                            }}
-                          >
-                            Preview
-                          </button>
-                        </div>
+        <div style={{ marginTop: '14px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px' }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+            Route collections ({brushedIds.size > 0 ? `${filteredCandidates.length} / ${candidates.length} selected` : `${candidates.length} options`})
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {clusters.map(cls => {
+              const filteredMembers = filteredCandidates.filter(c => c.cluster === cls.id);
+              if (filteredMembers.length === 0 && brushedIds.size > 0) return null;
+              
+              return (
+                <div key={cls.id} style={{ background: 'rgba(255,255,255,0.01)', border: `1px solid ${activeClusterTab === cls.id ? cls.color + '40' : 'rgba(255,255,255,0.04)'}`, borderRadius: '10px', overflow: 'hidden' }}>
+                  <div 
+                    onClick={() => setActiveClusterTab(activeClusterTab === cls.id ? null : cls.id)}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', cursor: 'pointer', background: activeClusterTab === cls.id ? 'rgba(255,255,255,0.02)' : 'transparent' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                      <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: cls.color }} />
+                      <div style={{ minWidth: 0 }}>
+                        <span style={{ fontSize: '0.76rem', fontWeight: '600', color: 'var(--text-primary)' }}>{cls.label}</span>
+                        <span style={{ display: 'block', fontSize: '0.62rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {cls.desc}
+                        </span>
                       </div>
-                    )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
+                        <strong>{filteredMembers.length}</strong>{brushedIds.size > 0 ? ` / ${cls.membersCount}` : ''} options
+                      </span>
+                      <ChevronRight size={13} style={{ transform: activeClusterTab === cls.id ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s', opacity: 0.5 }} />
+                    </div>
                   </div>
 
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '6px' }}>
-                    <div style={{ fontSize: '0.66rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>
-                      All {cls.membersCount} Experience Plans in this Family
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '150px', overflowY: 'auto', paddingRight: '4px' }}>
-                      {clusteredCandidates.filter(c => c.cluster === cls.id).map(m => {
-                        const isActive = routeSpaceRoute?.id === m.id;
+                  {activeClusterTab === cls.id && (
+                    <div style={{ padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.04)', background: 'rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem', color: 'var(--text-secondary)', paddingBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <span>Average stats:</span>
+                        <span>Stops: <strong>{cls.avgStops.toFixed(1)}</strong> · Dist: <strong>{cls.avgDistance.toFixed(1)} km</strong> · Cost: <strong>€{Math.round(cls.avgCost)}</strong></span>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px' }}>
+                        {filteredMembers.map(m => {
+                          const isActive = routeSpaceRoute?.id === m.id;
+                          const isMedoid = cls.medoid?.id === m.id;
                         return (
                           <div 
                             key={m.id} 
                             style={{ 
                               display: 'flex', 
                               justifyContent: 'space-between', 
-                              alignItems: 'center', 
-                              padding: '5px 8px', 
-                              borderRadius: '6px', 
+                              alignItems: 'flex-start', 
+                              padding: '8px 10px', 
+                              borderRadius: '8px', 
                               background: isActive ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.02)', 
                               border: `1px solid ${isActive ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.03)'}`,
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              transition: 'background 0.15s'
                             }}
                             onClick={() => setRouteSpaceRoute(m)}
                           >
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, minWidth: 0, paddingRight: '8px' }}>
-                              <span style={{ fontWeight: '500', color: isActive ? 'var(--accent-light)' : 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '220px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1, minWidth: 0 }}>
+                              <span style={{ fontSize: '0.72rem', fontWeight: '600', color: isActive ? 'var(--accent-light)' : 'var(--text-primary)', lineHeight: '1.3', wordBreak: 'break-word' }}>
                                 {m.name}
+                                {isMedoid && (
+                                  <span style={{ fontSize: '0.58rem', color: '#fbbf24', marginLeft: '6px', background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', padding: '0 4px', borderRadius: '4px', display: 'inline-block', fontWeight: 'bold' }}>
+                                    ★ Recommended
+                                  </span>
+                                )}
                               </span>
-                              <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginTop: '1px' }}>
+                              <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
                                 {m.stopCount} stops · {m.totalDistance.toFixed(1)} km · €{m.cost}
                               </span>
                             </div>
@@ -2068,10 +2243,11 @@ export function RouteSpacePanel({
                       })}
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
+          </div>
         </div>
       </div>
 
@@ -2087,10 +2263,18 @@ export function RouteSpacePanel({
           </div>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
             <span style={{ fontSize:'0.75rem', fontWeight:'700', color:'var(--text-primary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1, minWidth:0 }}>{routeSpaceRoute.name}</span>
-            <div style={{ display:'flex', gap:'8px', fontSize:'0.65rem', color:'var(--text-secondary)', flexShrink:0, marginLeft:'8px' }}>
+            <div style={{ display:'flex', gap:'8px', fontSize:'0.65rem', color:'var(--text-secondary)', flexShrink:0, marginLeft:'8px', alignItems:'center' }}>
               <span>{routeSpaceRoute.stopCount} stops</span>
               <span>{routeSpaceRoute.totalDistance.toFixed(1)} km</span>
               <span>€{routeSpaceRoute.cost}</span>
+              {setShowRouteOnMap && (
+                <button
+                  onClick={() => setShowRouteOnMap(v => !v)}
+                  title={showRouteOnMap ? 'Hide route on map' : 'Show route on map'}
+                  style={{ padding:'2px 7px', borderRadius:'6px', border:'1px solid rgba(255,255,255,0.12)', background: showRouteOnMap ? 'rgba(192,132,252,0.18)' : 'rgba(255,255,255,0.05)', color: showRouteOnMap ? '#c084fc' : 'rgba(255,255,255,0.3)', fontSize:'0.6rem', cursor:'pointer', fontWeight:'600', letterSpacing:'0.03em', lineHeight:1 }}>
+                  {showRouteOnMap ? '● on map' : '○ hidden'}
+                </button>
+              )}
             </div>
           </div>
           {/* Tab strip */}
@@ -2450,6 +2634,729 @@ export function RouteSpacePanel({
                 </div>
               )}
             </div>
+      )}
+
+      {/* Fullscreen white-background TripSpace Portal Modal */}
+      {isFullscreen && createPortal(
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: '#ffffff', color: '#1e293b',
+          display: 'flex', flexDirection: 'column',
+          fontFamily: 'Inter, sans-serif', padding: '20px',
+          boxSizing: 'border-box'
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #f1f5f9', paddingBottom: '12px', marginBottom: '16px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Compass size={22} style={{ color: '#6366f1' }}/>
+              <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>TripSpace Explorer</span>
+              <span style={{ fontSize: '0.75rem', background: '#e0e7ff', color: '#4338ca', padding: '3px 8px', borderRadius: '12px', fontWeight: '600' }}>
+                {candidates.length} routes · {clusters.length} clusters
+              </span>
+            </div>
+            <button
+              onClick={() => setIsFullscreen(false)}
+              style={{
+                background: '#f1f5f9', border: 'none', borderRadius: '6px',
+                color: '#64748b', cursor: 'pointer', padding: '6px 16px',
+                fontSize: '0.82rem', fontWeight: '700', transition: 'background 0.2s'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
+              onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}
+            >
+              ✕ Close Explorer
+            </button>
+          </div>
+
+          {/* Three Column Unified Layout */}
+          <div style={{ display: 'grid', gridTemplateColumns: '370px 1fr 340px', gap: '20px', flex: 1, minHeight: 0 }}>
+            
+            {/* Column 1: Configs & Recipe (White background themed style) */}
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Route Recipe</div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: '600', color: '#475569' }}>Theme Prompt:</span>
+                <input
+                  type="text" value={themeText} onChange={e => setThemeText(e.target.value)}
+                  placeholder="Trip theme (e.g. gothic walk, hidden cafes)…"
+                  style={{ fontSize: '0.8rem', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: '600', color: '#475569' }}>Stops count range:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input type="number" min="2" max="10" value={minStops}
+                    onChange={e => setMinStops(Math.max(2, Math.min(Number(e.target.value), maxStops)))}
+                    style={{ width: '54px', textAlign: 'center', fontSize: '0.75rem', padding: '4px 6px', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: '700', color: '#0f172a', background: '#ffffff' }}/>
+                  <span style={{ opacity: 0.5 }}>–</span>
+                  <input type="number" min="2" max="10" value={maxStops}
+                    onChange={e => setMaxStops(Math.max(minStops, Math.min(10, Number(e.target.value))))}
+                    style={{ width: '54px', textAlign: 'center', fontSize: '0.75rem', padding: '4px 6px', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: '700', color: '#0f172a', background: '#ffffff' }}/>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: '600', color: '#475569' }}>Category constraints:</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {INTEREST_CATEGORIES.map(cat => {
+                    const val = categoryReqs[cat.value] || 0;
+                    return (
+                      <div key={cat.value} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '4px 8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#334155' }}>{cat.label}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <button 
+                            onClick={() => setCategoryReqs(prev => {
+                              const next = { ...prev, [cat.value]: Math.max(0, val - 1) };
+                              localStorage.setItem('routespace_cat_reqs', JSON.stringify(next));
+                              return next;
+                            })}
+                            style={{ width: '18px', height: '18px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '0.72rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+                          
+                          <span style={{ fontSize: '0.68rem', fontWeight: '850', color: val > 0 ? '#4f46e5' : '#94a3b8', minWidth: '52px', textAlign: 'center' }}>
+                            {val === 0 ? 'Any' : val === 5 ? '5+ stops' : `${val} stop${val > 1 ? 's' : ''}`}
+                          </span>
+
+                          <button 
+                            onClick={() => setCategoryReqs(prev => {
+                              const next = { ...prev, [cat.value]: Math.min(5, val + 1) };
+                              localStorage.setItem('routespace_cat_reqs', JSON.stringify(next));
+                              return next;
+                            })}
+                            style={{ width: '18px', height: '18px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '0.72rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Sliders in full layout */}
+              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', marginTop: '4px' }}>
+                <div style={{ fontSize: '0.78rem', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Route Character Sliders</div>
+                {[
+                  { key: 'local', left: 'Popular', right: 'Hidden Gems', color: '#10b981', label: 'Local vs. Popular' },
+                  { key: 'compact', left: 'Wide Area', right: 'Short Walks', color: '#3b82f6', label: 'Walking Distance' },
+                  { key: 'theme', left: 'Mixed', right: 'Theme Focus', color: '#f59e0b', label: 'Theme Focus' },
+                  { key: 'social', left: 'No Food', right: 'Food Stops', color: '#f97316', label: 'Social Stops' },
+                ].map(({ key, left, right, color, label }) => (
+                  <div key={key} style={{ marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.64rem', color: '#64748b', marginBottom: '2px' }}>
+                      <span>{left}</span>
+                      <strong style={{ color }}>{label} ({navSliders[key]}%)</strong>
+                      <span>{right}</span>
+                    </div>
+                    <input type="range" min="0" max="100" value={navSliders[key]}
+                      onChange={e => setNavSliders(prev => ({ ...prev, [key]: Number(e.target.value) }))}
+                      style={{ width: '100%', accentColor: color }}/>
+                  </div>
+                ))}
+              </div>
+
+              <button 
+                onClick={() => {
+                  setIsGenerating(true);
+                  setJustGenerated(false);
+                  setTimeout(() => {
+                    generateRouteSpace();
+                    setIsGenerating(false);
+                    setJustGenerated(true);
+                    setTimeout(() => setJustGenerated(false), 2000);
+                  }, 200);
+                }}
+                disabled={isGenerating}
+                style={{
+                  background: justGenerated 
+                    ? '#10b981' 
+                    : isGenerating 
+                      ? '#94a3b8' 
+                      : 'linear-gradient(135deg, #4f46e5, #6366f1)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
+                  cursor: isGenerating ? 'not-allowed' : 'pointer',
+                  textAlign: 'center',
+                  marginTop: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 4px rgba(99,102,241,0.2)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 size={14} className="spin" /> Generating...
+                  </>
+                ) : justGenerated ? (
+                  <>✓ Generated successfully!</>
+                ) : (
+                  <>Generate Route Space</>
+                )}
+              </button>
+            </div>
+
+            {/* Column 2: Large Map/Constellation View (White background themed style) */}
+            <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', background: '#f8fafc', padding: '16px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexShrink: 0 }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#0f172a' }}>Experience Constellation</span>
+                <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '8px', padding: '2px' }}>
+                  {[['routes', 'Routes Space'], ['places', 'Geographic Places']].map(([m, label]) => (
+                    <button key={m} onClick={() => setViewMode(m)}
+                      style={{ fontSize: '0.65rem', padding: '4px 12px', border: 'none', borderRadius: '6px', background: viewMode === m ? '#ffffff' : 'transparent', color: viewMode === m ? '#0f172a' : '#64748b', fontWeight: '600', cursor: 'pointer' }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div ref={svgContainerRef} style={{ flex: 1, minHeight: 0, position: 'relative', border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden', background: '#ffffff', cursor: isPanning ? 'grabbing' : 'grab' }}>
+                <svg
+                  viewBox="-145 -120 290 240"
+                  style={{ width: '100%', height: '100%' }}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                >
+                  <defs>
+                    <filter id="glow-star" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="2.5" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Wrapper group applying pan and zoom transforms */}
+                  <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+                    {viewMode === 'places' && (<>
+                      <line x1="-130" y1="0" x2="130" y2="0" stroke="rgba(0,0,0,0.07)" strokeWidth="0.5"/>
+                      <line x1="0" y1="-110" x2="0" y2="110" stroke="rgba(0,0,0,0.07)" strokeWidth="0.5"/>
+
+                      {/* Active Route Path Overlay */}
+                      {routeSpaceRoute && (
+                        <g opacity="0.75">
+                          {routeSpaceRoute.stops.map((stop, sIdx) => {
+                            if (sIdx === 0) return null;
+                            const prev = routeSpaceRoute.stops[sIdx - 1];
+                            const p1 = placesConstellation.find(pl => pl.name.toLowerCase() === prev.name.toLowerCase()) || { px: (prev.coords[1] - placesConstellation.centerLon) * placesConstellation.scale, py: -(prev.coords[0] - placesConstellation.centerLat) * placesConstellation.scale };
+                            const p2 = placesConstellation.find(pl => pl.name.toLowerCase() === stop.name.toLowerCase()) || { px: (stop.coords[1] - placesConstellation.centerLon) * placesConstellation.scale, py: -(stop.coords[0] - placesConstellation.centerLat) * placesConstellation.scale };
+                            return (
+                              <g key={`modal-path-${sIdx}`}>
+                                <line
+                                  x1={p1.px} y1={p1.py}
+                                  x2={p2.px} y2={p2.py}
+                                  stroke="rgba(99, 102, 241, 0.85)"
+                                  strokeWidth="1.8"
+                                  strokeDasharray="3,3"
+                                />
+                                <circle cx={(p1.px + p2.px)/2} cy={(p1.py + p2.py)/2} r="1.5" fill="#6366f1"/>
+                              </g>
+                            );
+                          })}
+                        </g>
+                      )}
+
+                      {[...placesConstellation]
+                        .sort((a, b) => {
+                          const aInRoute = routeSpaceRoute && routeSpaceRoute.stops.some(s => s.name.toLowerCase() === a.name.toLowerCase());
+                          const bInRoute = routeSpaceRoute && routeSpaceRoute.stops.some(s => s.name.toLowerCase() === b.name.toLowerCase());
+                          if (aInRoute && !bInRoute) return 1;
+                          if (!aInRoute && bInRoute) return -1;
+
+                          const aFiltered = (brushedIds.size > 0 && !brushedIds.has(a.name)) || (legendFilters.size > 0 && !legendFilters.has(getTypeDetails(a.type).label));
+                          const bFiltered = (brushedIds.size > 0 && !brushedIds.has(b.name)) || (legendFilters.size > 0 && !legendFilters.has(getTypeDetails(b.type).label));
+                          if (aFiltered && !bFiltered) return -1;
+                          if (!aFiltered && bFiltered) return 1;
+                          return 0;
+                        })
+                        .map((p, i) => {
+                          const { color } = getTypeDetails(p.type);
+                          const isHov = hoveredPlace?.name === p.name;
+                          
+                          // Find index in active route if exists
+                          const activeStopIdx = routeSpaceRoute ? routeSpaceRoute.stops.findIndex(s => s.name.toLowerCase() === p.name.toLowerCase()) : -1;
+                          const isInActiveRoute = activeStopIdx !== -1;
+                          
+                          const placeLabel = getTypeDetails(p.type).label;
+                          const isFilteredOut = (brushedIds.size > 0 && !brushedIds.has(p.name)) || (legendFilters.size > 0 && !legendFilters.has(placeLabel));
+                          const r = isInActiveRoute ? 4.8 : Math.max(2.5, Math.min(5.5, (p.qualityScore || 5) * 0.5));
+                        
+                        return (
+                          <g key={p.name || i} style={{ cursor: isFilteredOut ? 'default' : 'pointer', pointerEvents: isFilteredOut ? 'none' : 'auto' }}
+                            onMouseEnter={() => setHoveredPlace(p)}
+                            onMouseLeave={() => setHoveredPlace(null)}
+                            onClick={() => triggerPlaceInfo(p)}
+                            opacity={isFilteredOut ? 0.15 : 0.88}>
+                            {isHov && <circle cx={p.px} cy={p.py} r={r + 5} fill={color + '30'} filter="url(#glow-star)"/>}
+                            
+                            {/* Glowing ring for active route stops */}
+                            {isInActiveRoute && (
+                              <circle cx={p.px} cy={p.py} r={r + 3.2} fill="rgba(99, 102, 241, 0.28)" stroke="#818cf8" strokeWidth="0.5" filter="url(#glow-star)"/>
+                            )}
+
+                            <circle cx={p.px} cy={p.py} r={r} fill={isInActiveRoute ? '#4f46e5' : color} stroke={isHov || isInActiveRoute ? '#0f172a' : 'rgba(0,0,0,0.15)'} strokeWidth={isHov || isInActiveRoute ? 1.2 : 0.5}/>
+                            
+                            {/* Stop Number Badge */}
+                            {isInActiveRoute && (
+                              <text x={p.px} y={p.py + 1.8} fill="#ffffff" fontSize="5" fontWeight="900" textAnchor="middle">
+                                {activeStopIdx + 1}
+                              </text>
+                            )}
+                          </g>
+                        );
+                      })}
+                    </>)}
+
+                    {viewMode === 'routes' && (<>
+                      {/* 2D scatter axes */}
+                      <line x1="-130" y1="0" x2="130" y2="0" stroke="rgba(0,0,0,0.08)" strokeWidth="0.6"/>
+                      <line x1="0" y1="-108" x2="0" y2="108" stroke="rgba(0,0,0,0.08)" strokeWidth="0.6"/>
+                      <text x="-125" y="116" fill="rgba(0,0,0,0.3)" fontSize="5" fontWeight="600" textAnchor="start">◀ Popular</text>
+                      <text x="125" y="116" fill="rgba(0,0,0,0.3)" fontSize="5" fontWeight="600" textAnchor="end">Local ▶</text>
+                      <text x="4" y="-100" fill="rgba(0,0,0,0.3)" fontSize="5" fontWeight="600">
+                        {radiusMode === 'budget' ? 'Low cost ▲' : radiusMode === 'theme' ? 'General ▲' : 'Compact ▲'}
+                      </text>
+                      <text x="4" y="113" fill="rgba(0,0,0,0.3)" fontSize="5" fontWeight="600">
+                        {radiusMode === 'budget' ? '▼ Expensive' : radiusMode === 'theme' ? '▼ Thematic' : '▼ Wide walk'}
+                      </text>
+
+                      {/* Dynamic Sparse Focus Coordinates & Halos Render Block */}
+                      {(() => {
+                        const selectedMembers = clusteredCandidates.filter(c => brushedIds.has(c.id));
+                        const xs = selectedMembers.map(c => c.x);
+                        const ys = selectedMembers.map(c => c.y);
+                        const minX = xs.length > 0 ? Math.min(...xs) : -100;
+                        const maxX = xs.length > 0 ? Math.max(...xs) : 100;
+                        const minY = ys.length > 0 ? Math.min(...ys) : -80;
+                        const maxY = ys.length > 0 ? Math.max(...ys) : 80;
+                        const xSpan = (maxX - minX) || 10;
+                        const ySpan = (maxY - minY) || 10;
+                        
+                        const getCoords = (c) => {
+                          if (sparseFocusActive && brushedIds.size > 0) {
+                            const normX = (c.x - minX) / xSpan;
+                            const normY = (c.y - minY) / ySpan;
+                            return { x: -110 + normX * 220, y: -90 + normY * 180 };
+                          }
+                          return { x: c.x, y: c.y };
+                        };
+
+                        return (<>
+                          {/* Cluster halos - only show if not in sparse focus */}
+                          {!sparseFocusActive && clusters.map((cls, idx) => {
+                            const members = clusteredCandidates.filter(c => c.cluster === idx);
+                            if (members.length === 0) return null;
+                            const mx = members.reduce((s, m) => s + m.x, 0) / members.length;
+                            const my = members.reduce((s, m) => s + m.y, 0) / members.length;
+                            const maxR = members.reduce((max, m) => Math.max(max, Math.sqrt((m.x-mx)**2+(m.y-my)**2)), 0);
+                            return (
+                              <ellipse key={`whalo-${idx}`} cx={mx} cy={my}
+                                rx={Math.max(9, maxR + 8)} ry={Math.max(9, maxR + 8)}
+                                fill={cls.color + '12'} stroke={cls.color + '35'} strokeWidth="0.8" strokeDasharray="2,3"/>
+                            );
+                          })}
+
+                          {clusteredCandidates.map(c => {
+                            const isFilteredOut = brushedIds.size > 0 && !brushedIds.has(c.id);
+                            if (sparseFocusActive && isFilteredOut) return null; // Hide in sparse focus!
+                            
+                            const pos = getCoords(c);
+                            const isActive = routeSpaceRoute?.id === c.id;
+                            const isHov = hoveredRoute?.id === c.id;
+                            const clusterColor = CLUSTER_PALETTE[c.cluster % CLUSTER_PALETTE.length];
+                            const starColor = isActive ? '#6d28d9' : clusterColor;
+                            
+                            return (
+                              <g key={c.id} style={{ cursor: 'pointer' }}
+                                onMouseEnter={() => setHoveredRoute(c)}
+                                onMouseLeave={() => setHoveredRoute(null)}
+                                onClick={() => setRouteSpaceRoute(c)}
+                                opacity={sparseFocusActive ? 1.0 : isFilteredOut ? 0.15 : 0.9}>
+                                {(isActive || isHov) && <circle cx={pos.x} cy={pos.y} r="9" fill={starColor} opacity="0.18" filter="url(#glow-star)"/>}
+                                <circle cx={pos.x} cy={pos.y} r={isActive ? 6 : isHov ? 5 : 3.5} fill={starColor} stroke={isActive ? '#6d28d9' : isHov ? '#0f172a' : 'rgba(0,0,0,0.2)'} strokeWidth={isActive ? 1.5 : 0.8}/>
+                              </g>
+                            );
+                          })}
+                        </>);
+                      })()}
+                    </>)}
+
+                    {/* Rendering the active Selection Brush Box */}
+                    {brushStart && brushEnd && (
+                      <rect
+                        x={Math.min(brushStart.x, brushEnd.x)}
+                        y={Math.min(brushStart.y, brushEnd.y)}
+                        width={Math.abs(brushStart.x - brushEnd.x)}
+                        height={Math.abs(brushStart.y - brushEnd.y)}
+                        fill="rgba(99, 102, 241, 0.12)"
+                        stroke="#6366f1"
+                        strokeWidth="0.8"
+                        strokeDasharray="2,2"
+                      />
+                    )}
+                  </g>
+                </svg>
+
+                {/* Floating Clear Selection Pill & Sparse Focus Toggle */}
+                {brushedIds.size > 0 && (
+                  <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 25, display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button onClick={() => { setBrushedIds(new Set()); setSparseFocusActive(false); }} style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '20px', color: '#991b1b', fontSize: '0.68rem', fontWeight: '700', padding: '4px 12px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      Clear Brush Selection ({brushedIds.size}) ✕
+                    </button>
+                    <button onClick={() => setSparseFocusActive(!sparseFocusActive)} 
+                      style={{ 
+                        background: sparseFocusActive ? 'linear-gradient(135deg, #10b981, #059669)' : '#ffffff',
+                        border: sparseFocusActive ? 'none' : '1px solid #cbd5e1', 
+                        borderRadius: '20px', 
+                        color: sparseFocusActive ? '#ffffff' : '#475569', 
+                        fontSize: '0.68rem', 
+                        fontWeight: '700', 
+                        padding: '4px 14px', 
+                        cursor: 'pointer', 
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.05)', 
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {sparseFocusActive ? '✓ Sparse Focus Active' : 'Sparse Focus Mode'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Floating zoom control buttons */}
+                <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.92)', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '3px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', zIndex: 20 }}>
+                  <button onClick={() => setBrushActive(!brushActive)} title="Toggle Selection Brush Mode (or Shift+Drag)" style={{ border: 'none', background: brushActive ? '#6366f1' : 'none', color: brushActive ? '#ffffff' : '#475569', fontWeight: '800', fontSize: '0.68rem', padding: '0 8px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '5px', transition: 'all 0.15s' }}>
+                    Brush
+                  </button>
+                  <button onClick={() => setZoom(z => Math.min(8, z * 1.25))} title="Zoom In" style={{ border: 'none', background: 'none', color: '#0f172a', fontWeight: 'bold', fontSize: '0.9rem', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>+</button>
+                  <button onClick={() => setZoom(z => Math.max(0.5, z * 0.8))} title="Zoom Out" style={{ border: 'none', background: 'none', color: '#0f172a', fontWeight: 'bold', fontSize: '0.9rem', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>-</button>
+                  <button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); setBrushedIds(new Set()); }} title="Reset View & Selection" style={{ border: 'none', background: 'none', color: '#64748b', fontWeight: 'bold', fontSize: '0.78rem', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>⟲</button>
+                </div>
+
+                {/* Hover tooltip for places mode */}
+                {viewMode === 'places' && hoveredPlace && (
+                  <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.97)', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '9px 12px', width: '190px', pointerEvents: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', zIndex: 10 }}>
+                    <div style={{ fontSize: '0.73rem', fontWeight: '800', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '3px' }}>{hoveredPlace.name}</div>
+                    <div style={{ fontSize: '0.65rem', color: '#64748b' }}>{hoveredPlace.type || 'Sight'}</div>
+                    <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '5px', paddingTop: '4px', fontSize: '0.6rem', color: '#4f46e5', fontWeight: '700' }}>Click to view details</div>
+                  </div>
+                )}
+
+                {/* Hover tooltip for routes mode */}
+                {viewMode === 'routes' && hoveredRoute && !routeSpaceRoute && (
+                  <div style={{ position:'absolute', top:'10px', right:'10px', background:'rgba(255,255,255,0.97)', border:`1px solid ${CLUSTER_PALETTE[hoveredRoute.cluster % CLUSTER_PALETTE.length]}60`, borderRadius:'10px', padding:'9px 12px', width:'190px', pointerEvents:'none', boxShadow:'0 4px 16px rgba(0,0,0,0.1)', zIndex:10 }}>
+                    <div style={{ fontSize:'0.73rem', fontWeight:'800', color:'#0f172a', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:'3px' }}>{hoveredRoute.name}</div>
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'2px 8px', fontSize:'0.63rem', color:'#64748b' }}>
+                      <div>Stops <strong style={{color:'#0f172a'}}>{hoveredRoute.stopCount}</strong></div>
+                      <div>Dist <strong style={{color:'#0f172a'}}>{hoveredRoute.totalDistance.toFixed(1)} km</strong></div>
+                      <div>Cost <strong style={{color:'#0f172a'}}>€{hoveredRoute.cost}</strong></div>
+                      <div>Local <strong style={{color:'#0f172a'}}>{Math.round(hoveredRoute.novelty*100)}%</strong></div>
+                    </div>
+                    <div style={{ marginTop:'5px', fontSize:'0.6rem', color: CLUSTER_PALETTE[hoveredRoute.cluster % CLUSTER_PALETTE.length], fontWeight:'700' }}>
+                      {clusters.find(cl => cl.id === hoveredRoute.cluster)?.label}
+                    </div>
+                  </div>
+                )}
+
+                {/* Floating selected route chip */}
+                {viewMode === 'routes' && routeSpaceRoute && (
+                  <div style={{ position: 'absolute', bottom: '10px', left: '10px', background: 'rgba(255,255,255,0.95)', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '7px 12px', maxWidth: '200px', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', zIndex: 15 }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: '800', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{routeSpaceRoute.name}</div>
+                    <div style={{ fontSize: '0.62rem', color: '#64748b', marginTop: '2px' }}>
+                      {routeSpaceRoute.stopCount} stops · {routeSpaceRoute.totalDistance.toFixed(1)} km · €{routeSpaceRoute.cost}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Informative Legend & Explainer Bar */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f1f5f9', borderRadius: '8px', padding: '10px 14px', marginTop: '8px', flexShrink: 0, border: '1px solid #e2e8f0' }}>
+                {viewMode === 'routes' ? (
+                  <>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.66rem', fontWeight: '800', color: '#475569', textTransform: 'uppercase', marginRight: '4px' }}>Clusters:</span>
+                      {clusters.map(cl => (
+                        <div key={cl.id} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', color: '#0f172a', fontWeight: '600' }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: cl.color, display: 'inline-block' }}/>
+                          {cl.label}
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: '0.65rem', color: '#64748b', textAlign: 'right', maxWidth: '300px', lineHeight: '1.3' }}>
+                      <strong>Projection:</strong> projecting all generated itineraries. <strong>Horizontal:</strong> popular vs. off-the-beaten-path. <strong>Vertical:</strong> walking distance scale.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.66rem', fontWeight: '800', color: '#475569', textTransform: 'uppercase', marginRight: '4px' }}>Legend:</span>
+                      {[
+                        { label: 'Food', color: '#f59e0b' },
+                        { label: 'Cafes', color: '#d97706' },
+                        { label: 'Museums', color: '#dc2626' },
+                        { label: 'Parks', color: '#16a34a' },
+                        { label: 'Shopping', color: '#ec4899' },
+                        { label: 'Sights', color: '#0ea5e9' },
+                        { label: 'Historic', color: '#92400e' },
+                        { label: 'Hiking', color: '#16a34a' },
+                        { label: 'Views', color: '#0ea5e9' },
+                        { label: 'Beaches', color: '#06b6d4' },
+                        { label: 'Camping', color: '#84cc16' },
+                      ].filter(cat => presentCategories.has(cat.label))
+                       .map(cat => {
+                        const isActive = legendFilters.has(cat.label);
+                        const isAnyActive = legendFilters.size > 0;
+                        const isDisabled = (cat.label === 'Shopping' && legendFilters.has('Cafes')) || (cat.label === 'Cafes' && legendFilters.has('Shopping'));
+                        return (
+                          <button key={cat.label} 
+                            disabled={isDisabled}
+                            onClick={() => setLegendFilters(prev => {
+                              const next = new Set(prev);
+                              if (next.has(cat.label)) {
+                                next.delete(cat.label);
+                              } else {
+                                next.add(cat.label);
+                              }
+                              return next;
+                            })}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem',
+                              color: '#0f172a', fontWeight: '700', cursor: isDisabled ? 'not-allowed' : 'pointer',
+                              background: isActive ? cat.color + '22' : 'transparent',
+                              border: isActive ? `1.5px solid ${cat.color}` : '1.5px solid transparent',
+                              borderRadius: '12px', padding: '3px 8px',
+                              opacity: isDisabled ? 0.2 : (!isAnyActive || isActive ? 1.0 : 0.45),
+                              transition: 'all 0.15s',
+                              outline: 'none'
+                            }}
+                          >
+                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: cat.color, display: 'inline-block' }}/>
+                            {cat.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div style={{ fontSize: '0.65rem', color: '#64748b', textAlign: 'right', maxWidth: '300px', lineHeight: '1.3' }}>
+                      <strong>Geographic view:</strong> Places are mapped onto their actual coordinates on the city grid, with dot size representing place quality.
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Route list grouped by cluster */}
+              {viewMode === 'routes' && clusters.length > 0 && (
+                <div style={{ flexShrink: 0, maxHeight: '420px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '4px' }}>
+                  {clusters.map(cl => {
+                    const members = clusteredCandidates.filter(c => c.cluster === cl.id);
+                    if (members.length === 0) return null;
+                    return (
+                      <div key={cl.id}>
+                        <div style={{ fontSize: '0.65rem', fontWeight: '700', color: cl.color, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: cl.color, display: 'inline-block' }}/>
+                          {cl.label}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '6px' }}>
+                          {members.slice(0, 5).map(c => {
+                            const isActive = routeSpaceRoute?.id === c.id;
+                            return (
+                              <button key={c.id} onClick={() => setRouteSpaceRoute(c)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', borderRadius: '7px', border: isActive ? `1.5px solid ${cl.color}` : '1px solid #e2e8f0', background: isActive ? cl.color + '12' : '#ffffff', cursor: 'pointer', textAlign: 'left' }}>
+                                <span style={{ width: 7, height: 7, borderRadius: '50%', background: cl.color, flexShrink: 0 }}/>
+                                <span style={{ fontSize: '0.72rem', fontWeight: isActive ? '700' : '500', color: '#0f172a', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                                <span style={{ fontSize: '0.62rem', color: '#94a3b8', flexShrink: 0 }}>{c.stopCount} stops · {c.totalDistance.toFixed(1)}km</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Column 3: Brushed details / Active Route Details (White background themed style) */}
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto' }}>
+              {viewMode === 'places' && brushedPlaces.length > 0 ? (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Brushed Places ({brushedPlaces.length})</span>
+                    <button 
+                      onClick={() => {
+                        const sorted = [...brushedPlaces].sort((a, b) => b.coords[0] - a.coords[0]);
+                        updateRouteWithStops(sorted);
+                        setViewMode('routes');
+                        setBrushedIds(new Set());
+                      }}
+                      style={{
+                        background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '20px',
+                        padding: '6px 14px',
+                        fontSize: '0.66rem',
+                        fontWeight: '750',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(99, 102, 241, 0.25)',
+                        transition: 'transform 0.15s, opacity 0.15s'
+                      }}
+                      onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
+                      onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                    >
+                      Create Route
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {(() => {
+                      const sorted = [...brushedPlaces].sort((a, b) => b.coords[0] - a.coords[0]);
+                      return sorted.map((p, idx) => {
+                        const { icon, color } = getTypeDetails(p.type);
+                        const nextPlace = sorted[idx + 1];
+                        let nextDist = 0;
+                        if (nextPlace) {
+                          nextDist = getDistanceKm(p.coords[0], p.coords[1], nextPlace.coords[0], nextPlace.coords[1]);
+                        }
+
+                        return (
+                          <div key={p.name || idx}>
+                            <div style={{ display: 'flex', gap: '8px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 10px', alignItems: 'center' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '50%', background: color, color: '#ffffff', fontSize: '0.6rem', fontWeight: '800', flexShrink: 0 }}>
+                                {idx + 1}
+                              </span>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                                <div style={{ fontSize: '0.62rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
+                                  <span style={{ color }}>{icon}</span> {p.type || 'Sight'}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Consecutive distance indicator */}
+                            {nextPlace && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '4px 0 4px 18px', fontSize: '0.62rem', color: '#6366f1', fontWeight: '600' }}>
+                                <span style={{ borderLeft: '1.5px dashed #818cf8', height: '12px', display: 'inline-block' }}/>
+                                <span>↕ {nextDist.toFixed(2)} km to next</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {routeSpaceRoute ? (
+                    <>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.06em' }}>◈ Active Route</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+                          <span style={{ fontSize: '0.82rem', fontWeight: '800', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{routeSpaceRoute.name}</span>
+                          <span style={{ fontSize: '0.64rem', color: '#64748b', whiteSpace: 'nowrap' }}>{routeSpaceRoute.stopCount} stops · {routeSpaceRoute.totalDistance.toFixed(1)} km</span>
+                        </div>
+                      </div>
+
+                      {/* Overview section */}
+                      <div style={{ flexShrink: 0 }}>
+                        <JourneyRhythm stops={routeSpaceRoute.stops} height={12}/>
+                        <RhythmLegend stopsArrays={[routeSpaceRoute.stops]}/>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '8px' }}>
+                          {[
+                            { name: 'Landmarks', val: Math.min(10, Math.max(1, (routeSpaceRoute.popularity / 16) * 10)), color: '#3b82f6', desc: 'Famous sights & popular attractions' },
+                            { name: 'Hidden gems', val: routeSpaceRoute.novelty * 10, color: '#10b981', desc: 'Local & off-the-beaten-path stops' },
+                            { name: 'Walkability', val: (routeSpaceRoute.walkingDistance / (routeSpaceRoute.totalDistance || 1)) * 10, color: '#0ea5e9', desc: 'How much can be done on foot' },
+                            { name: 'Spread', val: Math.min(10, (routeSpaceRoute.spread / 4.0) * 10), color: '#8b5cf6', desc: 'Geographic footprint across the city' },
+                            { name: 'Theme fit', val: Math.min(10, routeSpaceRoute.themeDensity * 2), color: '#fbbf24', desc: 'Match to your goal / theme query' },
+                            { name: 'Cost', val: Math.min(10, (routeSpaceRoute.cost / 120) * 10), color: '#f97316', desc: 'Estimated spend (entries + food)' },
+                          ].map(m => (
+                            <div key={m.name} style={{ padding: '4px 6px', background: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.62rem', marginBottom: '2px' }}>
+                                <span style={{ color: '#334155', fontWeight: '750' }}>{m.name}</span>
+                                <strong style={{ color: m.color }}>{m.val.toFixed(1)}</strong>
+                              </div>
+                              <div style={{ background: '#f1f5f9', borderRadius: '3px', height: '3px', overflow: 'hidden', marginBottom: '2px' }}>
+                                <div style={{ width: `${m.val * 10}%`, height: '100%', background: m.color, borderRadius: '3px' }}/>
+                              </div>
+                              <div style={{ fontSize: '0.54rem', color: '#64748b', lineHeight: 1.2 }}>{m.desc}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Stops list section */}
+                      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', borderTop: '1px solid #e2e8f0', paddingTop: '10px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ fontSize: '0.7rem', fontWeight: '750', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Stops Timeline</div>
+                        {routeSpaceRoute.stops.map((stop, sIdx) => {
+                          const { icon, color } = getTypeDetails(stop.type);
+                          return (
+                            <div key={stop.id || sIdx} style={{ display: 'flex', gap: '6px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', alignItems: 'center' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '50%', background: color, color: '#ffffff', fontSize: '0.6rem', fontWeight: '700', flexShrink: 0 }}>
+                                {sIdx + 1}
+                              </span>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stop.name}</div>
+                                <div style={{ fontSize: '0.58rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
+                                  <span style={{ color }}>{icon}</span> {stop.type} {stop.distanceKm > 0 && `· ${stop.distanceKm.toFixed(1)}km`}
+                                </div>
+                              </div>
+                              <button onClick={() => deleteStop(sIdx)} style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}>
+                                <Trash2 size={12}/>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#475569' }}>Add Place to Custom Route:</div>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <input type="text" placeholder="Search & add by name..."
+                            value={manualSearchQuery}
+                            onChange={e => setManualSearchQuery(e.target.value)}
+                            onKeyDown={async e => { if (e.key === 'Enter') { e.preventDefault(); await handleManualPlaceSearch(); } }}
+                            style={{ flex: 1, fontSize: '0.74rem', padding: '6px 10px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a' }}/>
+                          <button onClick={handleManualPlaceSearch} disabled={isSearchingManual}
+                            style={{ background: '#4f46e5', color: '#ffffff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.72rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {isSearchingManual ? <Loader2 size={11} className="spin"/> : <Plus size={12}/>} Add
+                          </button>
+                        </div>
+                      </div>
+
+                      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', marginTop: 'auto' }}>
+                        {appliedSuccess ? (
+                          <div style={{ background: '#ecfdf5', border: '1px solid #059669', color: '#059669', borderRadius: '8px', padding: '8px', fontSize: '0.8rem', fontWeight: '700', textAlign: 'center' }}>
+                            ✓ Applied to Planner Itinerary!
+                          </div>
+                        ) : (
+                          <button onClick={applyMorphedRouteToTrip}
+                            style={{ width: '100%', background: '#10b981', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                            <Check size={14}/> Apply to My Itinerary
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>
+                      Select or generate a route to view its details.
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+          </div>
+        </div>,
+        document.body
       )}
 
     </div>

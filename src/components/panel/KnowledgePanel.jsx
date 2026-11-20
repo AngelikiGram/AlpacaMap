@@ -158,32 +158,38 @@ const HEURISTIC_COMMON = new Set(nlpData.heuristicCommon);
 // runtime so neither the NLP entity regex nor isLocationNode passes them through.
 const EXTRA_NON_PLACE_WORDS = [
   // Conjunctions / connectives — never place names
-  'although','however','therefore','moreover','nevertheless','nonetheless','besides',
-  'furthermore','consequently','accordingly','meanwhile','otherwise','instead',
-  'indeed','actually','basically','essentially','generally','typically','usually',
-  'apparently','obviously','clearly','naturally','literally','simply','especially',
-  'particularly','recently','finally','previously','currently','originally',
+  'although', 'however', 'therefore', 'moreover', 'nevertheless', 'nonetheless', 'besides',
+  'furthermore', 'consequently', 'accordingly', 'meanwhile', 'otherwise', 'instead',
+  'indeed', 'actually', 'basically', 'essentially', 'generally', 'typically', 'usually',
+  'apparently', 'obviously', 'clearly', 'naturally', 'literally', 'simply', 'especially',
+  'particularly', 'recently', 'finally', 'previously', 'currently', 'originally',
   // Transport modes / items (not venues)
-  'taxi','taxis','cab','cabs','uber','lyft','bus','buses','tube','metro','tram',
-  'ferry','ferries','subway','trolley','shuttle','minibus','coach','coaches',
-  'oyster','travelcard','railcard','tfl','transit',
+  'taxi', 'taxis', 'cab', 'cabs', 'uber', 'lyft', 'bus', 'buses', 'tube', 'metro', 'tram',
+  'ferry', 'ferries', 'subway', 'trolley', 'shuttle', 'minibus', 'coach', 'coaches',
+  'oyster', 'travelcard', 'railcard', 'tfl', 'transit',
   // Titles without a proper name following
-  'princess','prince','duke','duchess','lord','lady','queen','king','sir','dame',
-  'count','countess','earl','baron','baroness','sultan','emperor','empress',
+  'princess', 'prince', 'duke', 'duchess', 'lord', 'lady', 'queen', 'king', 'sir', 'dame',
+  'count', 'countess', 'earl', 'baron', 'baroness', 'sultan', 'emperor', 'empress',
   // Generic standalone nouns frequently mis-extracted
-  'assembly','parliament','council','committee','commission','authority','agency',
-  'charity','foundation','trust','institute','society','association','federation',
-  'staff','crew','team','group','crowd','locals','tourists','visitors','everyone',
-  'people','pedestrians','cyclists','drivers','passengers','travellers','travelers',
+  'assembly', 'parliament', 'council', 'committee', 'commission', 'authority', 'agency',
+  'charity', 'foundation', 'trust', 'institute', 'society', 'association', 'federation',
+  'staff', 'crew', 'team', 'group', 'crowd', 'locals', 'tourists', 'visitors', 'everyone',
+  'people', 'pedestrians', 'cyclists', 'drivers', 'passengers', 'travellers', 'travelers',
   // Generic place words that need a qualifier to be meaningful
-  'pub','pubs','bar','bars','cafe','cafes','kiosk','stall','booth','outlet',
-  'office','offices','branch','branches','branch','depot','hub','terminal',
-  'bridge','bridges','street','road','avenue','lane','alley','path','trail',
-  'park','square','plaza','yard','court','close','row','gardens','terrace',
+  'pub', 'pubs', 'bar', 'bars', 'cafe', 'cafes', 'kiosk', 'stall', 'booth', 'outlet',
+  'office', 'offices', 'branch', 'branches', 'branch', 'depot', 'hub', 'terminal',
+  'bridge', 'bridges', 'street', 'road', 'avenue', 'lane', 'alley', 'path', 'trail',
+  'park', 'square', 'plaza', 'yard', 'court', 'close', 'row', 'gardens', 'terrace',
   // Directions / generic modifiers
-  'north','south','east','west','central','upper','lower','inner','outer','main',
+  'north', 'south', 'east', 'west', 'central', 'upper', 'lower', 'inner', 'outer', 'main',
   // Seasons / time (sometimes capitalised mid-sentence)
-  'summer','winter','spring','autumn','morning','afternoon','evening','night',
+  'summer', 'winter', 'spring', 'autumn', 'morning', 'afternoon', 'evening', 'night',
+  // Famous people / non-place concepts mis-extracted by the LLM
+  'harry', 'yoko', 'dua', 'turkish', 'visa', 'damien', 'christopher', 'danish', 'milan', 'fringe',
+  'karl', 'benjamin', 'elizabeth', 'holiday', 'suvarnabhumi', 'airlines', 'passport', 'passports',
+  'rental', 'rentals', 'flight', 'flights', 'ticket', 'tickets', 'fare', 'fares', 'insurance',
+  'hotel', 'hotels', 'accommodation', 'accommodations', 'stay', 'stays', 'trip', 'trips',
+  'booking', 'bookings', 'itinerary', 'itineraries'
 ];
 EXTRA_NON_PLACE_WORDS.forEach(w => {
   ENTITY_COMMON_WORDS.add(w);
@@ -321,20 +327,28 @@ async function fetchRedditFromDuckDuckGo(query) {
     if (!res.ok) { console.log('DDG not ok:', res.status); return []; }
     const html = await res.text();
     const snippets = [];
-    // DDG uses multiple possible snippet markup patterns — try all
-    const patterns = [
-      /<a class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g,
-      /<div class="result__snippet"[^>]*>([\s\S]*?)<\/div>/g,
-      /<span class="[^"]*snippet[^"]*"[^>]*>([\s\S]*?)<\/span>/g,
-      /<td class="result-snippet"[^>]*>([\s\S]*?)<\/td>/g,
-    ];
-    for (const rx of patterns) {
-      let match;
-      while ((match = rx.exec(html)) !== null) {
-        const cleanText = cleanContentText(match[1].replace(/<[^>]+>/g, '').replace(/&[a-z#0-9]+;/gi, ' '));
-        if (cleanText.length > 30 && !snippets.includes(cleanText)) snippets.push(cleanText);
+    
+    // Modern DDG HTML result parsing
+    const rx = /<a class="result__snippet"[^>]*>([\s\S]*?)<\/a>/gi;
+    let match;
+    while ((match = rx.exec(html)) !== null) {
+      const cleanText = cleanContentText(match[1].replace(/<[^>]+>/g, '').replace(/&[a-z#0-9]+;/gi, ' '));
+      if (cleanText.length > 30 && !snippets.includes(cleanText)) {
+        snippets.push(cleanText);
       }
     }
+    
+    // Fallback parsing for other styles
+    if (snippets.length === 0) {
+      const fallbackRx = /<div class="result__snippet"[^>]*>([\s\S]*?)<\/div>/gi;
+      while ((match = fallbackRx.exec(html)) !== null) {
+        const cleanText = cleanContentText(match[1].replace(/<[^>]+>/g, '').replace(/&[a-z#0-9]+;/gi, ' '));
+        if (cleanText.length > 30 && !snippets.includes(cleanText)) {
+          snippets.push(cleanText);
+        }
+      }
+    }
+    
     console.log(`DDG: ${snippets.length} snippets for: ${qStr.slice(0, 60)}`);
     return snippets;
   } catch (e) {
@@ -348,7 +362,7 @@ async function fetchRedditFromDuckDuckGo(query) {
 // Finds city/country-specific subs (r/JapanTravel, r/london, r/Netherlands) that generic
 // hardcoded lists miss entirely.
 async function discoverCitySubreddits(cityName) {
-  const EXCLUDE = new Set(['wiki','search','comments','user','all','popular','submit','message','login','register','help','about','r','new','hot','top','controversial']);
+  const EXCLUDE = new Set(['wiki', 'search', 'comments', 'user', 'all', 'popular', 'submit', 'message', 'login', 'register', 'help', 'about', 'r', 'new', 'hot', 'top', 'controversial']);
   try {
     const qStr = `site:reddit.com/r/ "${cityName}" travel`;
     const url = `/ddg-proxy/html/?q=${encodeURIComponent(qStr)}&kl=en-us`;
@@ -377,47 +391,55 @@ async function fetchRedditViaPullPush(cityName) {
   const results = [];
   const PULLPUSH_BASE = 'https://api.pullpush.io';
   const PROXY_BASE = '/pullpush-proxy';
-  const DEFAULT_SUBS = ['travel', 'solotravel', 'backpacking', 'travelhacks'];
-  const QUERIES = [`${cityName} travel tips`, `${cityName} itinerary`, `${cityName}`];
+  const citySlug = cityName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const DEFAULT_SUBS = ['travel', 'solotravel', 'backpacking'];
+  const GENERIC_QUERIES = [`${cityName} travel tips`, `${cityName} itinerary`, `${cityName}`];
+  // City-specific subreddit (r/london, r/paris, etc.) gets broader queries
+  const CITY_QUERIES = [`${cityName} travel`, `${cityName} tips`, `visiting ${cityName}`, cityName];
 
-  const fetchSubs = async (subs, baseUrl) => {
+  const fetchSubs = async (subs, queries, baseUrl, size = 50) => {
     await Promise.allSettled(subs.flatMap(sub =>
-      QUERIES.map(async q => {
+      queries.map(async q => {
         try {
-          const url = `${baseUrl}/reddit/search/submission/?q=${encodeURIComponent(q)}&subreddit=${sub}&sort=score&size=20`;
+          const url = `${baseUrl}/reddit/search/submission/?q=${encodeURIComponent(q)}&subreddit=${sub}&sort=score&size=${size}`;
           const res = await fetch(url, { credentials: 'omit', signal: AbortSignal.timeout(10000) });
-          if (!res.ok) { console.log(`[PullPush] ${res.status} for sub=${sub} q="${q}" base=${baseUrl}`); return; }
+          if (!res.ok) { console.log(`[PullPush] ${res.status} for sub=${sub} q="${q}"`); return; }
           const text = await res.text();
-          if (text.trimStart().startsWith('<')) { console.log(`[PullPush] HTML response from ${baseUrl}`); return; }
+          if (text.trimStart().startsWith('<')) { console.log(`[PullPush] HTML response — blocked`); return; }
           const data = JSON.parse(text);
           const posts = (data.data || []).filter(p =>
-            p.selftext && p.selftext !== '[deleted]' && p.selftext !== '[removed]' && p.selftext.trim().length > 80
+            p.selftext && p.selftext !== '[deleted]' && p.selftext !== '[removed]' && p.selftext.trim().length > 50
           );
-          console.log(`[PullPush] ${baseUrl === PULLPUSH_BASE ? 'direct' : 'proxy'} r/${sub} "${q}" → ${posts.length} posts`);
+          console.log(`[PullPush] r/${sub} "${q}" → ${posts.length} posts`);
           results.push(...posts);
         } catch (e) { console.log(`[PullPush] Error r/${sub} "${q}": ${e.message}`); }
       })
     ));
   };
 
-  // Run default subs fetch and city subreddit discovery simultaneously (saves 3–6s)
+  // Phase 1: generic travel subs + city subreddit discovery in parallel
   const [, discoveryResult] = await Promise.allSettled([
-    fetchSubs(DEFAULT_SUBS, PULLPUSH_BASE),
+    fetchSubs(DEFAULT_SUBS, GENERIC_QUERIES, PULLPUSH_BASE, 50),
     discoverCitySubreddits(cityName),
   ]);
 
-  // Fetch any city-specific subreddits discovered (r/JapanTravel, r/london, etc.)
+  // Phase 2: city-specific subreddit (r/london) with wider queries — sequential to avoid rate limits
+  if (citySlug) {
+    await fetchSubs([citySlug], CITY_QUERIES, PULLPUSH_BASE, 100);
+  }
+
+  // Phase 3: any other discovered subs (r/VisitingLondon etc.)
   const discovered = discoveryResult.status === 'fulfilled' ? discoveryResult.value : [];
-  const extraSubs = discovered.filter(s => !DEFAULT_SUBS.includes(s));
+  const extraSubs = discovered.filter(s => !DEFAULT_SUBS.includes(s) && s !== citySlug);
   if (extraSubs.length > 0) {
     console.log(`[PullPush] Fetching ${extraSubs.length} discovered subs: ${extraSubs.join(', ')}`);
-    await fetchSubs(extraSubs, PULLPUSH_BASE);
+    await fetchSubs(extraSubs, GENERIC_QUERIES, PULLPUSH_BASE, 50);
   }
 
   // If direct failed entirely, retry via Vite proxy
   if (results.length === 0) {
     console.log('[PullPush] Direct failed, trying Vite proxy...');
-    await fetchSubs(DEFAULT_SUBS, PROXY_BASE);
+    await fetchSubs(DEFAULT_SUBS, GENERIC_QUERIES, PROXY_BASE, 50);
   }
 
   return results;
@@ -506,7 +528,9 @@ function extractKnowledgeNLP(text, city, placeNames = [], sourceType, sourceLabe
 
     sentences.forEach(sentence => {
       const trimmed = sentence.trim();
-      if (trimmed.length < 25 || trimmed.length > 250) return;
+      const minLength = currentSourceType === 'reddit' ? 15 : 25;
+      const maxLength = currentSourceType === 'reddit' ? 350 : 250;
+      if (trimmed.length < minLength || trimmed.length > maxLength) return;
 
       let foundPlace = null;
 
@@ -560,7 +584,8 @@ function extractKnowledgeNLP(text, city, placeNames = [], sourceType, sourceLabe
 
       if (!foundPlace) return;
 
-      const hasTipAction = /should|must|avoid|recommend|book|ticket|price|fee|hour|time|scam|trap|crowd|watch|keep|always|never|free|visit|see|go|walk|travel|trip|station|line|great|good|best|love|amazing|wonderful|nice|fantastic|awesome|beautiful|perfect|delicious|tasty|worth|favorite|favourite|bad|worst|terrible|awful|expensive|overpriced|cheap|buy|eat|drink/i.test(trimmed);
+      // Relax action-verb matching for Reddit because comments are casual
+      const hasTipAction = currentSourceType === 'reddit' || /should|must|avoid|recommend|book|ticket|price|fee|hour|time|scam|trap|crowd|watch|keep|always|never|free|visit|see|go|walk|travel|trip|station|line|great|good|best|love|amazing|wonderful|nice|fantastic|awesome|beautiful|perfect|delicious|tasty|worth|favorite|favourite|bad|worst|terrible|awful|expensive|overpriced|cheap|buy|eat|drink/i.test(trimmed);
       if (!hasTipAction) return;
 
       const { sentiment, intensity } = analyzeSentimentNLP(trimmed);
@@ -694,49 +719,71 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
 
   const allPosts = [];
 
-  // ── Run PullPush + Reddit proxy IN PARALLEL ───────────────────────────────
-  // PullPush.io is a confirmed-working open Reddit archive (no auth, no blocks).
-  // Reddit proxy attempts are kept but with short timeouts as they usually return
-  // HTML (blocked) — we detect that via JSON parse failure and skip gracefully.
-  console.log('[Reddit] Fetching via PullPush + proxy in parallel...');
+  // ── api.reddit.com via Vite proxy (PRIMARY — confirmed working) ────────────
+  // api.reddit.com returns JSON directly without CORS blocks.
+  console.log('[Reddit] Fetching via api.reddit.com proxy...');
+  const TRAVEL_SUBS = [...new Set([citySlug, 'travel', 'solotravel', 'backpacking', 'shoestring'].filter(Boolean))];
+  const QUERIES = [`${noCountry} travel tips`, `${noCountry} itinerary`, `${noCountry} things to do`, noCountry];
 
-  const [ppResult] = await Promise.allSettled([
-    // ── PullPush.io (primary) ─────────────────────────────────────────────
-    fetchRedditViaPullPush(noCountry).then(posts => {
-      if (posts.length > 0) {
-        console.log(`[Reddit] PullPush → ${posts.length} posts`);
-        allPosts.push(...posts);
-      } else {
-        console.log('[Reddit] PullPush returned 0 posts');
+  // If direct API calls are blocked by Reddit's security system, we also query DuckDuckGo with multiple parallel queries
+  // so we have a guaranteed fallback that fetches a large volume of posts without triggering blocks.
+  const ddgQueries = [
+    `${noCountry} travel tips`,
+    `${noCountry} itinerary`,
+    `${noCountry} hidden gems`,
+    `${noCountry} things to do`,
+    `${noCountry} restaurants cafes food`,
+    `best places in ${noCountry}`
+  ];
+  let ddgPromise = Promise.allSettled(
+    ddgQueries.map(async (dq, qIdx) => {
+      try {
+        const snippets = await fetchRedditFromDuckDuckGo(dq);
+        if (snippets.length > 0) {
+          const posts = snippets.map((s, idx) => ({
+            id: `ddg-reddit-${qIdx}-${idx}`,
+            selftext: s,
+            title: `Reddit travel tip: ${dq} #${idx + 1}`,
+            subreddit: 'travel',
+            permalink: `/r/travel/search?q=${encodeURIComponent(dq)}`,
+            created_utc: Math.floor(Date.now() / 1000)
+          }));
+          allPosts.push(...posts);
+        }
+      } catch (e) {
+        console.log(`[Reddit] DDG query "${dq}" failed:`, e.message);
       }
-    }).catch(e => console.log('[Reddit] PullPush error:', e.message)),
+    })
+  );
 
-    // ── Reddit JSON proxy (bonus — often blocked, short timeout) ──────────
-    (async () => {
-      const queries = [`${noCountry} travel tips`, `${noCountry} itinerary`];
-      const subs = [...new Set([citySlug, 'travel', 'solotravel', 'backpacking'].filter(Boolean))];
-      await Promise.allSettled(
-        subs.flatMap(sub => queries.map(async q => {
-          try {
-            const qs = `q=${encodeURIComponent(q)}&sort=top&t=all&limit=25&restrict_sr=on`;
-            const res = await fetch(`/reddit-proxy/r/${sub}/search.json?${qs}`, {
-              headers: { Accept: 'application/json' },
-              credentials: 'omit',
-              signal: AbortSignal.timeout(4000) // short — don't block on HTML responses
-            });
-            if (!res.ok) { console.log(`[Reddit proxy] r/${sub} → HTTP ${res.status}`); return; }
-            const text = await res.text();
-            // Reddit blocks return HTML — detect and skip
-            if (text.trimStart().startsWith('<')) { console.log(`[Reddit proxy] r/${sub} → HTML response (blocked)`); return; }
-            const data = JSON.parse(text);
-            const posts = (data.data?.children || []).map(c => c.data)
-              .filter(p => !p.over_18 && p.selftext && p.selftext !== '[deleted]' && p.selftext !== '[removed]' && p.selftext.trim().length > 80);
-            if (posts.length > 0) { allPosts.push(...posts); console.log(`[Reddit proxy] r/${sub} "${q}" → ${posts.length} posts ✓`); }
-          } catch (e) { console.log(`[Reddit proxy] r/${sub} skipped: ${e.message}`); }
-        }))
-      );
-    })()
+  await Promise.allSettled([
+    ddgPromise,
+    ...TRAVEL_SUBS.flatMap(sub => QUERIES.map(async q => {
+      try {
+        const qs = `q=${encodeURIComponent(`${q} subreddit:${sub}`)}&sort=top&t=all&limit=100`;
+        const res = await fetch(`/reddit-proxy/search.json?${qs}`, {
+          headers: { Accept: 'application/json' },
+          credentials: 'omit',
+          signal: AbortSignal.timeout(8000)
+        });
+        if (!res.ok) { console.log(`[Reddit] search for sub=${sub} q="${q}" → HTTP ${res.status}`); return; }
+        const text = await res.text();
+        if (text.trimStart().startsWith('<')) { console.log(`[Reddit] sub=${sub} q="${q}" → HTML (blocked)`); return; }
+        const data = JSON.parse(text);
+        const posts = (data.data?.children || []).map(c => c.data)
+          .filter(p => !p.over_18 && p.selftext && p.selftext !== '[deleted]' && p.selftext !== '[removed]' && p.selftext.trim().length > 50);
+        if (posts.length > 0) { allPosts.push(...posts); console.log(`[Reddit] sub=${sub} "${q}" → ${posts.length} posts ✓`); }
+      } catch (e) { console.log(`[Reddit] search failed: ${e.message}`); }
+    }))
   ]);
+
+  // ── PullPush.io (fallback — often down) ───────────────────────────────────
+  if (allPosts.length === 0) {
+    console.log('[Reddit] api.reddit.com returned 0, trying PullPush fallback...');
+    await fetchRedditViaPullPush(noCountry).then(posts => {
+      if (posts.length > 0) { allPosts.push(...posts); console.log(`[Reddit] PullPush → ${posts.length} posts`); }
+    }).catch(e => console.log('[Reddit] PullPush error:', e.message));
+  }
 
   // ── Deduplicate ───────────────────────────────────────────────────────────
   const seen = new Set();
@@ -777,18 +824,18 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
 
 async function fetchWikitravel(city, parentCity = null) {
   const tryNames = buildCityVariants(city, parentCity);
-  // Do parallel fetch to optimize speed
   const results = await Promise.allSettled(tryNames.map(async name => {
-    const qs = `action=query&titles=${encodeURIComponent(name)}&prop=revisions&rvprop=content&format=json&origin=*`;
-    const res = await fetch(`/wikitravel-proxy/wiki/en/api.php?${qs}`, { credentials: 'omit', signal: AbortSignal.timeout(8000) });
-    if (!res.ok) throw new Error('Bad response');
-    const textData = await res.text();
-    const data = JSON.parse(textData);
+    // rvslots=* required for MediaWiki 1.32+ slot-based content model
+    const qs = `action=query&titles=${encodeURIComponent(name)}&prop=revisions&rvprop=content&rvslots=*&format=json&origin=*`;
+    const res = await fetch(`/wikitravel-proxy/wiki/en/api.php?${qs}`, { credentials: 'omit', signal: AbortSignal.timeout(10000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
     const pages = data.query?.pages || {};
     const page = Object.values(pages)[0];
     if (!page || page.missing !== undefined) throw new Error('Missing page');
     const revision = page?.revisions?.[0];
-    const wikitext = revision?.['*'] || '';
+    // Support both old format (revision['*']) and new slot format (revision.slots.main['*'])
+    const wikitext = revision?.slots?.main?.['*'] || revision?.['*'] || '';
     if (wikitext.length < 100) throw new Error('Too short');
     return { text: cleanContentText(wikitext), title: page.title, url: `https://wikitravel.org/en/${encodeURIComponent(page.title)}` };
   }));
@@ -836,9 +883,13 @@ function PlaceCard({ place, expanded, onToggle, onClaimClick }) {
   const neu = place.nodes.length - pos - neg;
   const posRatio = place.nodes.length > 0 ? pos / place.nodes.length : 0.5;
   const isExpanded = expanded === place.name;
-  const accentColor = posRatio > 0.6 ? '#10b981' : posRatio < 0.35 ? '#f97316' : '#8b5cf6';
-  const bgColor = posRatio > 0.6 ? 'rgba(16,185,129,0.07)' : posRatio < 0.35 ? 'rgba(249,115,22,0.07)' : 'rgba(139,92,246,0.07)';
-  const glowColor = posRatio > 0.6 ? 'rgba(16,185,129,0.15)' : posRatio < 0.35 ? 'rgba(249,115,22,0.12)' : 'rgba(139,92,246,0.12)';
+  
+  // Synchronized color scheme
+  const isContested = pos > 0 && neg > 0;
+  const accentColor = isContested ? '#fb923c' : (posRatio > 0.6 ? '#10b981' : (posRatio < 0.3 ? '#ef4444' : '#38bdf8'));
+  const bgColor = isContested ? 'rgba(251,146,60,0.07)' : (posRatio > 0.6 ? 'rgba(16,185,129,0.07)' : (posRatio < 0.3 ? 'rgba(239,68,68,0.07)' : 'rgba(56,189,248,0.07)'));
+  const glowColor = isContested ? 'rgba(251,146,60,0.15)' : (posRatio > 0.6 ? 'rgba(16,185,129,0.15)' : (posRatio < 0.3 ? 'rgba(239,68,68,0.15)' : 'rgba(56,189,248,0.15)'));
+  
   const displayName = place.isCategory ? place.name.split(' · ')[1] || place.name : place.name;
 
   return (
@@ -847,12 +898,12 @@ function PlaceCard({ place, expanded, onToggle, onClaimClick }) {
       <div style={{ fontSize: '0.73rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '5px', lineHeight: 1.3 }}>{displayName}</div>
       <div style={{ height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden', display: 'flex', marginBottom: '8px' }}>
         {pos > 0 && <div style={{ flex: pos, background: '#10b981' }} />}
-        {neu > 0 && <div style={{ flex: neu, background: '#8b5cf6' }} />}
-        {neg > 0 && <div style={{ flex: neg, background: '#f97316' }} />}
+        {neu > 0 && <div style={{ flex: neu, background: '#38bdf8' }} />}
+        {neg > 0 && <div style={{ flex: neg, background: '#ef4444' }} />}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '8px' }}>
         {place.nodes.slice(0, isExpanded ? 99 : 3).map((n, i) => {
-          const claimColor = n.evaluation?.sentiment === 'positive' ? '#34d399' : n.evaluation?.sentiment === 'negative' ? '#fb923c' : '#94a3b8';
+          const claimColor = n.evaluation?.sentiment === 'positive' ? '#10b981' : n.evaluation?.sentiment === 'negative' ? '#ef4444' : '#94a3b8';
           const icon = n.evaluation?.sentiment === 'positive' ? '✓' : n.evaluation?.sentiment === 'negative' ? '⚠' : '·';
           return (
             <div key={n.id || i} onClick={e => { e.stopPropagation(); onClaimClick(n); }}
@@ -879,10 +930,10 @@ function PlaceCard({ place, expanded, onToggle, onClaimClick }) {
           {place.novelty > 0.5 && (
             <span title={`Insider score: ${(place.novelty * 100).toFixed(0)}% — nuanced, multi-source, contested`}
               style={{ fontSize: '0.5rem', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '2px', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '6px', padding: '0 4px' }}>
-              <Sparkles size={7} color="#f59e0b"/> Insider
+              <Sparkles size={7} color="#f59e0b" /> Insider
             </span>
           )}
-          <div style={{ display: 'flex', gap: '2px', fontSize: '0.7rem' }}>
+          <div style={{ display: 'flex', gap: '2px', fontSize: '0.7rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {[...place.sources].map(src => <span key={src} title={SOURCE_META[src]?.label || src}>{SOURCE_META[src]?.icon || '?'}</span>)}
           </div>
         </div>
@@ -894,6 +945,9 @@ function PlaceCard({ place, expanded, onToggle, onClaimClick }) {
 function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, allCityNames }) {
   const [expanded, setExpanded] = useState(null);
   const [showCategories, setShowCategories] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filterCategory, setFilterCategory] = useState('All');
+  const [sortBy, setSortBy] = useState('claims'); // 'claims' | 'name' | 'novelty'
 
   const handleClaimClick = useCallback((n) => {
     if (n.source?.url) window.open(n.source.url, '_blank');
@@ -902,6 +956,18 @@ function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, all
     const found = all.find(pl => pl.name.toLowerCase() === n.place?.toLowerCase());
     triggerPlaceInfo(found || { name: n.place || 'Unknown', type: 'custom', coords: tripData?.locations?.[0]?.coords || [51.5074, -0.1278] });
   }, [triggerPlaceInfo, tripData]);
+
+  // Helper to classify places by keyword frequency
+  const getCategory = (nodes) => {
+    const text = nodes.map(n => (n.claim || '').toLowerCase()).join(' ');
+    if (/\b(food|eat|eating|drink|restaurant|cafe|coffee|beer|wine|cuisine|lunch|dinner|breakfast|pub|bar)\b/i.test(text)) return 'Food & Drink';
+    if (/\b(transport|metro|bus|train|taxi|cab|airport|flight|station|tram|subway|tube|travel|passenger|passengers|commute|commuter|commuters|fare|fares|oyster|travelcard|capping|cap|caps|peak|off-peak|journey|journeys|line|lines|rail|railway|railways)\b/i.test(text)) return 'Transport';
+    if (/\b(safe|safety|danger|scam|pickpocket|hospital|emergency|avoid|crime|theft|caution|beware)\b/i.test(text)) return 'Safety';
+    if (/\b(museum|history|historical|art|gallery|festival|landmark|palace|castle|abbey|church|cathedral|monument)\b/i.test(text)) return 'Culture';
+    if (/\b(shop|shopping|buy|souvenir|store|mall|price|market)\b/i.test(text)) return 'Shopping';
+    if (/\b(hotel|hostel|stay|accommodation|airbnb|room|booking)\b/i.test(text)) return 'Accommodation';
+    return 'Culture';
+  };
 
   const { specificPlaces, categoryPlaces } = useMemo(() => {
     const map = {};
@@ -918,7 +984,7 @@ function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, all
       if (n.source?.sourceType) map[key].sources.add(n.source.sourceType);
     });
     const maxNodeCount = Math.max(...Object.values(map).map(v => v.nodes.length), 1);
-    // Compute novelty: conflict ratio × source variety × rarity
+    // Compute novelty
     Object.values(map).forEach(v => {
       const total = v.nodes.length;
       const pos = v.nodes.filter(n => n.evaluation?.sentiment === 'positive').length;
@@ -927,6 +993,7 @@ function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, all
       const sourceVariety = Math.min(1, v.sources.size / 4);
       const rarity = 1 - total / maxNodeCount;
       v.novelty = conflictRatio * 0.4 + sourceVariety * 0.35 + rarity * 0.25;
+      v.category = v.isCategory ? (v.name.split(' · ')[1] || 'Culture') : getCategory(v.nodes);
     });
     const all = Object.values(map).sort((a, b) => b.nodes.length - a.nodes.length);
     return {
@@ -935,45 +1002,228 @@ function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, all
     };
   }, [nodes, cityNamesSet]);
 
+  const processList = useCallback((list) => {
+    let processed = list;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      processed = processed.filter(p => p.name.toLowerCase().includes(q) || p.nodes.some(n => n.claim?.toLowerCase().includes(q)));
+    }
+    if (filterCategory !== 'All') {
+      processed = processed.filter(p => p.category === filterCategory);
+    }
+    processed = [...processed];
+    if (sortBy === 'name') {
+      processed.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'novelty') {
+      processed.sort((a, b) => b.novelty - a.novelty);
+    } else {
+      processed.sort((a, b) => b.nodes.length - a.nodes.length);
+    }
+    return processed;
+  }, [search, filterCategory, sortBy]);
+
+  const filteredSpecific = useMemo(() => processList(specificPlaces), [specificPlaces, processList]);
+  const filteredCategory = useMemo(() => processList(categoryPlaces), [categoryPlaces, processList]);
+
   const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: '7px' };
 
+  const CATEGORY_TAGS = [
+    { name: 'All', color: '#888' },
+    { name: 'Culture', color: '#8b5cf6' },
+    { name: 'Transport', color: '#0ea5e9' },
+    { name: 'Food & Drink', color: '#f97316' },
+    { name: 'Safety', color: '#ef4444' },
+    { name: 'Shopping', color: '#ec4899' },
+    { name: 'Accommodation', color: '#06b6d4' }
+  ];
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontFamily: 'Inter,sans-serif' }}>
+      
+      {/* Search and Filters panel */}
+      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        
+        {/* Search & Sort Row */}
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="🔍 Search place name or keyword…"
+            style={{
+              flex: 1, minWidth: '180px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '8px', padding: '5px 10px', fontSize: '0.68rem', color: '#fff', outline: 'none'
+            }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.62rem', color: 'var(--text-secondary)' }}>Sort by:</span>
+            {[['claims', 'Claims'], ['name', 'Alphabetical'], ['novelty', 'Insider']].map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setSortBy(key)}
+                style={{
+                  background: sortBy === key ? 'rgba(139,92,246,0.18)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${sortBy === key ? '#8b5cf6' : 'rgba(255,255,255,0.08)'}`,
+                  borderRadius: '6px', padding: '3px 8px', fontSize: '0.62rem', color: sortBy === key ? '#c4b5fd' : '#aaa',
+                  cursor: 'pointer', fontFamily: 'Inter,sans-serif'
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Category Filter Chips */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginRight: '4px' }}>Topic:</span>
+          {CATEGORY_TAGS.map(c => {
+            const isActive = filterCategory === c.name;
+            return (
+              <button
+                key={c.name}
+                onClick={() => setFilterCategory(c.name)}
+                style={{
+                  background: isActive ? `${c.color}22` : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${isActive ? c.color : 'rgba(255,255,255,0.08)'}`,
+                  borderRadius: '12px', padding: '2px 8px', fontSize: '0.6rem',
+                  color: isActive ? '#fff' : '#888', cursor: 'pointer',
+                  fontFamily: 'Inter,sans-serif', transition: 'all 0.15s'
+                }}
+              >
+                {c.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Specific places */}
-      {specificPlaces.length > 0 && (
+      {filteredSpecific.length > 0 && (
         <div>
           <div style={{ fontSize: '0.62rem', color: '#38bdf8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <MapPin size={10} /> Specific Places ({specificPlaces.length})
+            <MapPin size={10} /> Specific Places ({filteredSpecific.length})
           </div>
           <div style={gridStyle}>
-            {specificPlaces.map(p => <PlaceCard key={p.name} place={p} expanded={expanded} onToggle={n => setExpanded(expanded === n ? null : n)} onClaimClick={handleClaimClick} />)}
+            {filteredSpecific.map(p => <PlaceCard key={p.name} place={p} expanded={expanded} onToggle={n => setExpanded(expanded === n ? null : n)} onClaimClick={handleClaimClick} />)}
           </div>
         </div>
       )}
 
       {/* Category insights — collapsible */}
-      {categoryPlaces.length > 0 && (
+      {filteredCategory.length > 0 && (
         <div>
           <button onClick={() => setShowCategories(v => !v)}
             style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: '8px' }}>
             <span style={{ fontSize: '0.62rem', color: '#8b5cf6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              General Insights ({categoryPlaces.length} topics)
+              General Insights ({filteredCategory.length} topics)
             </span>
             {showCategories ? <ChevronUp size={11} style={{ color: '#8b5cf6' }} /> : <ChevronDown size={11} style={{ color: '#8b5cf6' }} />}
           </button>
           {showCategories && (
             <div style={gridStyle}>
-              {categoryPlaces.map(p => <PlaceCard key={p.name} place={p} expanded={expanded} onToggle={n => setExpanded(expanded === n ? null : n)} onClaimClick={handleClaimClick} />)}
+              {filteredCategory.map(p => <PlaceCard key={p.name} place={p} expanded={expanded} onToggle={n => setExpanded(expanded === n ? null : n)} onClaimClick={handleClaimClick} />)}
             </div>
           )}
         </div>
       )}
 
-      {specificPlaces.length === 0 && categoryPlaces.length === 0 && (
-        <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.78rem', padding: '2rem' }}>No places extracted yet.</div>
+      {filteredSpecific.length === 0 && filteredCategory.length === 0 && (
+        <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.72rem', padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          No places found matching the filters.
+        </div>
       )}
     </div>
   );
+}
+
+// ── Wikidata Entity Linking ───────────────────────────────────────────────────
+// Replaces the LLM place-name refinement step with deterministic KG grounding.
+// For each unique place name, queries the Wikidata search API and returns the
+// best-matching entity with its canonical name, Q-ID, coordinates, and type.
+const WD_CACHE = new Map(); // session-level cache to avoid repeat lookups
+
+async function wikidataSearch(placeName, cityHint = '') {
+  const query = cityHint ? `${placeName} ${cityHint}` : placeName;
+  const cacheKey = query.toLowerCase();
+  if (WD_CACHE.has(cacheKey)) return WD_CACHE.get(cacheKey);
+
+  const url = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(query)}&language=en&limit=3&type=item&format=json&origin=*`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const hits = (data.search || []).filter(h =>
+      // Accept geographical entities: check description for place-related keywords
+      h.description && /place|city|town|village|district|museum|landmark|restaurant|park|station|street|market|church|temple|castle|island|mountain|beach|port|airport|neighborhood|quarter|area|site/i.test(h.description)
+    );
+    const best = hits[0] || data.search?.[0] || null;
+    const result = best ? {
+      wikidataId: best.id,
+      canonicalName: best.label,
+      description: best.description || '',
+      wikidataUrl: `https://www.wikidata.org/wiki/${best.id}`,
+    } : null;
+    WD_CACHE.set(cacheKey, result);
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+// Fetch coordinates from a Wikidata Q-ID (P625 = coordinate location)
+async function wikidataCoords(qid) {
+  if (!qid) return null;
+  const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${qid}&property=P625&format=json&origin=*`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const claims = data.claims?.P625;
+    if (!claims?.length) return null;
+    const val = claims[0].mainsnak?.datavalue?.value;
+    if (val?.latitude && val?.longitude) return [val.latitude, val.longitude];
+  } catch { }
+  return null;
+}
+
+// Main Wikidata resolution pass — enriches nodes in-place and returns updated array.
+// Each node gets: wikidata_id, canonical_name (corrected), wikidata_description, coords (if missing)
+async function resolveWithWikidata(nodes, city = '', onProgress = null) {
+  const uniquePlaces = [...new Set(nodes.map(n => n.place).filter(Boolean))];
+  const cityBase = city.split(',')[0].trim();
+
+  // Lookup table: raw place name → Wikidata entity
+  const entityMap = {};
+  for (let i = 0; i < uniquePlaces.length; i++) {
+    const name = uniquePlaces[i];
+    if (onProgress) onProgress(i + 1, uniquePlaces.length, name);
+    const entity = await wikidataSearch(name, cityBase);
+    if (entity) {
+      entityMap[name] = entity;
+      // Fetch coords if not already in the trip data (best-effort, no blocking)
+      if (!entity.coords) {
+        wikidataCoords(entity.wikidataId).then(coords => { if (coords) entity.coords = coords; }).catch(() => { });
+      }
+    }
+    // Polite delay: 80 ms per request — well within Wikidata rate limits
+    if (i < uniquePlaces.length - 1) await new Promise(r => setTimeout(r, 80));
+  }
+
+  // Annotate every node with its Wikidata match; correct place name if match is high-confidence
+  return nodes.map(n => {
+    const entity = entityMap[n.place];
+    if (!entity) return n;
+    const canonicalDiffers = entity.canonicalName && entity.canonicalName.toLowerCase() !== (n.place || '').toLowerCase();
+    return {
+      ...n,
+      place: canonicalDiffers ? entity.canonicalName : n.place,
+      wikidata_id: entity.wikidataId,
+      wikidata_description: entity.description,
+      wikidata_url: entity.wikidataUrl,
+      // Attach resolved coords to node for later map use
+      ...(entity.coords && !n.coords ? { coords: entity.coords } : {}),
+    };
+  });
 }
 
 // ── LLM Place Refinement Helper ──────────────────────────────────────────────
@@ -1063,8 +1313,8 @@ Respond ONLY with a JSON object: {"raw name": "Clean Name or Category"}`;
 // focuses ONLY on nodes that got a Naive-Bayes "City · Category" label and
 // asks Ollama to verify / correct the category using the actual claim text.
 const TOPIC_CLASSES = [
-  'Climate','History','Transport','Food & Drink','Safety & Health',
-  'Culture','Accommodation','Shopping','Districts','Travel Tips'
+  'Climate', 'History', 'Transport', 'Food & Drink', 'Safety & Health',
+  'Culture', 'Accommodation', 'Shopping', 'Districts', 'Travel Tips'
 ];
 async function reclassifyTopicNodesWithLLM(nodes, cityBase, ollamaEndpoint, ollamaModel, onProgress = null) {
   if (!ollamaEndpoint || !cityBase) return nodes;
@@ -1095,7 +1345,7 @@ async function reclassifyTopicNodesWithLLM(nodes, cityBase, ollamaEndpoint, olla
       `${j + 1}. ${(nodes[idx].claim || '').slice(0, 180)}`
     ).join('\n');
     const prompt =
-`Travel content classifier. Classify each sentence into one category.
+      `Travel content classifier. Classify each sentence into one category.
 Categories: ${TOPIC_CLASSES.join(', ')}
 
 ${numbered}
@@ -1190,7 +1440,7 @@ async function fetchAreaPOIsOverpass(city, lat, lon) {
   // amenity: type-filtered to travel-relevant venues (theatres, museums, universities, etc.)
   //   — not every restaurant/café or we'd get tens of thousands for large cities
   // leisure: parks, gardens, stadiums, nature reserves
-  const AMENITY_TYPES = 'museum|theatre|arts_centre|library|university|college|place_of_worship|cinema|nightclub|casino|marketplace|community_centre|social_centre|events_venue|conference_centre';
+  const AMENITY_TYPES = 'museum|theatre|arts_centre|library|university|college|place_of_worship|cinema|nightclub|casino|marketplace|community_centre|social_centre|events_venue|conference_centre|restaurant|cafe|fast_food|pub|bar';
   const LEISURE_TYPES = 'park|garden|nature_reserve|stadium|sports_centre|marina|golf_course|water_park|theme_park|beach_resort';
   const query = `[out:json][timeout:60];
 (
@@ -1274,7 +1524,7 @@ async function searchRedditForTopic(query) {
         if (text.trimStart().startsWith('<')) return;
         const data = JSON.parse(text);
         posts.push(...(data.data || []).filter(p => p.selftext && p.selftext.trim().length > 80));
-      } catch {}
+      } catch { }
     }));
     return posts;
   };
@@ -1579,8 +1829,8 @@ Respond ONLY with a valid JSON array: [{"place":"...","claim":"...","sentiment":
           EXTRA_NON_PLACE_WORDS.includes(firstWord) ||
           // Any word in a multi-word place is a strong non-place signal
           (placeWords.length > 1 && placeWords.some(w => [
-            'although','however','therefore','oyster','travelcard','taxi','cabs',
-            'assembly','parliament','committee','council','princess','prince',
+            'although', 'however', 'therefore', 'oyster', 'travelcard', 'taxi', 'cabs',
+            'assembly', 'parliament', 'committee', 'council', 'princess', 'prince',
           ].includes(w)));
 
         if (place.split(/\s+/).length === 1) {
@@ -1592,10 +1842,10 @@ Respond ONLY with a valid JSON array: [{"place":"...","claim":"...","sentiment":
           place = assignSemanticCategory(claim, cityBase);
         }
 
-        const sentiment = ['positive','negative','neutral'].includes(item.sentiment) ? item.sentiment : 'neutral';
-        const claimType = ['evaluation','conditional','temporal','sequence'].includes(item.claimType) ? item.claimType : 'evaluation';
+        const sentiment = ['positive', 'negative', 'neutral'].includes(item.sentiment) ? item.sentiment : 'neutral';
+        const claimType = ['evaluation', 'conditional', 'temporal', 'sequence'].includes(item.claimType) ? item.claimType : 'evaluation';
         allNodes.push({
-          id: `kg-${Date.now()}-${chunkSourceType}-${nodeCount++}-${Math.random().toString(36).slice(2,6)}`,
+          id: `kg-${Date.now()}-${chunkSourceType}-${nodeCount++}-${Math.random().toString(36).slice(2, 6)}`,
           place, city, claim, claimType,
           knowledge_type: /price|fee|hour|ticket|crowd|queue|wait|scam|closed|open/i.test(claim) ? 'volatile' : 'stable',
           conditions: {},
@@ -1628,7 +1878,7 @@ Respond ONLY with a valid JSON array: [{"place":"...","claim":"...","sentiment":
 
 
 
-export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo }) {
+export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo, activeCity }) {
   const [tab, setTab] = useState('ingest');
   const [ingestText, setIngestText] = useState('');
   const [sourceType, setSourceType] = useState('blog');
@@ -1702,10 +1952,10 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
     });
   }, [kg.nodes]);
 
-  // Pre-fill city from active trip
-  const cityHint = tripData.locations?.[0]?.name?.split(',')[0] || '';
+  // Pre-fill city from activeCity or active trip location
+  const cityHint = activeCity?.name?.split(',')[0] || tripData.locations?.[0]?.name?.split(',')[0] || '';
   useEffect(() => {
-    if (cityHint && !fetchCity) setFetchCity(cityHint);
+    if (cityHint) setFetchCity(cityHint);
   }, [cityHint]);
 
   const allCityNames = useMemo(() => {
@@ -1741,6 +1991,33 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
       setRefining(false);
     }
   }, [rawNodes, ollamaEndpoint, ollamaModel, setTripData]);
+
+  const [wikidataMsg, setWikidataMsg] = useState('');
+  const [wikidataRunning, setWikidataRunning] = useState(false);
+
+  const handleWikidataLink = useCallback(async () => {
+    if (rawNodes.length === 0 || wikidataRunning) return;
+    setWikidataRunning(true);
+    const city = fetchCity || cityHint || '';
+    const unique = new Set(rawNodes.map(n => n.place).filter(Boolean)).size;
+    setWikidataMsg(`Linking ${unique} places to Wikidata…`);
+    try {
+      const enriched = await resolveWithWikidata(rawNodes, city, (done, total, name) => {
+        setWikidataMsg(`Wikidata: ${done}/${total} — ${name}`);
+      });
+      const linked = enriched.filter(n => n.wikidata_id).length;
+      setTripData(prev => ({
+        ...prev,
+        knowledgeGraph: { ...prev.knowledgeGraph, nodes: enriched },
+      }));
+      setWikidataMsg(`✓ Linked ${linked}/${unique} places to Wikidata KG`);
+      setTimeout(() => setWikidataMsg(''), 5000);
+    } catch (e) {
+      setWikidataMsg(`Error: ${e.message}`);
+    } finally {
+      setWikidataRunning(false);
+    }
+  }, [rawNodes, fetchCity, cityHint, setTripData, wikidataRunning]);
 
   const toggleMapOverlay = useCallback(() => {
     const nextVal = !mapOverlayActive;
@@ -1941,13 +2218,29 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
         return;
       }
       city = fetchCity.trim();
+      // Geocode the searched city name to resolve coordinates so fetchAreaPOIsOverpass works
+      setFetchStatus(`Geocoding "${city}" to resolve coordinates…`);
+      try {
+        const geoUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`;
+        const geoRes = await fetch(geoUrl, { headers: { 'Accept-Language': 'en' } });
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData && geoData[0]) {
+            lat = parseFloat(geoData[0].lat);
+            lon = parseFloat(geoData[0].lon);
+            console.log(`Geocoded searched city to coords: [${lat}, ${lon}]`);
+          }
+        }
+      } catch (e) {
+        console.log('Error geocoding searched city:', e.message);
+      }
     } else {
       // Coordinate search mode
       const coords = customCoords || activeCity?.coords;
       if (coords && coords[0] && coords[1]) {
         lat = coords[0];
         lon = coords[1];
-        
+
         // 1. Reverse geocode to resolve city name for fetching sources
         setFetchStatus('Reverse geocoding coordinates to resolve city...');
         try {
@@ -1961,7 +2254,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
         } catch (e) {
           console.log('Error reverse geocoding:', e.message);
         }
-        
+
         if (!city) {
           city = cityHint || 'Unknown';
         }
@@ -1975,7 +2268,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           const maxLat = lat + dLat;
           const minLon = lon - dLon;
           const maxLon = lon + dLon;
-          
+
           const searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=tourism&viewbox=${minLon},${minLat},${maxLon},${maxLat}&bounded=1&limit=30`;
           const searchRes = await fetch(searchUrl);
           if (searchRes.ok) {
@@ -2144,16 +2437,31 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
         });
 
         if (allNewNodes.length > 0) {
+          // Always run Wikidata entity linking first (no Ollama required)
+          setFetchStatus('🔗 Linking places to Wikidata knowledge graph…');
+          const wikidataLinked = await resolveWithWikidata(allNewNodes, city,
+            (done, total) => setFetchStatus(`🔗 Wikidata: ${done}/${total} places linked`));
+          allNewNodes.length = 0;
+          allNewNodes.push(...wikidataLinked);
+
+          // Then optionally run LLM refinement + topic reclassification on top
           setFetchStatus('🤖 Refining place names with AI…');
           const refined = await refinePlacesWithLLM(allNewNodes, ollamaEndpoint, ollamaModel, localPlaceNames, city);
           setFetchStatus('🤖 Classifying topics with AI… (0%)');
           const reclassified = await reclassifyTopicNodesWithLLM(refined, city.split(',')[0].trim(), ollamaEndpoint, ollamaModel,
-            (done, total) => setFetchStatus(`🤖 Classifying topics… ${Math.round(done/total*100)}% (${done}/${total})`));
+            (done, total) => setFetchStatus(`🤖 Classifying topics… ${Math.round(done / total * 100)}% (${done}/${total})`));
           allNewNodes.length = 0;
           allNewNodes.push(...reclassified);
         }
       } else {
-        // No Ollama — skip LLM reclassification (calling it would time out per batch)
+        // No Ollama — still run Wikidata linking (deterministic, no local model needed)
+        if (allNewNodes.length > 0) {
+          setFetchStatus('🔗 Linking places to Wikidata knowledge graph…');
+          const wikidataLinked = await resolveWithWikidata(allNewNodes, city,
+            (done, total) => setFetchStatus(`🔗 Wikidata: ${done}/${total} places linked`));
+          allNewNodes.length = 0;
+          allNewNodes.push(...wikidataLinked);
+        }
       }
 
       // ── Pass 3: Deep research — targeted per-POI searches (Ollama only) ────
@@ -2161,7 +2469,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
         const deepNodes = await runDeepResearchPass(allNewNodes, city, localPlaceNames, lat, lon, ollamaEndpoint, ollamaModel, setFetchStatus, true);
         if (deepNodes.length > 0) {
           const deepReclassified = await reclassifyTopicNodesWithLLM(deepNodes, city.split(',')[0].trim(), ollamaEndpoint, ollamaModel,
-            (done, total) => setFetchStatus(`🔍 Classifying deep topics… ${Math.round(done/total*100)}%`));
+            (done, total) => setFetchStatus(`🔍 Classifying deep topics… ${Math.round(done / total * 100)}%`));
           allNewNodes.push(...deepReclassified);
         }
       }
@@ -2301,6 +2609,91 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
       {tab === 'ingest' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
+          {/* ── OFFLINE PREPROCESSED KNOWLEDGE GRAPH SECTION ── */}
+          {(() => {
+            const cleanTarget = (fetchCity || cityHint || '').toLowerCase().replace(/^(greater|inner|outer)\s+/i, '').replace(/\s+(region|city|greater|area)$/i, '').trim();
+            const PREPROCESSED_MAP = {
+              'amsterdam': 'amsterdam',
+              'barcelona': 'barcelona',
+              'kyoto': 'kyoto',
+              'london': 'london',
+              'new york': 'new_york',
+              'new york city': 'new_york',
+              'nyc': 'new_york',
+              'paris': 'paris',
+              'prague': 'prague',
+              'rome': 'rome',
+              'sydney': 'sydney',
+              'tokyo': 'tokyo'
+            };
+            const matchedKey = PREPROCESSED_MAP[cleanTarget];
+            if (!matchedKey) return null;
+
+            return (
+              <div style={{ background: 'linear-gradient(135deg,rgba(16,185,129,0.07),rgba(59,130,246,0.07))', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Brain size={16} style={{ color: '#10b981' }} />
+                  <div>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-primary)' }}>Offline Preprocessed KG Available</span>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)' }}>Instantly populate knowledge graph for {cleanTarget} (offline mock cache)</div>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    setExtracting(true);
+                    setFetchStatus('Loading preprocessed offline cache...');
+                    try {
+                      const res = await fetch(`/preprocessed/${matchedKey}.json`);
+                      if (!res.ok) throw new Error('Preprocessed data file not found');
+                      const data = await res.json();
+                      const allNew = [];
+                      // Flatten nodes from sources
+                      Object.entries(data).forEach(([srcKey, srcData]) => {
+                        if (srcData && Array.isArray(srcData.nodes)) {
+                          const label = SOURCE_LABELS[srcKey] || srcKey;
+                          const url = srcData.url || null;
+                          srcData.nodes.forEach((n, idx) => {
+                            allNew.push({
+                              id: `offline-${srcKey}-${idx}-${Math.random().toString(36).substr(2, 5)}`,
+                              place: n.place,
+                              claim: n.claim,
+                              claimType: n.claimType || 'evaluation',
+                              knowledge_type: n.knowledge_type || 'stable',
+                              evaluation: { sentiment: n.sentiment || 'neutral', intensity: n.intensity || 0.5 },
+                              advice: n.advice || null,
+                              conditions: n.conditions || {},
+                              source: { sourceType: srcKey, label, date: today, url }
+                            });
+                          });
+                        }
+                      });
+                      
+                      const merged = [...rawNodes, ...allNew];
+                      const seen = new Set();
+                      const deduped = merged.filter(n => {
+                        const k = (n.place || '').toLowerCase() + '::' + (n.claim || '').toLowerCase().slice(0, 120);
+                        if (seen.has(k)) return false;
+                        seen.add(k);
+                        return true;
+                      });
+                      
+                      saveKG(deduped);
+                      setFetchStatus(`✓ Loaded ${allNew.length} preprocessed offline nodes!`);
+                      setTab('graph');
+                    } catch (e) {
+                      setFetchStatus(`Error loading offline cache: ${e.message}`);
+                    } finally {
+                      setExtracting(false);
+                    }
+                  }}
+                  style={{ width: '100%', padding: '8px', fontSize: '0.78rem', fontWeight: '700', background: '#10b981', border: 'none', borderRadius: '6px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <RefreshCw size={12} /> Load Offline Preprocessed Graph ({cleanTarget})
+                </button>
+              </div>
+            );
+          })()}
+
           {/* ── ONLINE FETCH SECTION ── */}
           <div style={{ background: 'linear-gradient(135deg,rgba(14,165,233,0.07),rgba(139,92,246,0.07))', border: '1px solid rgba(14,165,233,0.25)', borderRadius: '12px', overflow: 'hidden' }}>
             <button
@@ -2362,9 +2755,9 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                       <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Search Coordinates</div>
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <div style={{ flex: 1, background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '7px', fontSize: '0.82rem', padding: '7px 10px', color: 'var(--text-primary)' }}>
-                          {customCoords 
+                          {customCoords
                             ? `${customCoords[0].toFixed(4)}, ${customCoords[1].toFixed(4)}`
-                            : (tripData.locations?.[0]?.coords 
+                            : (tripData.locations?.[0]?.coords
                               ? `${tripData.locations[0].coords[0].toFixed(4)}, ${tripData.locations[0].coords[1].toFixed(4)}`
                               : 'No coords (using GPS/hint)'
                             )
@@ -2619,11 +3012,13 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                 <button onClick={() => setAreaFilter('all')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'all' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'all' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'all' ? '700' : '400', transition: 'all 0.15s' }}>
                   All Insights ({credibleNodes.length})
                 </button>
-                <button onClick={() => setAreaFilter('inside')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'inside' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'inside' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'inside' ? '700' : '400', transition: 'all 0.15s' }}>
-                  Locations
+                <button onClick={() => setAreaFilter('inside')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'inside' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'inside' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'inside' ? '700' : '400', transition: 'all 0.15s' }}
+                  title="Claims about specific named places">
+                  Named Places ({locationNodeIds.size})
                 </button>
-                <button onClick={() => setAreaFilter('others')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'others' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'others' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'others' ? '700' : '400', transition: 'all 0.15s' }}>
-                  Topics
+                <button onClick={() => setAreaFilter('others')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'others' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'others' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'others' ? '700' : '400', transition: 'all 0.15s' }}
+                  title="General topic/category claims">
+                  General Tips ({credibleNodes.length - locationNodeIds.size})
                 </button>
               </div>
               {/* Filters */}
@@ -2827,22 +3222,29 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                 <button onClick={() => setAreaFilter('all')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'all' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'all' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'all' ? '700' : '400', transition: 'all 0.15s' }}>
                   All Insights ({credibleNodes.length})
                 </button>
-                <button onClick={() => setAreaFilter('inside')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'inside' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'inside' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'inside' ? '700' : '400', transition: 'all 0.15s' }}>
-                  Locations
+                <button onClick={() => setAreaFilter('inside')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'inside' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'inside' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'inside' ? '700' : '400', transition: 'all 0.15s' }}
+                  title="Claims about specific named places (museums, restaurants, landmarks)">
+                  Named Places ({locationNodeIds.size})
                 </button>
-                <button onClick={() => setAreaFilter('others')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'others' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'others' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'others' ? '700' : '400', transition: 'all 0.15s' }}>
-                  Topics
+                <button onClick={() => setAreaFilter('others')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'others' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'others' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'others' ? '700' : '400', transition: 'all 0.15s' }}
+                  title="General topic/category claims (safety tips, weather, transport overview)">
+                  General Tips ({credibleNodes.length - locationNodeIds.size})
                 </button>
               </div>
+              {areaFilter !== 'all' && visualMode === 'radar' && (
+                <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', marginTop: '-4px', marginBottom: '4px', paddingLeft: '2px' }}>
+                  Radar shows topic coverage of {areaFilter === 'inside' ? 'named-place' : 'general-tip'} claims only
+                </div>
+              )}
 
               {/* Controls and View Mode Toggle */}
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   {[
                     { id: 'constellation', label: 'Constellation', icon: Sparkles },
-                    { id: 'radar',         label: 'Radar',         icon: Filter   },
-                    { id: 'bubbles',       label: 'Bubbles',       icon: BarChart2 },
-                    { id: 'graph',         label: 'Force Graph',   icon: GitBranch },
+                    { id: 'radar', label: 'Radar', icon: Filter },
+                    { id: 'bubbles', label: 'Bubbles', icon: BarChart2 },
+                    { id: 'graph', label: 'Force Graph', icon: GitBranch },
                   ].map(({ id, label, icon: Icon }) => (
                     <button key={id} onClick={() => setVisualMode(id)}
                       style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', padding: '5px 11px', borderRadius: '8px', background: visualMode === id ? 'rgba(139,92,246,0.18)' : 'rgba(0,0,0,0.2)', border: `1px solid ${visualMode === id ? 'rgba(139,92,246,0.5)' : 'rgba(255,255,255,0.08)'}`, color: visualMode === id ? '#c084fc' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: visualMode === id ? '700' : '400', transition: 'all 0.15s' }}>
@@ -2870,9 +3272,38 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                   title="Toggle geographic view of claims & sequence arrows directly on the map"
                 >
                   <MapPin size={11} style={{ color: mapOverlayActive ? '#14b8a6' : 'inherit' }} />
-                  <span>{mapOverlayActive ? "Map Overlay Active" : "Show on Map"}</span>
+                  <span>{mapOverlayActive ? "Show on Map" : "Show on Map"}</span>
+                </button>
+
+                {/* Wikidata entity linking button */}
+                <button
+                  onClick={handleWikidataLink}
+                  disabled={wikidataRunning || rawNodes.length === 0}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '5px',
+                    fontSize: '0.68rem', padding: '5px 11px', borderRadius: '8px',
+                    background: wikidataRunning ? 'rgba(99,102,241,0.25)' : 'rgba(99,102,241,0.12)',
+                    border: '1px solid rgba(99,102,241,0.35)',
+                    color: wikidataRunning ? '#a5b4fc' : '#818cf8',
+                    cursor: wikidataRunning || rawNodes.length === 0 ? 'not-allowed' : 'pointer',
+                    fontWeight: '600', transition: 'all 0.15s',
+                    opacity: rawNodes.length === 0 ? 0.4 : 1,
+                  }}
+                  title="Resolve place names against Wikidata knowledge graph — enriches nodes with canonical entity IDs and coordinates"
+                >
+                  {wikidataRunning
+                    ? <Loader2 size={11} style={{ animation: 'spin 1s linear infinite' }} />
+                    : <Globe size={11} />}
+                  <span>{wikidataRunning ? 'Linking…' : 'Link Wikidata'}</span>
                 </button>
               </div>
+
+              {/* Wikidata status message */}
+              {wikidataMsg && (
+                <div style={{ fontSize: '0.65rem', color: wikidataMsg.startsWith('✓') ? '#10b981' : wikidataMsg.startsWith('Error') ? '#ef4444' : '#a5b4fc', padding: '4px 6px', background: 'rgba(99,102,241,0.07)', borderRadius: '6px', marginTop: '-2px' }}>
+                  {wikidataMsg}
+                </div>
+              )}
 
               {visualMode === 'constellation' ? (
                 <KnowledgeConstellationView nodes={visualNodes} triggerPlaceInfo={triggerPlaceInfo} tripData={tripData} city={fetchCity || cityHint || ''} cityNamesSet={cityNamesSet} />
@@ -2903,7 +3334,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
               </div>
               {Object.values(resolutions).length > 0 && (
                 <div style={{ fontSize: '0.6rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <CheckCircle2 size={10}/> {Object.values(resolutions).length} conflict{Object.values(resolutions).length > 1 ? 's' : ''} resolved
+                  <CheckCircle2 size={10} /> {Object.values(resolutions).length} conflict{Object.values(resolutions).length > 1 ? 's' : ''} resolved
                 </div>
               )}
               {/* Research export row */}
@@ -2911,12 +3342,12 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                 <button onClick={exportConflictData}
                   style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px', borderRadius: '7px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', color: '#fca5a5', cursor: 'pointer', fontSize: '0.65rem', fontWeight: '700', fontFamily: 'inherit' }}
                   title="Export contested places JSON for validate_conflicts.py (Approach A)">
-                  <Download size={11}/> Export conflicts
+                  <Download size={11} /> Export conflicts
                 </button>
                 <button onClick={exportKnowledgeGraph}
                   style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px', borderRadius: '7px', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.22)', color: '#c084fc', cursor: 'pointer', fontSize: '0.65rem', fontWeight: '700', fontFamily: 'inherit' }}
                   title="Export full KG JSON for validate_novelty.py (Approach B)">
-                  <Download size={11}/> Export KG
+                  <Download size={11} /> Export KG
                 </button>
               </div>
 
@@ -2939,7 +3370,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                           {resolution ? (
                             <>
                               <span style={{ fontSize: '0.6rem', fontWeight: '700', color: '#10b981', background: 'rgba(16,185,129,0.12)', padding: '2px 7px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                <CheckCircle2 size={9}/> {resolution.verdict === 'trust_positive' ? 'Trusted positive' : resolution.verdict === 'trust_negative' ? 'Trusted negative' : 'Context-dependent'}
+                                <CheckCircle2 size={9} /> {resolution.verdict === 'trust_positive' ? 'Trusted positive' : resolution.verdict === 'trust_negative' ? 'Trusted negative' : 'Context-dependent'}
                               </span>
                               <button onClick={() => resolveConflict(c.place, null)}
                                 style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 3px' }}>Re-open</button>
@@ -2989,11 +3420,11 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                         <div style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.28)', alignSelf: 'center', marginRight: '3px' }}>Adjudicate:</div>
                         <button onClick={() => resolveConflict(c.place, 'trust_positive')}
                           style={{ flex: 1, padding: '5px 6px', borderRadius: '6px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', cursor: 'pointer', fontSize: '0.6rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
-                          <ThumbsUp size={9}/> Trust positive
+                          <ThumbsUp size={9} /> Trust positive
                         </button>
                         <button onClick={() => resolveConflict(c.place, 'trust_negative')}
                           style={{ flex: 1, padding: '5px 6px', borderRadius: '6px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.28)', color: '#fca5a5', cursor: 'pointer', fontSize: '0.6rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
-                          <ThumbsDown size={9}/> Trust negative
+                          <ThumbsDown size={9} /> Trust negative
                         </button>
                         <button onClick={() => resolveConflict(c.place, 'both_valid')}
                           style={{ flex: 1, padding: '5px 6px', borderRadius: '6px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.28)', color: '#fbbf24', cursor: 'pointer', fontSize: '0.6rem', fontWeight: '700' }}>

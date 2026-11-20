@@ -147,7 +147,7 @@ def analyze_file(path):
     csv_path = os.path.join(os.path.dirname(path), f"conflict_validation_{city_slug}.csv")
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["place", "conflict_ratio", "positive_count", "negative_count",
+        writer.writerow(["city", "group", "place", "conflict_ratio", "positive_count", "negative_count",
                          "tripadvisor_1star", "tripadvisor_2star", "tripadvisor_3star",
                          "tripadvisor_4star", "tripadvisor_5star", "tripadvisor_mean",
                          "bimodality_coefficient", "notes"])
@@ -155,12 +155,21 @@ def analyze_file(path):
             ta = p.get("tripadvisor_ratings", {})
             bc, mean, _, _ = bimodality_coefficient(ta) if ta else (None, None, None, None)
             writer.writerow([
-                p["place"], p.get("conflict_ratio", ""), p.get("positive_count", ""), p.get("negative_count", ""),
+                city, "contested", p["place"], p.get("conflict_ratio", ""), p.get("positive_count", ""), p.get("negative_count", ""),
                 ta.get("1", ""), ta.get("2", ""), ta.get("3", ""), ta.get("4", ""), ta.get("5", ""),
                 mean or "", bc or "", ""
             ])
+        # Blank template rows for the control (uncontested) set — add one row per
+        # control place you pick manually, with group="control" and conflict_ratio=0.
+        for i in range(len(places)):
+            writer.writerow([city, "control", "", 0, "", "",
+                             "", "", "", "", "", "", "", "fill in: uncontested place + its external ratings"])
     print(f"\n  CSV written → {csv_path}")
-    print("  Fill in the tripadvisor_* columns, then re-run to compute Spearman ρ.")
+    print("  1) Fill in tripadvisor_* columns for the 'contested' rows.")
+    print("  2) Fill in the blank 'control' rows with an equal-sized set of uncontested")
+    print("     places (similar total claim volume) and their external ratings.")
+    print("  3) Re-run this script to compute Spearman ρ, then run scripts/plot_results.py")
+    print("     to generate the scatter plot for the paper.")
 
     return [(city, p["place"], p.get("conflict_ratio", 0)) for p in places]
 

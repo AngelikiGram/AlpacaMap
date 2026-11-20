@@ -19,6 +19,29 @@ import { WeatherWidget } from "./WeatherWidget.jsx";
 import { DonutChart } from "./DonutChart.jsx";
 import { PrintView } from "./PrintView.jsx";
 
+const GENERIC_WORDS = new Set([
+  'solo', 'travel', 'traveller', 'travellers', 'trip', 'trips', 'cafe', 'cafes', 'coffee', 'restaurant', 'restaurants', 
+  'bar', 'bars', 'pub', 'pubs', 'hotel', 'hotels', 'hostel', 'hostels', 'transport', 'bus', 'buses', 'train', 'trains', 
+  'metro', 'tube', 'station', 'stations', 'airport', 'airports', 'shop', 'shops', 'market', 'markets', 'park', 'parks', 
+  'street', 'road', 'food', 'drink', 'drinks', 'eating', 'dining', 'lunch', 'dinner', 'breakfast', 'museum', 'museums', 
+  'gallery', 'galleries', 'sight', 'sights', 'view', 'views', 'viewpoint', 'viewpoints', 'city', 'town', 'village', 
+  'place', 'places', 'location', 'locations', 'area', 'areas', 'district', 'districts', 'neighborhood', 'neighborhoods', 
+  'neighbourhood', 'neighbourhoods'
+]);
+
+const isGenericWord = (name) => {
+  return GENERIC_WORDS.has(name.toLowerCase().trim());
+};
+
+const isWordMatch = (name1, name2) => {
+  if (name1 === name2) return true;
+  const w1 = name1.split(/\s+/);
+  const w2 = name2.split(/\s+/);
+  if (w1.length === 1) return w2.includes(w1[0]);
+  if (w2.length === 1) return w1.includes(w2[0]);
+  return name1.includes(name2) || name2.includes(name1);
+};
+
 export const cleanNameForMatching = (name) => {
   if (!name) return '';
   return name.toLowerCase()
@@ -47,7 +70,12 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
       // Otherwise, do name matching
       const cleanN = cleanNameForMatching(nPlace);
       const cleanP = cleanNameForMatching(pName);
-      if (cleanN === cleanP && cleanN.length > 2) return true;
+      if (cleanN.length > 2) {
+        if (cleanN === cleanP) return true;
+        if (!isGenericWord(cleanN) && !isGenericWord(cleanP)) {
+          if (isWordMatch(cleanN, cleanP)) return true;
+        }
+      }
       return false;
     });
 

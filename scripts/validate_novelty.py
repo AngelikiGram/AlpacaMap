@@ -263,6 +263,11 @@ def compare(system_data, baseline_data):
         "sys_contested": len(sys_contested),
         "base_contested": len(base_contested),
         "sys_only_contested": len(sys_only_contested),
+        "novelty_by_source": {
+            src: {"total": all_by_src[src], "novel": novel_by_src.get(src, 0),
+                  "novelty_rate": round(novel_by_src.get(src, 0) / all_by_src[src], 3) if all_by_src[src] else 0}
+            for src in all_by_src
+        },
     }
 
 
@@ -291,6 +296,7 @@ if __name__ == "__main__":
     parser.add_argument("files", nargs="*", help="KG JSON file(s) for single-file analysis")
     parser.add_argument("--system", nargs="+", metavar="FILE", help="System KG JSON file(s)")
     parser.add_argument("--baseline", nargs="+", metavar="FILE", help="Baseline KG JSON file(s), same order as --system")
+    parser.add_argument("--json-out", metavar="FILE", help="Write pooled comparison results to this JSON file (for plot_results.py)")
     args = parser.parse_args()
 
     if args.system and args.baseline:
@@ -307,6 +313,10 @@ if __name__ == "__main__":
             all_results.append(result)
         if len(all_results) > 1:
             print_summary_table(all_results)
+        if args.json_out:
+            with open(args.json_out, "w", encoding="utf-8") as f:
+                json.dump(all_results, f, indent=2)
+            print(f"\nJSON results written → {args.json_out}")
     elif args.files:
         for path in args.files:
             if not os.path.exists(path):

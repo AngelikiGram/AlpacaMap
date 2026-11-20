@@ -70,33 +70,49 @@ import { PrintView } from "./PrintView.jsx";
 export const LiveImage = ({ rec, color, icon, activeCityName }) => {
   const initial = (rec.liveImage && rec.liveImage !== SENTINEL_NONE) ? rec.liveImage : (rec.osmTags?.image || null);
   const [imgUrl, setImgUrl] = useState(initial);
-  const [tried, setTried] = useState(rec.liveImage === SENTINEL_NONE);
-  const imgRef = useRef(null);
+  const [imgBroken, setImgBroken] = useState(false);
+  const fetchedRef = useRef(!!initial || rec.liveImage === SENTINEL_NONE);
 
   useEffect(() => {
-    if (imgUrl || tried) return;
-    const observer = new IntersectionObserver(async entries => {
-      if (!entries[0].isIntersecting) return;
-      observer.disconnect();
-      const url = await fetchPlaceImage(rec.osmTags, rec.name, rec.type, activeCityName);
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    fetchPlaceImage(rec.osmTags, rec.name, rec.type, activeCityName).then(url => {
       if (url) { rec.liveImage = url; setImgUrl(url); }
-      else { rec.liveImage = SENTINEL_NONE; setTried(true); }
-    }, { threshold: 0.1 });
-    if (imgRef.current) observer.observe(imgRef.current);
-    return () => observer.disconnect();
-  }, [rec, imgUrl, tried, activeCityName]);
+      else { rec.liveImage = SENTINEL_NONE; }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  if (imgUrl) {
+  const handleError = () => {
+    // Cached URL is broken — clear it and retry fetch
+    rec.liveImage = null;
+    setImgUrl(null);
+    setImgBroken(false);
+    fetchedRef.current = false;
+    fetchPlaceImage(rec.osmTags, rec.name, rec.type, activeCityName).then(url => {
+      if (url) { rec.liveImage = url; setImgUrl(url); }
+      else { rec.liveImage = SENTINEL_NONE; setImgBroken(true); }
+    });
+  };
+
+  if (imgUrl && !imgBroken) {
     return (
-      <div ref={imgRef} style={{
-        backgroundImage: `url(${imgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center',
+      <div style={{
         width: '46px', height: '46px', borderRadius: '8px', flexShrink: 0,
         border: `1px solid ${color}40`, boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-      }}/>
+        overflow: 'hidden',
+      }}>
+        <img
+          src={imgUrl}
+          alt=""
+          onError={handleError}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      </div>
     );
   }
   return (
-    <div ref={imgRef} style={{
+    <div style={{
       width: '46px', height: '46px', borderRadius: '8px', flexShrink: 0,
       background: `linear-gradient(135deg, ${color}35, ${color}15)`,
       border: `1px solid ${color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center',

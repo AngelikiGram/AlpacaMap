@@ -1,21 +1,30 @@
-import React, { useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 
-export function MapBoundsTracker({onCenterChange, onBoundsChange}){
+export function MapBoundsTracker({onCenterChange, onBoundsChange, panelOffsetPx = 0}){
+  const getVisibleCenter = (map) => {
+    const container = map.getContainer();
+    const w = container.offsetWidth;
+    const h = container.offsetHeight;
+    const cx = panelOffsetPx + (w - panelOffsetPx) / 2;
+    const cy = h / 2;
+    return map.containerPointToLatLng(L.point(cx, cy));
+  };
+
   const map = useMapEvents({
-    moveend(){ 
+    moveend(){
       const b = map.getBounds();
       if(onCenterChange) {
-        const c = map.getCenter();
+        const c = getVisibleCenter(map);
         onCenterChange({lat:c.lat,lng:c.lng});
       }
       if(onBoundsChange) onBoundsChange({south:b.getSouth(),west:b.getWest(),north:b.getNorth(),east:b.getEast()});
     },
-    zoomend(){ 
+    zoomend(){
       const b = map.getBounds();
       if(onCenterChange) {
-        const c = map.getCenter();
+        const c = getVisibleCenter(map);
         onCenterChange({lat:c.lat,lng:c.lng});
       }
       if(onBoundsChange) onBoundsChange({south:b.getSouth(),west:b.getWest(),north:b.getNorth(),east:b.getEast()});
@@ -25,8 +34,12 @@ export function MapBoundsTracker({onCenterChange, onBoundsChange}){
     if(map){
       const b = map.getBounds();
       if(onBoundsChange) onBoundsChange({south:b.getSouth(),west:b.getWest(),north:b.getNorth(),east:b.getEast()});
+      if(onCenterChange) {
+        const c = getVisibleCenter(map);
+        onCenterChange({lat:c.lat,lng:c.lng});
+      }
     }
-  }, [map]);
+  }, [map, panelOffsetPx]);
   return null;
 }
 
@@ -163,22 +176,31 @@ export function MapFlyController({ target }) {
 }
 
 
-export const SmartMapController=({activeCity,locations})=>{
+export const SmartMapController=({activeCity,locations,flyToken})=>{
   const map=useMap();
   const cityId = activeCity?.id;
   const locStr = locations.map(l=>l.id).join(',');
   const prevCityId = useRef(null);
+  const prevToken = useRef(null);
+
+  const flyToCity = useCallback(() => {
+    if (!activeCity?.coords) return;
+    const [lat, lng] = activeCity.coords;
+    if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) return;
+    map.flyTo([lat, lng], activeCity.zoomLevel || 14, { duration: 1.5 });
+  }, [activeCity, map]);
+
   useEffect(()=>{
     if(cityId){
-      // Only fly when the city actually changes — not when recommendations or places update
-      if(prevCityId.current !== cityId){
+      if(prevCityId.current !== cityId || prevToken.current !== flyToken){
         prevCityId.current = cityId;
-        map.flyTo(activeCity.coords,activeCity.zoomLevel||14,{duration:1.5});
+        prevToken.current = flyToken;
+        flyToCity();
       }
     }else{
       prevCityId.current = null;
       if(locations.length>0){map.fitBounds(L.latLngBounds(locations.map(l=>l.coords)),{padding:[60,60],duration:1.5});}
     }
-  },[cityId,locStr,map]);
+  },[cityId,locStr,flyToken,flyToCity,map]);
   return null;
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, Suspense, lazy, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, ZoomControl, Polyline, Circle, Polygon, ScaleControl, useMap, useMapEvents } from 'react-leaflet';
@@ -31,7 +31,9 @@ import { NotesPanel } from "./components/panel/NotesPanel";
 import { DocumentsPanel } from "./components/panel/DocumentsPanel";
 import { CoherencePanel } from "./components/panel/CoherencePanel";
 import { RouteSpacePanel } from "./components/panel/RouteSpacePanel.jsx";
+import { MenuPanel } from "./components/panel/MenuPanel.jsx";
 const KnowledgePanel = lazy(() => import('./components/panel/KnowledgePanel.jsx'));
+const AnalyticsPanel = lazy(() => import('./components/panel/AnalyticsPanel.jsx'));
 import { MapBoundsTracker, MapZoomTracker, MapClickHandler, MapFlyController, SmartMapController } from "./components/map/MapControllers";
 import { CITY_PALETTE, getCityColor, MAP_LAYERS, SENTINEL_NONE, getTypeDetails, createDayStopIcon, createGlyphIcon, createCityIcon, classifyWeather, detectOSMCategory, processOverpassResults, scorePlaceQuality, nameSim, semanticDedup, getZoomParams, filterMarkersAdaptive, loadTrips, loadPrefs, saveTrips, savePrefs, detectLocationType, createSearchResultIcon, getAllMapPoints, buildArc, getDistanceKm, INITIAL_TRIP, TRIPS_KEY, PREFS_KEY, TABS, wmoIcon, formatDur, searchOverpass } from "./utils";
 import { searchNominatim, fetchPlaceImage } from "./api";
@@ -144,10 +146,10 @@ function useHorizontalScroll() {
 
 /* ── App ─────────────────────────────────────────────────────────────────────── */
 export default function App(){
-  const[activeTab,       setActiveTab]       =useState('locations');
+  const[activeTab,       setActiveTab]       =useState('menu');
   const [recFilterText, setRecFilterText] = useState('');
   const tabScrollRef = useHorizontalScroll();
-  const[calendarExpandedDay, setCalendarExpandedDay] =useState(null);
+  const[calendarExpandedDays, setCalendarExpandedDays] =useState([]);
   const[tripData,        setTripData]        =useState(()=>{ const t=loadTrips(); return t.length>0?t[0].data:INITIAL_TRIP; });
   const[activeCity,      setActiveCity]      =useState(null);
   const[mapBounds,       setMapBounds]       =useState(null);
@@ -168,13 +170,15 @@ export default function App(){
   const[aiActiveDay,       setAiActiveDay]       =useState(0);
   const[aiDayDisplay,      setAiDayDisplay]      =useState('current'); // 'current'|'all'|'none'
   const[showNeighborhoods, setShowNeighborhoods] =useState(false);
-  const[osmHardCap, setOsmHardCap] = useState(500);
+  const[osmHardCap, setOsmHardCap] = useState(1500);
   const[categoryDisplayLimit, setCategoryDisplayLimit] = useState(5);
   const[mapMarkerLimitFactor, setMapMarkerLimitFactor] = useState(1.0);
+  const[poiQualityThreshold, setPoiQualityThreshold] = useState(0);
   const[tripMindPreviewPlaces, setTripMindPreviewPlaces] = useState([]);
   const[routeSpaceRoute, setRouteSpaceRoute] =useState(() => {
     try { return JSON.parse(sessionStorage.getItem('routespace_route') || 'null'); } catch { return null; }
   });
+  const[showRouteOnMap, setShowRouteOnMap] = useState(true);
   const[stopStabilityMap, setStopStabilityMap] =useState({});
   const[previewFlyTarget,     setPreviewFlyTarget]     = useState(null);
   const[panelOpen,            setPanelOpen]            = useState(true);
@@ -241,7 +245,7 @@ export default function App(){
   };
 
   const exportTrip=()=>{
-    const trip=loadTrips().find(t=>t.id===currentTripId)||{id:currentTripId,title:tripData.title,lastModified:new Date().toISOString(),data:tripData};
+    const trip={id:currentTripId,title:tripData.title,lastModified:new Date().toISOString(),data:tripData};
     const blob=new Blob([JSON.stringify(trip,null,2)],{type:'application/json'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);
     a.download=`${tripData.title.replace(/[^a-z0-9]/gi,'_')}_trip.json`;a.click();
@@ -268,8 +272,50 @@ export default function App(){
     input.click();
   };
 
+  // Geocache: count pending missions for tab badge
+  const gcUndiscovered = useMemo(() => {
+    const nodes = tripData.knowledgeGraph?.nodes || [];
+    if (!nodes.length) return 0;
+    try {
+      const raw = JSON.parse(localStorage.getItem(`gc_intel_v1_${currentTripId}`) || '{}');
+      const completed = Object.keys(raw.completed || {});
+      // Count unique places with contested claims (proxy for mission count) minus completed
+      const contested = new Set(nodes.filter(n => n.evaluation?.sentiment).map(n => (n.place || '').toLowerCase().trim()).filter(Boolean));
+      return Math.max(0, contested.size - completed.length);
+    } catch { return 0; }
+  }, [tripData.knowledgeGraph, currentTripId]);
+
+  // Auto-enable knowledge overlay when switching to analytics tab; disable when leaving
+  useEffect(() => {
+    if (activeTab === 'analytics') {
+      window.dispatchEvent(new CustomEvent('toggle-knowledge-overlay', { detail: true }));
+    }
+  }, [activeTab]);
+
+  // Listen for knowledge overlay toggle to auto-select a city if needed (so POIs load for the KG to attach to)
+  useEffect(() => {
+    const handleToggle = (e) => {
+      if (e.detail && !activeCity && tripData?.locations?.length > 0) {
+        setActiveCity(tripData.locations[0]);
+      }
+    };
+    window.addEventListener('toggle-knowledge-overlay', handleToggle);
+    return () => window.removeEventListener('toggle-knowledge-overlay', handleToggle);
+  }, [activeCity, tripData]);
+
   const triggerPlaceInfo=async(place)=>{
+    // Analytics: if on analytics tab, investigate the cache for this place
+    if (activeTab === 'analytics') {
+      const key = (place.name || '').toLowerCase().trim();
+      window._geocacheInvestigate?.(key);
+    }
     setActivePlaceInfo({...place});setIsInfoLoading(true);
+    
+    // Fly the map to this place's coordinates
+    if (place.coords && Array.isArray(place.coords) && place.coords.length >= 2 && typeof place.coords[0] === 'number') {
+      setPreviewFlyTarget({ lat: place.coords[0], lon: place.coords[1], zoom: 15, duration: 0.7 });
+    }
+
     let extract = place.extract || '';
     let heroImage=(place.liveImage&&place.liveImage!==SENTINEL_NONE)?place.liveImage:null;
     // Fetch Wikipedia extract and hero image in parallel (no artificial delay)
@@ -317,21 +363,54 @@ export default function App(){
   };
 
   const totalSaved=tripData.locations.reduce((s,c)=>s+c.places.length,0);
-  const totalKm=tripData.routes.reduce((sum,r)=>{const f=tripData.locations.find(l=>l.id===r.from),t=tripData.locations.find(l=>l.id===r.to);return f&&t?sum+Math.round(getDistanceKm(f.coords[0],f.coords[1],t.coords[0],t.coords[1])):sum;},0);
+  const totalKm = (() => {
+    // 1. Try to compute sequential distance along the itinerary path
+    const visitedCoords = [];
+    const sortedItinerary = [...(tripData.itinerary || [])].sort((a,b) => a.date.localeCompare(b.date));
+    sortedItinerary.forEach(day => {
+      const loc = tripData.locations.find(l => l.name === day.location || l.name.split(',')[0] === day.location.split(',')[0]);
+      if (loc) {
+        const last = visitedCoords[visitedCoords.length - 1];
+        if (!last || last[0] !== loc.coords[0] || last[1] !== loc.coords[1]) {
+          visitedCoords.push(loc.coords);
+        }
+      }
+    });
+
+    let sum = 0;
+    if (visitedCoords.length > 1) {
+      for (let i = 1; i < visitedCoords.length; i++) {
+        sum += getDistanceKm(visitedCoords[i-1][0], visitedCoords[i-1][1], visitedCoords[i][0], visitedCoords[i][1]);
+      }
+    }
+
+    // 2. Fallback to location list sequence if itinerary is empty
+    if (sum === 0 && tripData.locations && tripData.locations.length > 1) {
+      for (let i = 1; i < tripData.locations.length; i++) {
+        sum += getDistanceKm(
+          tripData.locations[i-1].coords[0], tripData.locations[i-1].coords[1],
+          tripData.locations[i].coords[0], tripData.locations[i].coords[1]
+        );
+      }
+    }
+    return Math.round(sum);
+  })();
 
   const renderPanel=()=>{
     switch(activeTab){
+      case 'menu':     return<MenuPanel     activeTab={activeTab} setActiveTab={setActiveTab} gcUndiscovered={gcUndiscovered}/>;
       case 'locations':return null;
       case 'route':    return<ExportPanel   tripData={tripData}/>;
-      case 'calendar': return<CalendarPanel tripData={tripData} setTripData={setTripData} expandedDay={calendarExpandedDay} setExpandedDay={setCalendarExpandedDay}/>;
+      case 'calendar': return<CalendarPanel tripData={tripData} setTripData={setTripData} expandedDays={calendarExpandedDays} setExpandedDays={setCalendarExpandedDays}/>;
       case 'budget':   return<BudgetPanel   tripData={tripData} setTripData={setTripData}/>;
       case 'packing':  return<PackingPanel  tripData={tripData} setTripData={setTripData}/>;
       case 'notes':    return<NotesPanel    tripData={tripData} setTripData={setTripData}/>;
       case 'documents':return<DocumentsPanel tripData={tripData} setTripData={setTripData}/>;
-      case 'tripmind': return<TripMindPanel tripData={tripData} setTripData={setTripData} aiActiveDay={aiActiveDay} onDayChange={setAiActiveDay} triggerPlaceInfo={triggerPlaceInfo} onPreviewPlaces={setTripMindPreviewPlaces} onFlyTo={coords=>setPreviewFlyTarget({lat:coords[0],lon:coords[1],zoom:16,duration:0.7})} />;
+      case 'tripmind': return<TripMindPanel tripData={tripData} setTripData={setTripData} activeCity={activeCity} aiActiveDay={aiActiveDay} onDayChange={setAiActiveDay} triggerPlaceInfo={triggerPlaceInfo} onPreviewPlaces={setTripMindPreviewPlaces} onFlyTo={coords=>setPreviewFlyTarget({lat:coords[0],lon:coords[1],zoom:16,duration:0.7})} />;
       case 'analyze':  return<CoherencePanel tripData={tripData}/>;
-      case 'routespace': return<RouteSpacePanel tripData={tripData} setTripData={setTripData} activeCity={activeCity} routeSpaceRoute={routeSpaceRoute} setRouteSpaceRoute={setRouteSpaceRoute} setStopStabilityMap={setStopStabilityMap} triggerPlaceInfo={triggerPlaceInfo} aiInterests={aiInterests} onSwitchToCalendar={()=>setActiveTab('calendar')} />;
-      case 'knowledge':  return<Suspense fallback={<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'200px',color:'rgba(255,255,255,0.4)',fontSize:'0.8rem'}}>Loading Knowledge Graph…</div>}><KnowledgePanel tripData={tripData} setTripData={setTripData} triggerPlaceInfo={triggerPlaceInfo} /></Suspense>;
+      case 'routespace': return<RouteSpacePanel tripData={tripData} setTripData={setTripData} activeCity={activeCity} routeSpaceRoute={routeSpaceRoute} setRouteSpaceRoute={setRouteSpaceRoute} setStopStabilityMap={setStopStabilityMap} triggerPlaceInfo={triggerPlaceInfo} aiInterests={aiInterests} onSwitchToCalendar={()=>setActiveTab('calendar')} showRouteOnMap={showRouteOnMap} setShowRouteOnMap={setShowRouteOnMap} />;
+      case 'knowledge':  return<Suspense fallback={<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'200px',color:'rgba(255,255,255,0.4)',fontSize:'0.8rem'}}>Loading Knowledge Graph…</div>}><KnowledgePanel tripData={tripData} setTripData={setTripData} triggerPlaceInfo={triggerPlaceInfo} activeCity={activeCity} /></Suspense>;
+      case 'analytics':  return<Suspense fallback={<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'200px',color:'rgba(255,255,255,0.4)',fontSize:'0.8rem'}}>Loading Analytics…</div>}><AnalyticsPanel tripData={tripData} setTripData={setTripData} tripId={currentTripId} activeCity={activeCity} /></Suspense>;
       default:return null;
     }
   };
@@ -350,17 +429,21 @@ export default function App(){
         setCategoryDisplayLimit={setCategoryDisplayLimit}
         mapMarkerLimitFactor={mapMarkerLimitFactor}
         setMapMarkerLimitFactor={setMapMarkerLimitFactor}
+        poiQualityThreshold={poiQualityThreshold}
+        setPoiQualityThreshold={setPoiQualityThreshold}
         recFilterText={recFilterText}
         infoOpen={!!activePlaceInfo}
         previewPlaces={tripMindPreviewPlaces}
         previewFlyTarget={previewFlyTarget}
         routeSpaceRoute={routeSpaceRoute}
+        showRouteOnMap={showRouteOnMap}
         stopStabilityMap={stopStabilityMap}
+        activeTab={activeTab}
         panelOpen={panelOpen}
         hasTimeline={tripData.itinerary && tripData.itinerary.length > 0}
         knowledgeGraph={tripData.knowledgeGraph}
       />
-      <TimelineStrip tripData={tripData} setActiveCity={setActiveCity} setActiveTab={setActiveTab} setCalendarExpandedDay={setCalendarExpandedDay} panelOpen={panelOpen}/>
+      <TimelineStrip tripData={tripData} setActiveCity={setActiveCity} setActiveTab={setActiveTab} setCalendarExpandedDay={dayId => setCalendarExpandedDays(prev => prev.includes(dayId) ? prev : [...prev, dayId])} panelOpen={panelOpen}/>
 
       {/* Floating Toggle Button to open the menu when collapsed */}
       {!panelOpen && (
@@ -397,7 +480,7 @@ export default function App(){
           <div style={{display:'flex',alignItems:'center',gap:'0.6rem',flex:1,minWidth:0}}>
             <Compass size={17} style={{color:'var(--accent-primary)',filter:'drop-shadow(0 0 8px rgba(59,130,246,0.6))',flexShrink:0}}/>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:'0.58rem',color:'var(--text-secondary)',fontWeight:'700',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:'0.1rem'}}>AlpacaMap</div>
+              <div style={{fontSize:'0.58rem',color:'var(--text-secondary)',fontWeight:'700',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:'0.1rem'}}>TravelScout</div>
               {editingTitle?(
                 <input autoFocus type="text" value={titleInput} onChange={e=>setTitleInput(e.target.value)}
                   onBlur={saveTitle} onKeyDown={e=>{if(e.key==='Enter')saveTitle();if(e.key==='Escape')setEditingTitle(false);}}
@@ -413,6 +496,11 @@ export default function App(){
           </div>
           <div style={{display:'flex',alignItems:'center',gap:'0.4rem',flexShrink:0}}>
             {savedAt&&<span className="saved-badge"><Check size={12} style={{marginRight:'3px'}}/> Saved</span>}
+            {activeTab !== 'menu' && (
+              <button className="btn-icon" title="Main Menu" onClick={()=>setActiveTab('menu')} style={{padding:'0.35rem', background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6'}}>
+                <Compass size={15}/>
+              </button>
+            )}
             <button className="btn-icon" title="Collapse Menu" onClick={() => setPanelOpen(false)} style={{padding:'0.35rem'}}>
               <ChevronLeft size={15}/>
             </button>
@@ -428,14 +516,6 @@ export default function App(){
               {totalKm>0&&<div className="stat-chip"><strong>{totalKm>999?`${(totalKm/1000).toFixed(1)}k`:totalKm}</strong> km</div>}
             </div>
           </div>
-        </div>
-
-        <div className="tab-bar" ref={tabScrollRef} style={{cursor: 'grab'}}>
-          {TABS.map(({id,label,Icon})=>(
-            <button key={id} className={`tab-btn ${activeTab===id?'active':''}`} onClick={()=>setActiveTab(id)}>
-              <Icon size={12}/>{label}
-            </button>
-          ))}
         </div>
 
         <div className="tab-content">

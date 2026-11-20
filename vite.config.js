@@ -16,12 +16,12 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/ollama-proxy/, ''),
         },
         '/reddit-proxy': {
-          target: 'https://www.reddit.com',
+          target: 'https://api.reddit.com',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/reddit-proxy/, ''),
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            'Accept': 'application/json, text/javascript, */*; q=0.01',
+            'Accept': 'application/json',
             'Accept-Language': 'en-US,en;q=0.9',
             'Accept-Encoding': 'identity',
           },
