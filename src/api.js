@@ -20,6 +20,10 @@ export const searchNominatim = async (query, opts = {}) => {
   return r.json();
 };
 
+// Optional CORS proxy for scraping images from other sites (set VITE_CORS_PROXY in .env).
+// The old default, corsproxy.io, now requires an API key, so these steps are skipped unless one is set.
+const CORS_PROXY = import.meta.env.VITE_CORS_PROXY || '';
+
 export const fetchPlaceImage = async (osmTags, name, type, cityName) => {
   if (osmTags?.image && /^https?:\/\//.test(osmTags.image)) return osmTags.image;
 
@@ -71,16 +75,16 @@ export const fetchPlaceImage = async (osmTags, name, type, cityName) => {
 
   try {
     const q = [name, cityName].filter(Boolean).join(' ');
-    const proxy = 'https://corsproxy.io/?url=';
+    // api.duckduckgo.com allows browser requests directly — no proxy needed
     const targetUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1&skip_disambig=1`;
-    const j = await fetch(`${proxy}${encodeURIComponent(targetUrl)}`).then(r => r.json());
+    const j = await fetch(targetUrl, { signal: AbortSignal.timeout(5000) }).then(r => r.json());
     if (j?.Image && /^https?:\/\//.test(j.Image)) return j.Image;
   } catch {}
 
-  if (osmTags?.website) {
+  if (CORS_PROXY && osmTags?.website) {
     try {
       const html = await fetch(
-        `https://corsproxy.io/?url=${encodeURIComponent(osmTags.website)}`,
+        `${CORS_PROXY}${encodeURIComponent(osmTags.website)}`,
         { signal: AbortSignal.timeout(6000) }
       ).then(r => r.text());
       const m = html.match(/property="og:image"\s+content="([^"]+)"/i) ||
@@ -91,10 +95,10 @@ export const fetchPlaceImage = async (osmTags, name, type, cityName) => {
     } catch {}
   }
 
-  try {
+  if (CORS_PROXY) try {
     const query = [name, type, cityName].filter(Boolean).join(' ');
     const encoded = encodeURIComponent(query);
-    const proxy = 'https://corsproxy.io/?url=';
+    const proxy = CORS_PROXY;
     const html = await fetch(
       `${proxy}${encodeURIComponent(`https://duckduckgo.com/?q=${encoded}&iax=images&ia=images`)}`,
       { signal: AbortSignal.timeout(5000) }
@@ -113,7 +117,7 @@ export const fetchPlaceImage = async (osmTags, name, type, cityName) => {
   if (osmTags?.website) {
     try {
       const domain = new URL(osmTags.website).hostname.replace(/^www\./, '');
-      const res = await fetch(`https://logo.clearbit.com/${domain}`);
+      const res = await fetch(`https://logo.clearbit.com/${domain}`, { signal: AbortSignal.timeout(4000) });
       if (res.ok && res.headers.get('content-type')?.startsWith('image/')) {
         return `https://logo.clearbit.com/${domain}`;
       }

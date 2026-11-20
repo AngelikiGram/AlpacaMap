@@ -5,6 +5,7 @@ import KnowledgeConstellationView from './KnowledgeConstellationView';
 import ExtractionProgress from './ExtractionProgress';
 import KnowledgeRadarView from './KnowledgeRadarView';
 import nlpData from '../../data/nlp_data.json';
+import { API, HAS_DEV_PROXY, assetUrl } from '../../endpoints';
 
 // ── Credibility model ──────────────────────────────────────────────────────────
 // Returns { score, low, high } — the CI widens when fewer corroborating sources exist
@@ -320,6 +321,7 @@ function cleanContentText(text) {
 
 // ── DuckDuckGo HTML Reddit Search Fallback (fixed regex for modern DDG HTML) ──
 async function fetchRedditFromDuckDuckGo(query) {
+  if (!HAS_DEV_PROXY) return [];
   try {
     const qStr = `site:reddit.com ${query} travel tips`;
     const url = `/ddg-proxy/html/?q=${encodeURIComponent(qStr)}&kl=en-us`;
@@ -362,6 +364,7 @@ async function fetchRedditFromDuckDuckGo(query) {
 // Finds city/country-specific subs (r/JapanTravel, r/london, r/Netherlands) that generic
 // hardcoded lists miss entirely.
 async function discoverCitySubreddits(cityName) {
+  if (!HAS_DEV_PROXY) return [];
   const EXCLUDE = new Set(['wiki', 'search', 'comments', 'user', 'all', 'popular', 'submit', 'message', 'login', 'register', 'help', 'about', 'r', 'new', 'hot', 'top', 'controversial']);
   try {
     const qStr = `site:reddit.com/r/ "${cityName}" travel`;
@@ -437,7 +440,7 @@ async function fetchRedditViaPullPush(cityName) {
   }
 
   // If direct failed entirely, retry via Vite proxy
-  if (results.length === 0) {
+  if (results.length === 0 && HAS_DEV_PROXY) {
     console.log('[PullPush] Direct failed, trying Vite proxy...');
     await fetchSubs(DEFAULT_SUBS, GENERIC_QUERIES, PROXY_BASE, 50);
   }
@@ -676,7 +679,7 @@ async function fetchWikivoyageWithFallback(city, parentCity = null) {
   const tryNames = buildCityVariants(city, parentCity);
   // Try parallel requests to speed up the process instead of sequential loops
   const results = await Promise.allSettled(tryNames.map(async name => {
-    const url = `/wikivoyage-proxy/w/api.php?action=query&titles=${encodeURIComponent(name)}&prop=extracts&explaintext=true&exsectionformat=plain&format=json&origin=*`;
+    const url = `${API.wikivoyage}/w/api.php?action=query&titles=${encodeURIComponent(name)}&prop=extracts&explaintext=true&exsectionformat=plain&format=json&origin=*`;
     const res = await fetch(url, { credentials: 'omit', signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error('Bad response');
     const textData = await res.text();
@@ -696,7 +699,7 @@ async function fetchWikipediaWithFallback(city, parentCity = null) {
   const tryNames = buildCityVariants(city, parentCity);
   // Try parallel requests to speed up the process
   const results = await Promise.allSettled(tryNames.map(async name => {
-    const url = `/wikipedia-proxy/w/api.php?action=query&titles=${encodeURIComponent(name)}&prop=extracts&explaintext=true&format=json&origin=*`;
+    const url = `${API.wikipedia}/w/api.php?action=query&titles=${encodeURIComponent(name)}&prop=extracts&explaintext=true&format=json&origin=*`;
     const res = await fetch(url, { credentials: 'omit', signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error('Bad response');
     const textData = await res.text();
@@ -719,6 +722,12 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
 
   const allPosts = [];
 
+  // Hosted site: Reddit's API and DuckDuckGo block browser requests — use the PullPush archive only.
+  if (!HAS_DEV_PROXY) {
+    const posts = await fetchRedditViaPullPush(noCountry).catch(() => []);
+    allPosts.push(...posts);
+  }
+
   // ── api.reddit.com via Vite proxy (PRIMARY — confirmed working) ────────────
   // api.reddit.com returns JSON directly without CORS blocks.
   console.log('[Reddit] Fetching via api.reddit.com proxy...');
@@ -735,7 +744,7 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
     `${noCountry} restaurants cafes food`,
     `best places in ${noCountry}`
   ];
-  let ddgPromise = Promise.allSettled(
+  let ddgPromise = !HAS_DEV_PROXY ? Promise.resolve() : Promise.allSettled(
     ddgQueries.map(async (dq, qIdx) => {
       try {
         const snippets = await fetchRedditFromDuckDuckGo(dq);
@@ -756,7 +765,7 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
     })
   );
 
-  await Promise.allSettled([
+  if (HAS_DEV_PROXY) await Promise.allSettled([
     ddgPromise,
     ...TRAVEL_SUBS.flatMap(sub => QUERIES.map(async q => {
       try {
@@ -778,7 +787,7 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
   ]);
 
   // ── PullPush.io (fallback — often down) ───────────────────────────────────
-  if (allPosts.length === 0) {
+  if (allPosts.length === 0 && HAS_DEV_PROXY) {
     console.log('[Reddit] api.reddit.com returned 0, trying PullPush fallback...');
     await fetchRedditViaPullPush(noCountry).then(posts => {
       if (posts.length > 0) { allPosts.push(...posts); console.log(`[Reddit] PullPush → ${posts.length} posts`); }
@@ -823,6 +832,7 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
 
 
 async function fetchWikitravel(city, parentCity = null) {
+  if (!HAS_DEV_PROXY) return null;
   const tryNames = buildCityVariants(city, parentCity);
   const results = await Promise.allSettled(tryNames.map(async name => {
     // rvslots=* required for MediaWiki 1.32+ slot-based content model
@@ -847,9 +857,9 @@ async function fetchStackExchangeTravel(city, parentCity = null) {
   const baseName = normalizeCityName(city);
   const stripHtml = html => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   const tryQuery = async (queryTerm, pagesize = 8) => {
-    const url = `/stackexchange-proxy/2.3/search/advanced?q=${encodeURIComponent(queryTerm)}&site=travel&sort=votes&pagesize=${pagesize}&filter=withbody`;
+    const url = `${API.stackexchange}/2.3/search/advanced?q=${encodeURIComponent(queryTerm)}&site=travel&sort=votes&pagesize=${pagesize}&filter=withbody`;
     const res = await fetch(url, {
-      headers: { 'Accept': 'application/json', 'Accept-Encoding': 'identity' },
+      headers: { 'Accept': 'application/json' },
       credentials: 'omit',
       signal: AbortSignal.timeout(10000)
     });
@@ -1459,11 +1469,11 @@ async function fetchAreaPOIsOverpass(city, lat, lon) {
 out center;`;
 
   try {
-    const res = await fetch('/overpass-proxy/api/interpreter', {
+    const res = await fetch(`${API.overpass}/api/interpreter`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `data=${encodeURIComponent(query)}`,
-      signal: AbortSignal.timeout(35000),
+      signal: AbortSignal.timeout(12000),
     });
     if (!res.ok) { console.log('[OverpassPOI] HTTP', res.status); return []; }
     const data = await res.json();
@@ -1490,7 +1500,7 @@ out center;`;
 async function searchAndFetchWikipedia(query) {
   try {
     const sRes = await fetch(
-      `/wikipedia-proxy/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=1&format=json&origin=*`,
+      `${API.wikipedia}/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=1&format=json&origin=*`,
       { signal: AbortSignal.timeout(5000) }
     );
     if (!sRes.ok) return null;
@@ -1498,7 +1508,7 @@ async function searchAndFetchWikipedia(query) {
     const title = sData.query?.search?.[0]?.title;
     if (!title) return null;
     const eRes = await fetch(
-      `/wikipedia-proxy/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=extracts&explaintext=true&format=json&origin=*`,
+      `${API.wikipedia}/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=extracts&explaintext=true&format=json&origin=*`,
       { signal: AbortSignal.timeout(8000) }
     );
     if (!eRes.ok) return null;
@@ -1529,7 +1539,7 @@ async function searchRedditForTopic(query) {
     return posts;
   };
   const direct = await fetchPosts('https://api.pullpush.io');
-  return direct.length > 0 ? direct : fetchPosts('/pullpush-proxy');
+  return direct.length > 0 || !HAS_DEV_PROXY ? direct : fetchPosts('/pullpush-proxy');
 }
 
 // ── Deep research second pass ─────────────────────────────────────────────────
@@ -1929,7 +1939,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
   const [fetchMode, setFetchMode] = useState('name'); // 'name' or 'coords'
   const [radiusKm, setRadiusKm] = useState(5); // default radius 5km
   const [customCoords, setCustomCoords] = useState(null); // GPS coordinates override
-  const [fetchSources, setFetchSources] = useState({ wikivoyage: true, wikitravel: true, reddit: true, stackexchange: true, wikipedia: true });
+  const [fetchSources, setFetchSources] = useState({ wikivoyage: true, wikitravel: HAS_DEV_PROXY, reddit: true, stackexchange: true, wikipedia: true });
   const [fetching, setFetching] = useState(false);
   const [fetchStatus, setFetchStatus] = useState('');
   const [fetchedPreviews, setFetchedPreviews] = useState([]); // { sourceType, label, status, charCount, posts, url, title }
@@ -2270,7 +2280,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           const maxLon = lon + dLon;
 
           const searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=tourism&viewbox=${minLon},${minLat},${maxLon},${maxLat}&bounded=1&limit=30`;
-          const searchRes = await fetch(searchUrl);
+          const searchRes = await fetch(searchUrl, { signal: AbortSignal.timeout(6000) });
           if (searchRes.ok) {
             const poiData = await searchRes.json();
             const poiNames = poiData.map(item => item.display_name.split(',')[0]).filter(Boolean);
@@ -2324,7 +2334,13 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
 
     const [overpassSettled, ...results] = await Promise.allSettled([
       fetchAreaPOIsOverpass(city.split(',')[0].trim(), lat, lon),
-      ...checkedSources.map(async key => fetchers[key]?.() ?? Promise.resolve(null))
+      ...checkedSources.map(async key => {
+        const r = await (fetchers[key]?.() ?? Promise.resolve(null));
+        setFetchedPreviews(p => p.map(x => x.sourceType === key
+          ? (r && r.text ? { ...x, status: 'ok', charCount: r.text.length, posts: r.count, url: r.url, title: r.title } : { ...x, status: 'none', title: 'Nothing found' })
+          : x));
+        return r;
+      })
     ]);
 
     const overpassPOIs = overpassSettled.status === 'fulfilled' ? (overpassSettled.value || []) : [];
@@ -2615,6 +2631,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
             const PREPROCESSED_MAP = {
               'amsterdam': 'amsterdam',
               'barcelona': 'barcelona',
+              'edinburgh': 'edinburgh',
               'kyoto': 'kyoto',
               'london': 'london',
               'new york': 'new_york',
@@ -2624,7 +2641,9 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
               'prague': 'prague',
               'rome': 'rome',
               'sydney': 'sydney',
-              'tokyo': 'tokyo'
+              'tokyo': 'tokyo',
+              'zurich': 'zurich',
+              'zürich': 'zurich'
             };
             const matchedKey = PREPROCESSED_MAP[cleanTarget];
             if (!matchedKey) return null;
@@ -2643,11 +2662,20 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                     setExtracting(true);
                     setFetchStatus('Loading preprocessed offline cache...');
                     try {
-                      const res = await fetch(`/preprocessed/${matchedKey}.json`);
+                      const res = await fetch(assetUrl(`preprocessed/${matchedKey}.json`));
                       if (!res.ok) throw new Error('Preprocessed data file not found');
                       const data = await res.json();
+                      const today = new Date().toISOString().slice(0, 10);
+                      const SOURCE_LABELS = { wikivoyage: 'Wikivoyage', wikitravel: 'Wikitravel', wikipedia: 'Wikipedia', reddit: 'Reddit', stackexchange: 'StackExchange Travel' };
                       const allNew = [];
-                      // Flatten nodes from sources
+                      // Newer files: one ready-made `nodes` list (london, paris, rome, edinburgh, zurich)
+                      if (Array.isArray(data.nodes)) {
+                        data.nodes.forEach((n, idx) => {
+                          const src = n.source || {};
+                          allNew.push({ ...n, id: `offline-${matchedKey}-${idx}`, source: { ...src, label: src.label || src.sourceLabel || SOURCE_LABELS[src.sourceType] || src.sourceType } });
+                        });
+                      }
+                      // Older files: nodes grouped per source
                       Object.entries(data).forEach(([srcKey, srcData]) => {
                         if (srcData && Array.isArray(srcData.nodes)) {
                           const label = SOURCE_LABELS[srcKey] || srcKey;
@@ -2810,7 +2838,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                       { key: 'reddit', icon: '💬', label: 'Reddit', color: '#f97316', desc: 'r/travel · r/solotravel · r/backpacking · r/travelhacks · city subreddit · up to 100 posts per query' },
                       { key: 'stackexchange', icon: '🏷', label: 'StackExchange', color: '#f59e0b', desc: 'Voted travel Q&A from Travel StackExchange' },
                       { key: 'wikipedia', icon: '📖', label: 'Wikipedia', color: '#94a3b8', desc: 'Factual/historical context' },
-                    ].map(src => (
+                    ].filter(src => HAS_DEV_PROXY || src.key !== 'wikitravel').map(src => (
                       <label key={src.key}
                         style={{
                           display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer',

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { searchNominatim } from './api.js';
+import { ollamaChatUrl } from './endpoints';
 import { Loader2, X, Sparkles, ChevronDown, ChevronUp, RotateCcw, Download, Settings, Plus, Pencil, Trash2, AlertTriangle, Calendar, CreditCard, Backpack, Lightbulb, BrainCircuit, Check, MapPin, ListChecks, GripVertical, User, Heart, Gem, Users, Briefcase, Activity, Zap, Coffee, Crown, Accessibility, Camera, TreePine, Leaf, Landmark, Utensils, Tent, Moon, Layers, Gamepad2, BookOpen, Compass, Martini } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -567,8 +568,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
     setStreamChars(0); setElapsedSecs(0);
     const startTime = Date.now();
     generationRef.current = setInterval(() => setElapsedSecs(Math.floor((Date.now() - startTime) / 1000)), 1000);
-    const isLocal = /localhost|127\.0\.0\.1/.test(ollamaEndpoint);
-    const chatUrl = isLocal ? `/ollama-proxy/api/chat` : `${ollamaEndpoint.replace(/\/$/, '')}/api/chat`;
+    const chatUrl = ollamaChatUrl(ollamaEndpoint);
     const theme = desc.trim();
     const count = Math.max(3, Math.min(50, placeCount || 15));
     const stylesLabel = Array.isArray(tripStyle) ? tripStyle.join(' and ') : tripStyle;
@@ -702,8 +702,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
   useEffect(() => {
     if (warmupDone.current) return;
     warmupDone.current = true;
-    const isLocal = /localhost|127\.0\.0\.1/.test(ollamaEndpoint);
-    const chatUrl = isLocal ? `/ollama-proxy/api/chat` : `${ollamaEndpoint.replace(/\/$/, '')}/api/chat`;
+    const chatUrl = ollamaChatUrl(ollamaEndpoint);
     fetch(chatUrl, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -757,10 +756,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
       : baseUserMsg;
 
     try {
-      const isLocal = /localhost|127\.0\.0\.1/.test(ollamaEndpoint);
-      const chatUrl = isLocal
-        ? `/ollama-proxy/api/chat`
-        : `${ollamaEndpoint.replace(/\/$/, '')}/api/chat`;
+      const chatUrl = ollamaChatUrl(ollamaEndpoint);
       const res = await fetch(chatUrl, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },

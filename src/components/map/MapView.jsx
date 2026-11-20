@@ -710,7 +710,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
     setNeighborhoods([]);
     const baseName = cityName.split(',')[0].trim();
     const query = `[out:json][timeout:30];area["name"="${baseName}"]["admin_level"~"^(4|6|8)$"]->.city;(relation(area.city)["boundary"="administrative"]["admin_level"~"^(8|9|10)$"]["name"];);out geom;`;
-    fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`)
+    fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, { signal: AbortSignal.timeout(20000) })
       .then(r => r.json())
       .then(data => {
         const results = (data.elements || []).map((rel, idx) => {
