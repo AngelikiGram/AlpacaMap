@@ -158,7 +158,7 @@ export default function App(){
   const[isInfoLoading,   setIsInfoLoading]   =useState(false);
   const[pendingPin,      setPendingPin]      =useState(null);
   const[mapCenter,       setMapCenter]       =useState(null);
-  const[mapLayer,        setMapLayer]        =useState(()=>loadPrefs().mapLayer||'clean');
+  const[mapLayer,        setMapLayer]        =useState(()=>loadPrefs().mapLayer||'satellite');
   const[editingTitle,    setEditingTitle]    =useState(false);
   const[titleInput,      setTitleInput]      =useState('');
   const[savedTrips,      setSavedTrips]      =useState(()=>loadTrips());

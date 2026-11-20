@@ -22,7 +22,7 @@ export const MAP_LAYERS = [
   {
     id:'satellite', icon:<Satellite size={14}/>, label:'Satellite', desc:'Aerial imagery with place labels',
     url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    labelsUrl:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
+    labelsUrl:'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
     attr:'© Esri', maxNative:17, subdomains:'',
   },
   {
