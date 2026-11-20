@@ -849,7 +849,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
         <TileLayer key={mapLayer} url={currentLayer.url} attribution={currentLayer.attr} maxZoom={22} maxNativeZoom={currentLayer.maxNative} keepBuffer={4} subdomains={currentLayer.subdomains || 'abc'} />
         {/* Labels overlay (satellite, etc.) */}
         {currentLayer.labelsUrl && (
-          <TileLayer key={`${mapLayer}-labels`} url={currentLayer.labelsUrl} attribution="" maxZoom={22} maxNativeZoom={19} subdomains="abcd" zIndex={500} opacity={0.9} />
+          <TileLayer key={`${mapLayer}-labels`} url={currentLayer.labelsUrl} attribution="" maxZoom={22} maxNativeZoom={currentLayer.labelsMaxNative || 19} subdomains="abcd" zIndex={500} opacity={0.9} />
         )}
         {/* Fly-to controllers */}
         <MapFlyController target={flyTarget} />

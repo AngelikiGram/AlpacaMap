@@ -15,9 +15,10 @@ export const MAP_LAYERS = [
     attr:'© OpenStreetMap', maxNative:19, subdomains:'abc',
   },
   {
-    id:'clean', icon:<Layers size={14}/>, label:'Clean', desc:'Clean street map (Voyager)',
-    url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    attr:'© CARTO', maxNative:19, subdomains:'abcd',
+    id:'clean', icon:<Layers size={14}/>, label:'Clean', desc:'Clean light map (Esri)',
+    url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    labelsUrl:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+    attr:'© Esri',maxNative:16,labelsMaxNative:16,subdomains:'',
   },
   {
     id:'satellite', icon:<Satellite size={14}/>, label:'Satellite', desc:'Aerial imagery with place labels',
@@ -32,8 +33,9 @@ export const MAP_LAYERS = [
   },
   {
     id:'dark', icon:<Moon size={14}/>, label:'Dark', desc:'Dark mode — great for night planning',
-    url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attr:'© CARTO', maxNative:19, subdomains:'abcd',
+    url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    labelsUrl:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+    attr:'© Esri',maxNative:16,labelsMaxNative:16,subdomains:'',
   },
   {
     id:'osm', icon:<TreePine size={14}/>, label:'Outdoors', desc:'Full OSM detail — trails, parks, POIs',
@@ -445,7 +447,7 @@ export const INITIAL_TRIP = {
 
 export const TRIPS_KEY = 'alpacamap_trips_v1';
 
-export const PREFS_KEY = 'alpacamap_prefs_v1';
+export const PREFS_KEY = 'alpacamap_prefs_v2';
 
 export const TABS=[
   {id:'locations',  label:'Explore',    Icon:MapPin},
