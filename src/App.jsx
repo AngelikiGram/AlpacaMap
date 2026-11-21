@@ -480,43 +480,48 @@ export default function App(){
           <div style={{display:'flex',alignItems:'center',gap:'0.6rem',flex:1,minWidth:0}}>
             <Compass size={17} style={{color:'var(--accent-primary)',filter:'drop-shadow(0 0 8px rgba(59,130,246,0.6))',flexShrink:0}}/>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:'0.58rem',color:'var(--text-secondary)',fontWeight:'700',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:'0.1rem'}}>TravelScout</div>
               {editingTitle?(
                 <input autoFocus type="text" value={titleInput} onChange={e=>setTitleInput(e.target.value)}
                   onBlur={saveTitle} onKeyDown={e=>{if(e.key==='Enter')saveTitle();if(e.key==='Escape')setEditingTitle(false);}}
                   style={{fontSize:'0.9rem',fontWeight:'700',padding:'0.1rem 0.3rem',width:'100%',fontFamily:'Outfit,sans-serif'}}
                 />
               ):(
-                <div style={{display:'flex',alignItems:'center',gap:'0.3rem',cursor:'pointer'}} onClick={()=>{setTitleInput(tripData.title);setEditingTitle(true);}}>
+                <div role="button" tabIndex={0} title="Rename trip" style={{display:'flex',alignItems:'center',gap:'0.3rem',cursor:'pointer'}}
+                  onClick={()=>{setTitleInput(tripData.title);setEditingTitle(true);}}
+                  onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setTitleInput(tripData.title);setEditingTitle(true);}}}>
                   <span style={{fontWeight:'700',fontSize:'0.9rem',fontFamily:'Outfit,sans-serif',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tripData.title}</span>
                   <Pencil size={10} color="var(--text-secondary)" style={{flexShrink:0}}/>
                 </div>
               )}
+              <div className="panel-trip-meta">
+                {tripData.locations.length} {tripData.locations.length===1?'stop':'stops'} · {totalSaved} saved{totalKm>0?` · ${totalKm>999?`${(totalKm/1000).toFixed(1)}k`:totalKm} km`:''}
+              </div>
             </div>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:'0.4rem',flexShrink:0}}>
-            {savedAt&&<span className="saved-badge"><Check size={12} style={{marginRight:'3px'}}/> Saved</span>}
-            {activeTab !== 'menu' && (
-              <button className="btn-icon" title="Main Menu" onClick={()=>setActiveTab('menu')} style={{padding:'0.35rem', background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6'}}>
-                <Compass size={15}/>
-              </button>
-            )}
-            <button className="btn-icon" title="Collapse Menu" onClick={() => setPanelOpen(false)} style={{padding:'0.35rem'}}>
-              <ChevronLeft size={15}/>
-            </button>
-            <button className="btn-icon" title="Print / Export PDF" onClick={()=>window.print()} style={{padding:'0.35rem'}}>
-              <FileText size={15}/>
-            </button>
-            <button className="btn-icon" title="My Trips" onClick={()=>setShowTripsPanel(true)} style={{padding:'0.35rem'}}>
+            {savedAt&&<span className="saved-badge" title="All changes saved in this browser"><Check size={12}/></span>}
+            <button className="btn-icon" title="My trips" aria-label="My trips" onClick={()=>setShowTripsPanel(true)} style={{padding:'0.35rem'}}>
               <FolderOpen size={15}/>
             </button>
-            <div className="stats-strip">
-              <div className="stat-chip"><strong>{tripData.locations.length}</strong> stops</div>
-              <div className="stat-chip"><strong>{totalSaved}</strong> saved</div>
-              {totalKm>0&&<div className="stat-chip"><strong>{totalKm>999?`${(totalKm/1000).toFixed(1)}k`:totalKm}</strong> km</div>}
-            </div>
+            <button className="btn-icon" title="Print / save as PDF" aria-label="Print or save as PDF" onClick={()=>window.print()} style={{padding:'0.35rem'}}>
+              <FileText size={15}/>
+            </button>
+            <button className="btn-icon" title="Hide panel" aria-label="Hide panel" onClick={() => setPanelOpen(false)} style={{padding:'0.35rem'}}>
+              <ChevronLeft size={15}/>
+            </button>
           </div>
         </div>
+        {activeTab !== 'menu' && (() => {
+          const tab = TABS.find(t => t.id === activeTab);
+          return (
+            <div className="panel-section-bar">
+              <button type="button" className="panel-back" title="Main menu" onClick={()=>setActiveTab('menu')}>
+                <ChevronLeft size={14}/> Menu
+              </button>
+              {tab && <><tab.Icon size={15} style={{color:'var(--accent-primary)'}}/><span className="panel-section-name">{tab.label}</span></>}
+            </div>
+          );
+        })()}
 
         <div className="tab-content">
           <div style={{display: activeTab === 'locations' ? 'block' : 'none', height: '100%', overflow: 'hidden'}}>

@@ -1,7 +1,7 @@
 import L from 'leaflet';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
-import { Accessibility, Activity, BookOpen, Bed, Brain, Bus, Camera, Car, Castle, Clock, Coffee, Compass, CreditCard, DollarSign, Download, Droplets, Globe, Info, Landmark, MapPin, MountainSnow, Package, Plane, Search, Ship, ShoppingBag, Sparkles, Tent, Train, TreePine, Utensils, Calendar as CalendarIcon, FileText, Layers, Satellite, Moon, Navigation } from 'lucide-react';
+import { Accessibility, Activity, BookOpen, Bed, Brain, Bus, Camera, Car, Castle, Clock, Coffee, Compass, CreditCard, DollarSign, Download, Droplets, Globe, Info, Landmark, MapPin, MountainSnow, Package, Plane, Search, Ship, ShoppingBag, Sparkles, Tent, Train, TreePine, Utensils, Calendar as CalendarIcon, FileText, Layers, Satellite, Moon, Navigation, ClipboardList } from 'lucide-react';
 import { CATEGORY_ZOOM_PRIORITY, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS, OVERPASS_URL } from "./config";
 
 export const CITY_PALETTE = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#ef4444','#84cc16','#f97316','#a78bfa'];
@@ -450,17 +450,18 @@ export const TRIPS_KEY = 'alpacamap_trips_v1';
 export const PREFS_KEY = 'alpacamap_prefs_v2';
 
 export const TABS=[
-  {id:'locations',  label:'Explore',    Icon:MapPin},
-  {id:'tripmind',   label:'Planner',    Icon:Sparkles},
-  {id:'routespace', label:'TripSpace',  Icon:Compass},
-  {id:'analytics',  label:'Insights',   Icon:Activity},
-  {id:'knowledge',  label:'Knowledge',  Icon:Brain},
-  {id:'calendar',   label:'Itinerary',  Icon:CalendarIcon},
-  {id:'budget',     label:'Budget',     Icon:DollarSign},
-  {id:'packing',    label:'Packing',    Icon:Package},
-  {id:'notes',      label:'Notes',      Icon:BookOpen},
-  {id:'documents',  label:'Docs',       Icon:FileText},
-  {id:'route',      label:'Export',     Icon:Download},
+  {id:'locations',  label:'Explore',    Icon:MapPin,       desc:'Find places on the map and save them to your trip'},
+  {id:'tripmind',   label:'Planner',    Icon:Sparkles,     desc:'Generate a day-by-day plan with a local AI model'},
+  {id:'calendar',   label:'Itinerary',  Icon:CalendarIcon, desc:'Your days, stops and times'},
+  {id:'routespace', label:'TripSpace',  Icon:Compass,      desc:'Compare and build route options between places'},
+  {id:'knowledge',  label:'Knowledge',  Icon:Brain,        desc:'What guides and travellers say, and where they disagree'},
+  {id:'analytics',  label:'Insights',   Icon:Activity,     desc:'Charts about your places and the collected knowledge'},
+  {id:'analyze',    label:'Overview',   Icon:ClipboardList,desc:'Summary of saved places, budget and packing per city'},
+  {id:'budget',     label:'Budget',     Icon:DollarSign,   desc:'Track expenses against your total'},
+  {id:'packing',    label:'Packing',    Icon:Package,      desc:'Checklists of things to bring'},
+  {id:'notes',      label:'Notes',      Icon:BookOpen,     desc:'Free notes per trip and city'},
+  {id:'documents',  label:'Docs',       Icon:FileText,     desc:'Tickets, bookings and other documents'},
+  {id:'route',      label:'Export',     Icon:Download,     desc:'Export to Google Maps, KML or a file'},
 ];
 
 

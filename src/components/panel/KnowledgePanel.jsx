@@ -396,16 +396,19 @@ async function fetchRedditViaPullPush(cityName) {
   const PROXY_BASE = '/pullpush-proxy';
   const citySlug = cityName.toLowerCase().replace(/[^a-z0-9]/g, '');
   const DEFAULT_SUBS = ['travel', 'solotravel', 'backpacking'];
-  const GENERIC_QUERIES = [`${cityName} travel tips`, `${cityName} itinerary`, `${cityName}`];
+  // PullPush rate-limits bursts (HTTP 429). On the hosted site we send fewer queries, one at a time.
+  const GENERIC_QUERIES = HAS_DEV_PROXY ? [`${cityName} travel tips`, `${cityName} itinerary`, `${cityName}`] : [cityName];
   // City-specific subreddit (r/london, r/paris, etc.) gets broader queries
-  const CITY_QUERIES = [`${cityName} travel`, `${cityName} tips`, `visiting ${cityName}`, cityName];
+  const CITY_QUERIES = HAS_DEV_PROXY ? [`${cityName} travel`, `${cityName} tips`, `visiting ${cityName}`, cityName] : [`${cityName} tips`, cityName];
 
   const fetchSubs = async (subs, queries, baseUrl, size = 50) => {
-    await Promise.allSettled(subs.flatMap(sub =>
-      queries.map(async q => {
+    const jobs = subs.flatMap(sub => queries.map(q => ({ sub, q })));
+    const runJob = async ({ sub, q }) => {
+      for (let attempt = 0; attempt < 3; attempt++) {
         try {
           const url = `${baseUrl}/reddit/search/submission/?q=${encodeURIComponent(q)}&subreddit=${sub}&sort=score&size=${size}`;
           const res = await fetch(url, { credentials: 'omit', signal: AbortSignal.timeout(10000) });
+          if (res.status === 429) { await new Promise(r => setTimeout(r, 1500 * (attempt + 1))); continue; }
           if (!res.ok) { console.log(`[PullPush] ${res.status} for sub=${sub} q="${q}"`); return; }
           const text = await res.text();
           if (text.trimStart().startsWith('<')) { console.log(`[PullPush] HTML response — blocked`); return; }
@@ -415,9 +418,13 @@ async function fetchRedditViaPullPush(cityName) {
           );
           console.log(`[PullPush] r/${sub} "${q}" → ${posts.length} posts`);
           results.push(...posts);
-        } catch (e) { console.log(`[PullPush] Error r/${sub} "${q}": ${e.message}`); }
-      })
-    ));
+          return;
+        } catch (e) { console.log(`[PullPush] Error r/${sub} "${q}": ${e.message}`); return; }
+      }
+      console.log(`[PullPush] still rate-limited for r/${sub} "${q}" — skipped`);
+    };
+    if (HAS_DEV_PROXY) await Promise.allSettled(jobs.map(runJob));
+    else for (const job of jobs) await runJob(job);
   };
 
   // Phase 1: generic travel subs + city subreddit discovery in parallel
@@ -1198,26 +1205,37 @@ async function wikidataCoords(qid) {
 
 // Main Wikidata resolution pass — enriches nodes in-place and returns updated array.
 // Each node gets: wikidata_id, canonical_name (corrected), wikidata_description, coords (if missing)
+const WIKIDATA_CACHE = new Map();
 async function resolveWithWikidata(nodes, city = '', onProgress = null) {
   const uniquePlaces = [...new Set(nodes.map(n => n.place).filter(Boolean))];
   const cityBase = city.split(',')[0].trim();
 
-  // Lookup table: raw place name → Wikidata entity
+  // Lookup table: raw place name → Wikidata entity.
+  // Topic labels like "Paris · Shopping" are categories, not places — skip them.
+  // Lookups run 6 at a time and are cached for the session (this used to take ~80 s per city).
   const entityMap = {};
-  for (let i = 0; i < uniquePlaces.length; i++) {
-    const name = uniquePlaces[i];
-    if (onProgress) onProgress(i + 1, uniquePlaces.length, name);
-    const entity = await wikidataSearch(name, cityBase);
-    if (entity) {
-      entityMap[name] = entity;
-      // Fetch coords if not already in the trip data (best-effort, no blocking)
-      if (!entity.coords) {
-        wikidataCoords(entity.wikidataId).then(coords => { if (coords) entity.coords = coords; }).catch(() => { });
+  const lookups = uniquePlaces.filter(name => !name.includes(' · '));
+  let done = 0, next = 0;
+  const worker = async () => {
+    while (next < lookups.length) {
+      const name = lookups[next++];
+      const key = `${cityBase}::${name}`;
+      let entity = WIKIDATA_CACHE.get(key);
+      if (entity === undefined) {
+        entity = await wikidataSearch(name, cityBase).catch(() => null);
+        WIKIDATA_CACHE.set(key, entity || null);
       }
+      if (entity) {
+        entityMap[name] = entity;
+        if (!entity.coords) {
+          wikidataCoords(entity.wikidataId).then(coords => { if (coords) entity.coords = coords; }).catch(() => { });
+        }
+      }
+      done++;
+      if (onProgress) onProgress(done, lookups.length, name);
     }
-    // Polite delay: 80 ms per request — well within Wikidata rate limits
-    if (i < uniquePlaces.length - 1) await new Promise(r => setTimeout(r, 80));
-  }
+  };
+  await Promise.all(Array.from({ length: Math.min(6, lookups.length) }, worker));
 
   // Annotate every node with its Wikidata match; correct place name if match is high-confidence
   return nodes.map(n => {
@@ -2099,7 +2117,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
       }
       if (filterSentiment !== 'all' && n.evaluation?.sentiment !== filterSentiment) return false;
       if (filterType !== 'all' && n.claimType !== filterType) return false;
-      if (filterPlaceLower && !n.place?.toLowerCase().includes(filterPlaceLower)) return false;
+      if (filterPlaceLower && !n.place?.toLowerCase().includes(filterPlaceLower) && !n.claim?.toLowerCase().includes(filterPlaceLower)) return false;
       return true;
     }).sort((a, b) => (b.credibility || 0) - (a.credibility || 0));
   }, [credibleNodes, filterSentiment, filterType, filterPlaceLower, areaFilter, locationNodeIds]);
@@ -2654,7 +2672,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                   <Brain size={16} style={{ color: '#10b981' }} />
                   <div>
                     <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-primary)' }}>Offline Preprocessed KG Available</span>
-                    <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)' }}>Instantly populate knowledge graph for {cleanTarget} (offline mock cache)</div>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)' }}>Load ready-made knowledge for {cleanTarget} bundled with the app — no internet needed</div>
                   </div>
                 </div>
                 <button
@@ -2730,7 +2748,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
                 <Wifi size={13} style={{ color: '#0ea5e9' }} />
                 <span style={{ fontSize: '0.78rem', fontWeight: '700' }}>Fetch from Online</span>
-                <span style={{ fontSize: '0.6rem', color: '#0ea5e9', background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)', padding: '1px 6px', borderRadius: '8px', fontWeight: '600' }}>Wikivoyage · Wikitravel · Reddit · StackExchange</span>
+                <span style={{ fontSize: '0.6rem', color: '#0ea5e9', background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)', padding: '1px 6px', borderRadius: '8px', fontWeight: '600' }}>{HAS_DEV_PROXY ? 'Wikivoyage · Wikitravel · Reddit · StackExchange · Wikipedia' : 'Wikivoyage · Reddit · StackExchange · Wikipedia'}</span>
               </div>
               {showFetchPanel ? <ChevronUp size={13} style={{ opacity: 0.5 }} /> : <ChevronDown size={13} style={{ opacity: 0.5 }} />}
             </button>
@@ -3051,7 +3069,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
               </div>
               {/* Filters */}
               <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                <input type="text" placeholder="Filter by place…" value={filterPlace} onChange={e => setFilterPlace(e.target.value)}
+                <input type="text" placeholder="Search places or statements…" aria-label="Search places or statements" value={filterPlace} onChange={e => setFilterPlace(e.target.value)}
                   style={{ flex: 1, minWidth: '100px', background: 'rgba(0,0,0,0.25)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '0.69rem', padding: '4px 8px' }} />
                 <select value={filterSentiment} onChange={e => setFilterSentiment(e.target.value)}
                   style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '0.69rem', padding: '4px 6px' }}>

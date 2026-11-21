@@ -292,6 +292,25 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
   const [ollamaEndpoint, setOllamaEndpoint] = useState(() => localStorage.getItem('ollama_endpoint') || 'http://localhost:11434');
   const [ollamaModel,    setOllamaModel]    = useState(() => localStorage.getItem('ollama_model')    || 'llama3.1');
   const [showOllamaConfig, setShowOllamaConfig] = useState(false);
+  // Real connection check: is Ollama reachable, and which models are installed?
+  const [ollamaState, setOllamaState] = useState({ status: 'checking', models: [] });
+  useEffect(() => {
+    let cancelled = false;
+    const ep = ollamaEndpoint.trim().replace(/\/$/, '');
+    if (!ep) { setOllamaState({ status: 'none', models: [] }); return; }
+    setOllamaState(s => ({ ...s, status: 'checking' }));
+    const t = setTimeout(async () => {
+      try {
+        const r = await fetch(`${ep}/api/tags`, { signal: AbortSignal.timeout(2500) });
+        if (!r.ok) throw new Error(String(r.status));
+        const j = await r.json();
+        if (!cancelled) setOllamaState({ status: 'ok', models: (j.models || []).map(m => m.name) });
+      } catch {
+        if (!cancelled) setOllamaState({ status: 'offline', models: [] });
+      }
+    }, 400);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [ollamaEndpoint]);
   const [desc,        setDesc]        = useState(() => localStorage.getItem('tripmind_desc') || '');
   const [groupType,   setGroupType]   = useState(() => localStorage.getItem('tripmind_grouptype') || 'couple');
   const [tripPace,    setTripPace]    = useState(() => localStorage.getItem('tripmind_trippace') || 'moderate');
@@ -1120,9 +1139,10 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
               </div>
               <div>
                 <div style={{ fontSize:'0.6rem', color:subColor, marginBottom:'3px', fontWeight:'600' }}>MODEL</div>
-                <input type="text" value={ollamaModel}
+                <input type="text" value={ollamaModel} list="ollama-models"
                   onChange={e => { setOllamaModel(e.target.value); localStorage.setItem('ollama_model', e.target.value); }}
                   placeholder="llama3.1" style={inputStyle}/>
+                <datalist id="ollama-models">{ollamaState.models.map(m => <option key={m} value={m}/>)}</datalist>
               </div>
               <div style={{ fontSize:'0.61rem', color:subColor, lineHeight:1.55, padding:'5px 8px', background: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.03)', borderRadius:'6px' }}>
                 Run <code style={{ background: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.1)', padding:'1px 5px', borderRadius:'3px' }}>ollama serve</code> locally, then pull a model:<br/>
@@ -1130,10 +1150,16 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
               </div>
             </div>
           ) : (
-            <div style={{ fontSize:'0.65rem', color: ollamaEndpoint ? 'var(--success)' : 'var(--warning)' }}>
-              {ollamaEndpoint
-                ? <>✓ <strong>{ollamaModel}</strong> · {ollamaEndpoint}</>
-                : '⚠ No endpoint set — click config'}
+            <div style={{ fontSize:'0.65rem', lineHeight:1.5, color: ollamaState.status === 'ok' && (ollamaState.models.length === 0 || ollamaState.models.some(m => m === ollamaModel || m.startsWith(ollamaModel + ':'))) ? 'var(--success)' : ollamaState.status === 'checking' ? subColor : 'var(--warning)' }}>
+              {ollamaState.status === 'none' && '⚠ No endpoint set — click config'}
+              {ollamaState.status === 'checking' && <>Checking {ollamaEndpoint}…</>}
+              {ollamaState.status === 'ok' && (ollamaState.models.length === 0 || ollamaState.models.some(m => m === ollamaModel || m.startsWith(ollamaModel + ':'))
+                ? <>✓ Connected · <strong>{ollamaModel}</strong></>
+                : <>⚠ Connected, but model <strong>{ollamaModel}</strong> is not installed. Run <code>ollama pull {ollamaModel}</code> or pick one of: {ollamaState.models.slice(0, 4).join(', ')}</>)}
+              {ollamaState.status === 'offline' && <>
+                ⚠ Ollama is not reachable at {ollamaEndpoint}. AI features need Ollama running on this computer
+                {!/localhost|127\.0\.0\.1/.test(location.hostname) && <> and started with <code>OLLAMA_ORIGINS={location.origin}</code></>}.
+              </>}
             </div>
           )}
         </div>
