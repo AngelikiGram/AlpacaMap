@@ -9,6 +9,8 @@ import { API, HAS_DEV_PROXY, assetUrl } from '../../endpoints';
 import { classifyTopic } from '../../knowledge/topics';
 import { isUsefulClaim, isJunkPlace, excerpt } from '../../knowledge/quality';
 import SourcesCredits from '../shared/SourcesCredits';
+import VerifiedConflicts from './VerifiedConflicts';
+import { summarizeVerified } from '../../knowledge/contradictions';
 
 // ── Credibility model ──────────────────────────────────────────────────────────
 // Returns { score, low, high } — the CI widens when fewer corroborating sources exist
@@ -2155,12 +2157,22 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
     setTripData(prev => ({
       ...prev,
       knowledgeGraph: {
+        ...prev.knowledgeGraph,
         nodes: newNodes ?? rawNodes,
         edges: newEdges ?? edges,
         lastUpdated: new Date().toISOString(),
       }
     }));
   }, [setTripData, rawNodes, edges]);
+
+  // Statement-level conflict check results (VerifiedConflicts)
+  const verified = kg.verified || null;
+  const saveVerified = useCallback((v) => {
+    setTripData(prev => ({ ...prev, knowledgeGraph: { ...prev.knowledgeGraph, verified: v } }));
+  }, [setTripData]);
+  const verifiedSummary = useMemo(() => verified ? summarizeVerified(verified.pairs || []) : null, [verified]);
+  const conflictCount = verifiedSummary ? verifiedSummary.contradictionPlaces + verifiedSummary.dependsPlaces : contradictions.length;
+  const [showToneOnly, setShowToneOnly] = useState(false);
 
   const deleteNode = useCallback((id) => {
     saveKG(rawNodes.filter(n => n.id !== id));
@@ -2548,7 +2560,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
         { label: 'Nodes', val: nodes.length, color: '#8b5cf6' },
         { label: 'Places', val: uniquePlaces.size, color: '#3b82f6' },
         { label: 'Sequences', val: sequenceEdges.length, color: '#10b981' },
-        { label: 'Conflicts', val: contradictions.length, color: contradictions.length > 0 ? '#ef4444' : 'var(--text-secondary)' },
+        { label: 'Conflicts', val: conflictCount, color: conflictCount > 0 ? '#ef4444' : 'var(--text-secondary)' },
       ].map(s => (
         <div key={s.label} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '6px 8px', textAlign: 'center' }}>
           <div style={{ fontSize: '1.1rem', fontWeight: '800', color: s.color }}>{s.val}</div>
@@ -2641,8 +2653,8 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           <button key={id} onClick={() => setTab(id)}
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', fontSize: '0.62rem', padding: '6px 0', background: tab === id ? 'rgba(139,92,246,0.2)' : 'transparent', color: tab === id ? '#c084fc' : 'var(--text-secondary)', border: 'none', cursor: 'pointer', fontWeight: tab === id ? '700' : '400', borderRight: id !== 'conflicts' ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
             <Icon size={10} />{label}
-            {id === 'conflicts' && contradictions.length > 0 && (
-              <span style={{ fontSize: '0.55rem', background: '#ef4444', color: '#fff', borderRadius: '8px', padding: '0 4px', fontWeight: '800', minWidth: '14px', textAlign: 'center' }}>{contradictions.length}</span>
+            {id === 'conflicts' && conflictCount > 0 && (
+              <span style={{ fontSize: '0.55rem', background: '#ef4444', color: '#fff', borderRadius: '8px', padding: '0 4px', fontWeight: '800', minWidth: '14px', textAlign: 'center' }}>{conflictCount}</span>
             )}
           </button>
         ))}
@@ -3369,7 +3381,14 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
       {/* ── CONFLICTS TAB ── */}
       {tab === 'conflicts' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {contradictions.length === 0 ? (
+          <VerifiedConflicts nodes={rawNodes} verified={verified} onSave={saveVerified} />
+          {contradictions.length > 0 && (
+            <button type="button" onClick={() => setShowToneOnly(v => !v)}
+              style={{ fontSize: '0.66rem', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '6px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+              {showToneOnly ? 'Hide' : 'Show'} {contradictions.length} place{contradictions.length > 1 ? 's' : ''} with both positive and negative statements (not checked)
+            </button>
+          )}
+          {!showToneOnly ? null : contradictions.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem', fontSize: '0.78rem' }}>
               <Check size={24} style={{ color: '#10b981', marginBottom: '8px', display: 'block', margin: '0 auto 8px' }} />
               No contradictions detected across {nodes.length} nodes.
@@ -3377,7 +3396,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           ) : (
             <>
               <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                {contradictions.length} place{contradictions.length > 1 ? 's have' : ' has'} conflicting evaluations. Use the resolver to adjudicate — your decisions persist for this session.
+                {contradictions.length} place{contradictions.length > 1 ? 's have' : ' has'} both positive and negative statements. This is a difference in tone, not necessarily a contradiction — use the check above for that. You can adjudicate here; decisions persist for this session.
               </div>
               {Object.values(resolutions).length > 0 && (
                 <div style={{ fontSize: '0.6rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '5px' }}>

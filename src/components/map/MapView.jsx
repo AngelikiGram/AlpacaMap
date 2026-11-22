@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
+import { summarizeVerified } from '../../knowledge/contradictions';
 import { createPortal } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 
@@ -712,7 +713,16 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
       const p = (pol[n.place] ||= { positive: new Set(), negative: new Set(), count: 0 });
       p[sn].add(n.source?.sourceType); p.count++;
     }
-    const disputed = Object.entries(pol)
+    // Prefer the statement-level check (knowledgeGraph.verified) when it has been run
+    const verifiedPairs = knowledgeGraph?.verified?.pairs;
+    let verifiedDisputed = null, verifiedDepends = 0;
+    if (verifiedPairs) {
+      const inCityPairs = cityKey && inCity.length ? verifiedPairs.filter(p => (p.place || '').toLowerCase().startsWith(cityKey) || nodes.some(n => n.id === p.aId)) : verifiedPairs;
+      const sv = summarizeVerified(inCityPairs);
+      verifiedDisputed = sv.places.filter(p => p.contradictions.length).map(p => p.place.replace(/^.*? · /, ''));
+      verifiedDepends = sv.places.filter(p => !p.contradictions.length && p.depends.length).length;
+    }
+    const disputed = verifiedDisputed || Object.entries(pol)
       .filter(([, p]) => p.positive.size && p.negative.size && [...p.positive].some(a => [...p.negative].some(b => a !== b)))
       .sort((x, y) => y[1].count - x[1].count)
       .map(([name]) => name.replace(/^.*? · /, ''));
@@ -724,6 +734,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
     return {
       city: inCity.length ? cityName : 'all cities', total: nodes.length, pos, neg, neu,
       places: placeNames.size, topics: topicNames.size, disputed, safety,
+      checked: !!verifiedPairs, depends: verifiedDepends || 0,
       sources: Object.entries(sources).sort((x, y) => y[1] - x[1]),
     };
   }, [knowledgeGraph?.nodes, activeCity?.name, locations]);
@@ -849,7 +860,11 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
             </div>
 
             <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-              <div style={row}><span>Disputed between sources</span><strong style={{ color: o.disputed.length ? '#f59e0b' : 'var(--text-primary)' }}>{o.disputed.length}</strong></div>
+              <div style={row} title={o.checked ? 'Checked statement by statement with the AI model (Knowledge → Conflicts)' : 'Positive and negative statements from different sources — not checked yet (Knowledge → Conflicts)'}>
+                <span>{o.checked ? 'Real contradictions' : 'Opposite views (not checked)'}</span>
+                <strong style={{ color: o.disputed.length ? '#f59e0b' : 'var(--text-primary)' }}>{o.disputed.length}</strong>
+              </div>
+              {o.checked && o.depends > 0 && <div style={row}><span>Depends on conditions</span><strong style={{ color: 'var(--text-primary)' }}>{o.depends}</strong></div>}
               {o.disputed.length > 0 && (
                 <div style={{ marginTop: '4px', color: 'var(--text-primary)', lineHeight: 1.45 }}>
                   {o.disputed.slice(0, 4).join(' · ')}{o.disputed.length > 4 ? ` +${o.disputed.length - 4}` : ''}

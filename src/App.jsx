@@ -189,6 +189,20 @@ export default function App(){
   const autoSaveTimer   = useRef(null);
   const poiSearchTrigger = useRef(null);
 
+  // One-time migration: move statements of all other saved trips from localStorage to IndexedDB
+  useEffect(()=>{
+    (async()=>{
+      const trips=loadTrips();
+      let changed=false;
+      for(const t of trips){
+        if(t.id===currentTripId||!t.data?.knowledgeGraph?.nodes?.length)continue;
+        try{ await idbSaveKG(t.id,t.data.knowledgeGraph); t.data=stripKG(t.data); changed=true; }catch{ return; }
+      }
+      if(changed){ try{ const fresh=loadTrips(); for(const t of trips){ const i=fresh.findIndex(f=>f.id===t.id); if(i>=0&&t.id!==currentTripId) fresh[i]=t; } saveTrips(fresh); setSavedTrips(fresh); }catch(e){ console.warn('Migration save failed',e); } }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+
   // Load this trip's knowledge graph from IndexedDB (statements are kept out of localStorage)
   useEffect(()=>{
     let cancelled=false;
