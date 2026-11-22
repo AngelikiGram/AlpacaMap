@@ -174,24 +174,22 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
               </div>
             )}
 
-            {place.extract&&<p style={{color:'var(--text-secondary)',fontSize:'0.8rem',lineHeight:'1.7',marginBottom:'1.1rem',borderLeft:'3px solid var(--accent-secondary)',paddingLeft:'0.75rem'}}>{place.extract}</p>}
+            {place.extract&&<p style={{color:'var(--text-secondary)',fontSize:'0.8rem',lineHeight:'1.7',marginBottom:'1.1rem'}}>{place.extract}</p>}
 
             {/* Knowledge claims extracted from travel sources */}
             {kgInsights.length > 0 && (
               <div className="knowledge-insights-section" style={{
                 marginBottom: '1.2rem',
-                background: 'rgba(139,92,246,0.05)',
-                border: '1px solid rgba(139,92,246,0.22)',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: '12px',
-                padding: '12px',
-                boxShadow: '0 4px 16px rgba(139,92,246,0.04)',
-                borderLeft: '4px solid #8b5cf6'
+                padding: '12px'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                  <Brain size={14} color="#8b5cf6" style={{ filter: 'drop-shadow(0 0 6px rgba(139,92,246,0.5))' }}/>
+                  <Brain size={14} color="var(--text-secondary)"/>
                   <h4 style={{ fontSize: '0.82rem', margin: 0, color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'Outfit, sans-serif' }}>
                     What travellers say
-                    <span style={{ fontSize: '0.65rem', fontWeight: '400', color: '#a78bfa', marginLeft: '6px' }}>{kgInsights.length} claim{kgInsights.length !== 1 ? 's' : ''} from knowledge graph</span>
+                    <span style={{ fontSize: '0.65rem', fontWeight: '400', color: 'var(--text-secondary)', marginLeft: '6px' }}>{kgInsights.length} claim{kgInsights.length !== 1 ? 's' : ''} from knowledge graph</span>
                   </h4>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

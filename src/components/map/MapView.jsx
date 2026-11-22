@@ -689,16 +689,44 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
   }, [showKnowledgeOverlay, knowledgeGraph?.nodes, resolvePlaceCoords]);
 
   // Pre-compute overlay panel stats — avoids 3 separate .filter() calls inside JSX on every render
+  // City knowledge summary for the map overlay — restricted to the city in focus.
   const overlaySummary = useMemo(() => {
-    const nodes = knowledgeGraph?.nodes || [];
-    if (!nodes.length) return null;
-    const pos = nodes.filter(n => n.evaluation?.sentiment === 'positive').length;
-    const neg = nodes.filter(n => n.evaluation?.sentiment === 'negative').length;
-    const warnings = nodes.filter(n => { const t = (n.claim || '').toLowerCase(); return n.evaluation?.sentiment === 'negative' || t.includes('scam') || t.includes('pickpocket') || t.includes('avoid') || t.includes('beware'); }).length;
-    const score = Math.round((pos / (pos + neg || 1)) * 100);
-    const uniquePlaces = new Set(nodes.map(n => n.place?.toLowerCase().trim()).filter(Boolean)).size;
-    return { total: nodes.length, pos, neg, warnings, score, uniquePlaces };
-  }, [knowledgeGraph?.nodes]);
+    const all = knowledgeGraph?.nodes || [];
+    if (!all.length) return null;
+    const base = (x) => (x || '').split(',')[0].trim().toLowerCase();
+    const cityName = (activeCity?.name || locations?.[0]?.name || '').split(',')[0].trim();
+    const cityKey = base(cityName);
+    const inCity = cityKey ? all.filter(n => base(n.city) === cityKey || (n.place || '').toLowerCase().startsWith(cityKey + ' ·')) : [];
+    const nodes = inCity.length ? inCity : all;
+    const sentimentOf = (n) => n.evaluation?.sentiment;
+    const pos = nodes.filter(n => sentimentOf(n) === 'positive').length;
+    const neg = nodes.filter(n => sentimentOf(n) === 'negative').length;
+    const neu = nodes.length - pos - neg;
+    // Places vs topic labels ("Paris · History")
+    const placeNames = new Set(), topicNames = new Set();
+    for (const n of nodes) { if (!n.place) continue; (n.place.includes(' · ') ? topicNames : placeNames).add(n.place); }
+    // Disputed = positive and negative statements about the same place/topic from different sources
+    const pol = {};
+    for (const n of nodes) {
+      const sn = sentimentOf(n); if (!n.place || (sn !== 'positive' && sn !== 'negative')) continue;
+      const p = (pol[n.place] ||= { positive: new Set(), negative: new Set(), count: 0 });
+      p[sn].add(n.source?.sourceType); p.count++;
+    }
+    const disputed = Object.entries(pol)
+      .filter(([, p]) => p.positive.size && p.negative.size && [...p.positive].some(a => [...p.negative].some(b => a !== b)))
+      .sort((x, y) => y[1].count - x[1].count)
+      .map(([name]) => name.replace(/^.*? · /, ''));
+    // Safety: statements that are actually about safety, not every negative sentence
+    const SAFETY = /\b(scams?|pickpocket\w*|theft|thie(f|ves)|stolen|robb\w*|mugg\w*|unsafe|dangerous|crime|assault)\b/i;
+    const safety = nodes.filter(n => /safety/i.test(n.place || '') ? sentimentOf(n) === 'negative' : SAFETY.test(n.claim || '')).length;
+    const sources = {};
+    for (const n of nodes) { const k = n.source?.sourceLabel || n.source?.label || n.source?.sourceType || 'Other'; sources[k] = (sources[k] || 0) + 1; }
+    return {
+      city: inCity.length ? cityName : 'all cities', total: nodes.length, pos, neg, neu,
+      places: placeNames.size, topics: topicNames.size, disputed, safety,
+      sources: Object.entries(sources).sort((x, y) => y[1] - x[1]),
+    };
+  }, [knowledgeGraph?.nodes, activeCity?.name, locations]);
 
   const NBR_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444', '#84cc16', '#f97316', '#a78bfa', '#14b8a6', '#f43f5e'];
 
@@ -782,56 +810,61 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
       {/* Location info bar (overview mode click) */}
       <MapClickBar info={activeCity ? null : clickInfo} onAddDestination={(info) => { onAddClickDestination(info); setClickInfo(null); }} onClose={() => setClickInfo(null)} />
 
-      {/* Floating Knowledge Summary Panel on Map */}
-      {showKnowledgeOverlay && knowledgeGraph?.nodes?.length > 0 && (
-        <div style={{
-          position: 'absolute',
-          top: '140px',
-          right: '20px',
-          zIndex: 1000,
-          background: 'rgba(8,12,26,0.92)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(236,72,153,0.3)',
-          borderRadius: '14px',
-          padding: '12px 14px',
-          width: '200px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05)',
-          pointerEvents: 'auto',
-          fontFamily: 'Inter, sans-serif'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-            <Brain size={14} color="#ec4899" style={{ filter: 'drop-shadow(0 0 4px #ec4899)' }} />
-            <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-primary)' }}>City Knowledge Index</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Total Ingests:</span>
-              <strong style={{ color: 'var(--text-primary)' }}>{knowledgeGraph.nodes.length} claims</strong>
+      {/* Floating knowledge summary for the city in focus */}
+      {showKnowledgeOverlay && overlaySummary && (() => {
+        const o = overlaySummary;
+        const pct = (x) => Math.round((x / (o.total || 1)) * 100);
+        const row = { display: 'flex', justifyContent: 'space-between', gap: '8px' };
+        return (
+          <div className="city-knowledge-card" style={{
+            position: 'absolute', top: '140px', right: '20px', zIndex: 1000, width: '232px',
+            background: 'rgba(8,12,26,0.94)', backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 14px',
+            boxShadow: '0 8px 28px rgba(0,0,0,0.5)', pointerEvents: 'auto', fontSize: '0.72rem', color: 'var(--text-secondary)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+              <Brain size={14} color="var(--text-secondary)" />
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>What sources say · {o.city}</span>
             </div>
-            {overlaySummary && (
-              <>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Coverage:</span>
-                  <strong style={{ color: 'var(--text-primary)' }}>{overlaySummary.uniquePlaces} places</strong>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <div style={row}><span>Statements</span><strong style={{ color: 'var(--text-primary)' }}>{o.total.toLocaleString()}</strong></div>
+              <div style={row}><span>Named places</span><strong style={{ color: 'var(--text-primary)' }}>{o.places}</strong></div>
+              <div style={row}><span>Topics</span><strong style={{ color: 'var(--text-primary)' }}>{o.topics}</strong></div>
+              <div style={row} title="Statements that mention scams, pickpockets, theft or crime, or negative statements about safety">
+                <span>Safety mentions</span><strong style={{ color: o.safety ? '#f59e0b' : 'var(--text-primary)' }}>{o.safety}</strong>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '10px' }}>
+              <div style={{ height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden', display: 'flex' }}>
+                {o.pos > 0 && <div style={{ flex: o.pos, background: '#10b981' }} />}
+                {o.neu > 0 && <div style={{ flex: o.neu, background: '#64748b' }} />}
+                {o.neg > 0 && <div style={{ flex: o.neg, background: '#ef4444' }} />}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '0.66rem' }}>
+                <span style={{ color: '#10b981' }}>{pct(o.pos)}% positive</span>
+                <span>{pct(o.neu)}% neutral</span>
+                <span style={{ color: '#ef4444' }}>{pct(o.neg)}% negative</span>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+              <div style={row}><span>Disputed between sources</span><strong style={{ color: o.disputed.length ? '#f59e0b' : 'var(--text-primary)' }}>{o.disputed.length}</strong></div>
+              {o.disputed.length > 0 && (
+                <div style={{ marginTop: '4px', color: 'var(--text-primary)', lineHeight: 1.45 }}>
+                  {o.disputed.slice(0, 4).join(' · ')}{o.disputed.length > 4 ? ` +${o.disputed.length - 4}` : ''}
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Sentiment Index:</span>
-                  <strong style={{ color: overlaySummary.score > 60 ? '#6366f1' : overlaySummary.score > 40 ? '#f59e0b' : '#f97316' }}>{overlaySummary.score}% Pos</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Safety Alerts:</span>
-                  <strong style={{ color: overlaySummary.warnings > 0 ? '#f97316' : 'var(--text-secondary)' }}>{overlaySummary.warnings} Warnings</strong>
-                </div>
-                <div style={{ height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden', marginTop: '4px', display: 'flex' }}>
-                  {overlaySummary.pos > 0 && <div style={{ flex: overlaySummary.pos, background: '#6366f1' }} />}
-                  {overlaySummary.total - overlaySummary.pos - overlaySummary.neg > 0 && <div style={{ flex: overlaySummary.total - overlaySummary.pos - overlaySummary.neg, background: '#6b7280' }} />}
-                  {overlaySummary.neg > 0 && <div style={{ flex: overlaySummary.neg, background: '#f97316' }} />}
-                </div>
-              </>
-            )}
+              )}
+            </div>
+
+            <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+              {o.sources.map(([name, n]) => (
+                <span key={name} style={{ fontSize: '0.62rem', padding: '1px 6px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>{name} {n}</span>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Floating RouteSpace Map Legend */}
       {routeSpaceRoute && showRouteOnMap && (

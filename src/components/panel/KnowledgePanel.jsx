@@ -3141,7 +3141,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                       {isExpanded && (
                         <div style={{ padding: '8px 11px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.15)' }}>
                           {node.source?.snippet && (
-                            <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontStyle: 'italic', borderLeft: '3px solid rgba(139,92,246,0.4)', paddingLeft: '8px', marginBottom: '8px', lineHeight: 1.5 }}>
+                            <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '8px', lineHeight: 1.5 }}>
                               "{node.source.snippet}"
                             </div>
                           )}
