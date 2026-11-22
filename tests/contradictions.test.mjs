@@ -26,8 +26,8 @@ test('conditions explain a disagreement', () => {
 
 test('candidate pairs need different sources and a shared aspect', () => {
   const nodes = [
-    node('1', 'Paris · Transport', 'The metro is fast and cheap.', 'reddit', 'positive'),
-    node('2', 'Paris · Transport', 'The metro is expensive and slow.', 'wikivoyage', 'negative'),
+    node('1', 'Paris · Transport', 'The metro tickets are fast and cheap.', 'reddit', 'positive'),
+    node('2', 'Paris · Transport', 'The metro tickets are expensive and slow.', 'wikivoyage', 'negative'),
     node('3', 'Paris · Transport', 'The metro is cheap.', 'reddit', 'positive'),          // same source as 1
     node('4', 'Paris · Transport', 'Napoleon built many bridges.', 'wikipedia'),           // no shared aspect
   ];
@@ -41,6 +41,7 @@ test('candidate pairs need different sources and a shared aspect', () => {
 test('classifyPair', () => {
   const a = node('a', 'X', 'Crowded in summer.', 'reddit'), b = node('b', 'X', 'Empty in winter.', 'wikivoyage');
   assert.equal(classifyPair({ contradiction: 0.9, entailment: 0.05 }, a, b).label, 'depends');
+  assert.equal(classifyPair({ contradiction: 0.7, entailment: 0.05 }, a, b).label, 'unrelated');
   const c = node('c', 'X', 'Always crowded.', 'reddit');
   assert.equal(classifyPair({ contradiction: 0.9, entailment: 0.05 }, c, b).label, 'contradiction');
   assert.equal(classifyPair({ contradiction: 0.1, entailment: 0.8 }, c, b).label, 'agree');
@@ -67,4 +68,13 @@ test('near-identical copies across sources are not candidates', () => {
 
 test('plainText strips markup', () => {
   assert.equal(plainText("**Paris:** '''TER''' trains"), 'Paris: TER trains');
+});
+
+test('unrelated statements about the same place are not paired', () => {
+  const nodes = [
+    node('1', 'Eiffel Tower', 'The American Library is a short walk from the Eiffel Tower, and the metro stop is close.', 'wikivoyage'),
+    node('2', 'Eiffel Tower', 'We took the metro to the Eiffel Tower and then a boat on the Seine.', 'reddit'),
+  ];
+  // shared aspect (transport) but only one shared word beyond the place name ("metro")
+  assert.equal(candidatePairs(nodes).length, 0);
 });

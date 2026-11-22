@@ -996,7 +996,15 @@
   .timeline-strip { display: none; }
   .map-searchbar { left: 14px !important; right: 60px !important; top: 14px; }
   .map-layer-switcher { top: 14px; right: 10px; }
+  /* Tap the handle to switch between half and almost full height */
+  .content-panel.tall { height: 88vh !important; height: 88dvh !important; }
+  .mobile-drag-handle { width: 56px !important; height: 5px !important; padding: 0; border: 0; }
+  .mobile-drag-handle-hit { display: block; width: 100%; padding: 6px 0 2px; background: none; border: 0; cursor: pointer; }
+  /* Knowledge summary card: full width under the search bar instead of covering it */
+  .city-knowledge-card { top: 64px !important; left: 10px !important; right: 10px !important; width: auto !important; max-height: 32vh; overflow-y: auto; }
+  .hide-on-mobile { display: none !important; }
 }
+.mobile-drag-handle-hit { display: none; }
 .mobile-drag-handle { display: none; }
 
 @media print {

@@ -23,3 +23,24 @@ export const ollamaChatUrl = (endpoint) =>
 
 // Files in /public, resolved relative to wherever the site is hosted.
 export const assetUrl = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
+
+// Tiny requests used to check whether a source is reachable before fetching from it.
+export const HEALTH_CHECKS = {
+  wikivoyage:    `${API.wikivoyage}/w/api.php?action=query&meta=siteinfo&format=json&origin=*`,
+  wikipedia:     `${API.wikipedia}/w/api.php?action=query&meta=siteinfo&format=json&origin=*`,
+  stackexchange: `${API.stackexchange}/2.3/info?site=travel`,
+  reddit:        `${API.pullpush}/reddit/search/submission/?q=travel&size=1`,
+};
+
+/** Resolves true/false within `ms`. Sources without a check (dev-only ones) count as reachable. */
+export async function isReachable(source, ms = 4000) {
+  const url = HEALTH_CHECKS[source];
+  if (!url || (source === 'reddit' && HAS_DEV_PROXY)) return true;
+  try { const r = await fetch(url, { signal: AbortSignal.timeout(ms), credentials: 'omit' }); return r.ok || r.status === 429; }
+  catch { return false; }
+}
+
+// Overpass has several public servers; the main one is often overloaded.
+export const OVERPASS_MIRRORS = DEV
+  ? ['/overpass-proxy/api/interpreter']
+  : ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];

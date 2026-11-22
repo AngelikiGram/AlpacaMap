@@ -11,6 +11,8 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Responsi
 
 import { CITY_PALETTE, getCityColor, MAP_LAYERS, SENTINEL_NONE, getTypeDetails, createDayStopIcon, createGlyphIcon, createCityIcon, classifyWeather, detectOSMCategory, processOverpassResults, scorePlaceQuality, nameSim, semanticDedup, getZoomParams, filterMarkersAdaptive, loadTrips, loadPrefs, saveTrips, savePrefs, detectLocationType, createSearchResultIcon, getAllMapPoints, buildArc, getDistanceKm, INITIAL_TRIP, TRIPS_KEY, PREFS_KEY, TABS, wmoIcon, formatDur, searchOverpass } from "../../utils.jsx";
 import { searchNominatim, fetchPlaceImage } from "../../api.js";
+import EvidenceBadge from "../shared/EvidenceBadge";
+import { buildPlaceEvidence, findEvidence } from "../../knowledge/evidence";
 import { OVERPASS_URL, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS, CATEGORY_ZOOM_PRIORITY, SEARCH_KEYWORDS, INTEREST_CATEGORIES, LOCATION_TYPE_PRESETS, EVENT_TYPES, TRANSPORT_ICON, EVT_EMOJI, DOC_SECTIONS, BUDGET_CATEGORIES, PACKING_TEMPLATES, ENTITY_PROFILES } from "../../config.jsx";
 
 import { LiveImage } from "../shared/LiveImage.jsx";
@@ -83,6 +85,8 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
   const[dragOverDayId, setDragOverDayId]=useState(null);
 
   const sorted=[...tripData.itinerary].sort((a,b)=>a.date.localeCompare(b.date));
+  // Do the sources agree about each stop? (warnings on itinerary stops)
+  const evidenceMap=useMemo(()=>buildPlaceEvidence(tripData.knowledgeGraph?.nodes||[],tripData.knowledgeGraph?.verified),[tripData.knowledgeGraph]);
   const fmtDate=d=>new Date(d+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
 
   const saveEvent=(dayId)=>{
@@ -429,6 +433,7 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
                       <GripVertical size={11} style={{ cursor: 'grab', color: 'rgba(255,255,255,0.18)', flexShrink: 0 }} />
                       <div className="time-col" style={{display:'flex',alignItems:'center',gap:'4px'}}>{EVT_EMOJI[evt.type]||'•'} {evt.time}</div>
                       <div className="activity-col" style={{fontSize:'0.83rem'}}>{evt.title}</div>
+                      <EvidenceBadge evidence={findEvidence(evt.title,evidenceMap)}/>
                       <button className="btn-icon" style={{padding:'0.2rem'}} onClick={e=>{e.stopPropagation();deleteEvt(day.id,evt.id);}}>
                         <Trash2 size={11} color="var(--danger)"/>
                       </button>

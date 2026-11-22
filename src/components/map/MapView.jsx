@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
 import { summarizeVerified } from '../../knowledge/contradictions';
+import { buildPlaceEvidence, findEvidence, LEVELS } from '../../knowledge/evidence';
 import { createPortal } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 
@@ -314,7 +315,7 @@ const createStabilityIcon = (num, group) => {
 };
 
 const _iconHtmlCache = new Map();
-const createComplexMarkerIcon = (place, isSaved = false, isCity = false, showKnowledgeOverlay = false, claimsCount = 0, sentimentInfo = null, isHighlighted = false) => {
+const createComplexMarkerIcon = (place, isSaved = false, isCity = false, showKnowledgeOverlay = false, claimsCount = 0, sentimentInfo = null, isHighlighted = false, evidenceLevel = null) => {
   const details = getTypeDetails(isCity ? 'city' : place.type);
   const color = isCity ? (place.color || '#06b6d4') : details.color;
   const typeKey = isCity ? 'city' : (place.type || 'default');
@@ -416,8 +417,18 @@ const createComplexMarkerIcon = (place, isSaved = false, isCity = false, showKno
     pointer-events:none; z-index:6;
   "></div>` : '';
 
-  const html = `<div style="position:relative; width:${sz}px; height:${isCity ? sz : h}px; animation:markerFadeIn 0.22s ease both;">
-    ${highlightRing}
+  // Evidence status (src/knowledge/evidence.js): ! sources disagree, ~ depends/mixed, ? little evidence.
+  // Pins with little evidence are drawn faded so uncertainty is visible on the map itself.
+  const EVIDENCE_GLYPH = { disputed: '!', conditional: '~', mixed: '~', thin: '?' };
+  const evidenceDot = evidenceLevel && EVIDENCE_GLYPH[evidenceLevel] ? `<div style="
+    position:absolute; top:-5px; left:-6px; width:15px; height:15px; border-radius:50%;
+    background:${LEVELS[evidenceLevel].color}; border:1.5px solid #0b1220; color:#0b1220;
+    font:800 10px/12px Inter,system-ui,sans-serif; text-align:center; z-index:11; pointer-events:none;
+  ">${EVIDENCE_GLYPH[evidenceLevel]}</div>` : '';
+  const fade = evidenceLevel === 'thin' ? 'opacity:0.72;' : '';
+
+  const html = `<div style="position:relative; width:${sz}px; height:${isCity ? sz : h}px; animation:markerFadeIn 0.22s ease both;${fade}">
+    ${highlightRing}${evidenceDot}
     ${pulsingHalo}
     <div style="position:relative; z-index:5;">
       ${pinSvg}
@@ -690,6 +701,9 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
   }, [showKnowledgeOverlay, knowledgeGraph?.nodes, resolvePlaceCoords]);
 
   // Pre-compute overlay panel stats — avoids 3 separate .filter() calls inside JSX on every render
+  const evidenceMap = useMemo(() => buildPlaceEvidence(knowledgeGraph?.nodes || [], knowledgeGraph?.verified), [knowledgeGraph?.nodes, knowledgeGraph?.verified]);
+  const evidenceLevelFor = useCallback((name) => findEvidence(name, evidenceMap)?.level || null, [evidenceMap]);
+
   // City knowledge summary for the map overlay — restricted to the city in focus.
   const overlaySummary = useMemo(() => {
     const all = knowledgeGraph?.nodes || [];
@@ -872,6 +886,9 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
               )}
             </div>
 
+            <div style={{ marginTop: '8px', fontSize: '0.62rem', lineHeight: 1.6 }}>
+              Pins: <b style={{ color: LEVELS.disputed.color }}>!</b> sources disagree · <b style={{ color: LEVELS.conditional.color }}>~</b> depends / mixed · <b style={{ color: LEVELS.thin.color }}>?</b> little evidence (faded)
+            </div>
             <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
               {o.sources.map(([name, n]) => (
                 <span key={name} style={{ fontSize: '0.62rem', padding: '1px 6px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>{name} {n}</span>
@@ -968,7 +985,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
               const claimsCount = getClaimsForPlace(p.name);
               const sentimentInfo = getPlaceSentimentInfo(p.name);
               const isHL = highlightedPlace?.name?.toLowerCase() === p.name?.toLowerCase();
-              const complexIcon = createComplexMarkerIcon(p, true, false, showKnowledgeOverlay, claimsCount, sentimentInfo, isHL);
+              const complexIcon = createComplexMarkerIcon(p, true, false, showKnowledgeOverlay, claimsCount, sentimentInfo, isHL, evidenceLevelFor(p.name));
               return (
                 <Marker key={`p-group-${p.id}`} position={p.coords} icon={complexIcon} zIndexOffset={isHL ? 500 : 100} eventHandlers={{ click: () => triggerPlaceInfo(p) }}>
                   <Tooltip direction="top" offset={[0, -22]} className="custom-tooltip">
@@ -1030,7 +1047,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                 const claimsCount = getClaimsForPlace(r.name);
                 const sentimentInfo = getPlaceSentimentInfo(r.name);
                 const isHL = highlightedPlace?.name?.toLowerCase() === r.name?.toLowerCase();
-                const complexIcon = createComplexMarkerIcon(r, false, false, showKnowledgeOverlay, claimsCount, sentimentInfo, isHL);
+                const complexIcon = createComplexMarkerIcon(r, false, false, showKnowledgeOverlay, claimsCount, sentimentInfo, isHL, showKnowledgeOverlay ? evidenceLevelFor(r.name) : null);
                 markers.push(
                   <Marker key={`r-group-${r.id}`} position={r.coords} icon={complexIcon} opacity={0.92} zIndexOffset={isHL ? 500 : 80} eventHandlers={{ click: () => triggerPlaceInfo(r) }}>
                     <Tooltip direction="top" offset={[0, -20]} className="custom-tooltip" permanent={isHL}>

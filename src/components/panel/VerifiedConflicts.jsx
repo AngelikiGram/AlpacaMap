@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { ShieldCheck, Loader2, AlertTriangle, Clock } from 'lucide-react';
-import { candidatePairs, classifyPair, plainText, summarizeVerified } from '../../knowledge/contradictions';
-import { NLI_MODEL, loadNli, scoreSymmetric } from '../../knowledge/nli';
+import { candidatePairs, classifyPair, plainText, summarizeVerified, CALIBRATION } from '../../knowledge/contradictions';
+import { NLI_MODEL, loadNli, scoreSymmetric, calibrate } from '../../knowledge/nli';
+import { readTravellerProfile, pairRelevance } from '../../knowledge/relevance';
 
 const SRC = { wikivoyage: 'Wikivoyage', wikitravel: 'Wikitravel', wikipedia: 'Wikipedia', reddit: 'Reddit', stackexchange: 'StackExchange' };
 
@@ -33,19 +34,35 @@ function PairCard({ pair, byId }) {
   );
 }
 
-function PlaceGroup({ title, color, places, kind, byId }) {
+function PlaceGroup({ title, color, places, kind, byId, profile }) {
   const [open, setOpen] = useState(null);
+  // Personal relevance: disagreements that matter for this traveller come first
+  const ranked = useMemo(() => places.map((pl) => {
+    let best = { score: 0, reasons: [] };
+    for (const p of pl[kind]) {
+      const r = pairRelevance(p, byId.get(p.aId), byId.get(p.bId), profile);
+      if (r.score > best.score) best = r;
+    }
+    return { ...pl, relevance: best };
+  }).sort((x, y) => y.relevance.score - x.relevance.score), [places, kind, byId, profile]);
   if (!places.length) return null;
   return (
     <div>
       <div style={{ fontSize: '0.7rem', fontWeight: 700, color, margin: '4px 0 6px' }}>{title} ({places.length})</div>
-      {places.map((pl) => {
+      {ranked.map((pl) => {
         const list = pl[kind];
         const expanded = open === pl.place;
         return (
           <div key={pl.place} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 10px', marginBottom: 6, background: 'rgba(0,0,0,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>{pl.place}</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>
+                {pl.place}
+                {pl.relevance.score >= 0.4 && (
+                  <span title="Based on your traveller profile in the Planner" style={{ marginLeft: 6, fontSize: '0.58rem', fontWeight: 700, color: '#60a5fa', border: '1px solid #60a5fa55', borderRadius: 8, padding: '0 5px' }}>
+                    Matters for you: {pl.relevance.reasons.join(', ')}
+                  </span>
+                )}
+              </span>
               <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{list.length} pair{list.length > 1 ? 's' : ''}</span>
             </div>
             {(expanded ? list : list.slice(0, 1)).map((p) => <PairCard key={p.aId + p.bId} pair={p} byId={byId} />)}
@@ -73,6 +90,7 @@ export default function VerifiedConflicts({ nodes, verified, onSave }) {
   const byId = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
   const summary = useMemo(() => summarizeVerified(verified?.pairs || []), [verified]);
   const stale = verified && verified.nodeCount !== nodes.length;
+  const profile = useMemo(() => readTravellerProfile(), []);
 
   const run = async () => {
     setError(null);
@@ -81,6 +99,8 @@ export default function VerifiedConflicts({ nodes, verified, onSave }) {
       if (!pairs.length) { onSave({ model: NLI_MODEL, checkedAt: new Date().toISOString(), nodeCount: nodes.length, pairsChecked: 0, pairs: [] }); return; }
       setStatus('Loading the AI model (about 45 MB, only the first time)…');
       await loadNli(({ progress }) => setStatus(`Downloading the AI model… ${Math.round(progress)}%`));
+      setStatus('Testing the model on known examples…');
+      const calibration = await calibrate(CALIBRATION);
       setStatus(`Comparing statements… 0/${pairs.length}`);
       const scores = await scoreSymmetric(
         pairs.map((p) => ({ a: plainText(p.a.claim), b: plainText(p.b.claim) })),
@@ -92,7 +112,7 @@ export default function VerifiedConflicts({ nodes, verified, onSave }) {
         ...classifyPair(scores[i], p.a, p.b),
       }));
       const counts = results.reduce((acc, r) => ({ ...acc, [r.label]: (acc[r.label] || 0) + 1 }), {});
-      onSave({ model: NLI_MODEL, checkedAt: new Date().toISOString(), nodeCount: nodes.length, pairsChecked: pairs.length, counts, pairs: results.filter((r) => r.label !== 'unrelated') });
+      onSave({ model: NLI_MODEL, method: 'symmetric-min, threshold 0.8', checkedAt: new Date().toISOString(), nodeCount: nodes.length, pairsChecked: pairs.length, counts, calibration: calibration.map((c) => ({ expect: c.expect, got: c.got })), pairs: results.filter((r) => r.label !== 'unrelated') });
     } catch (e) {
       console.error('[NLI]', e);
       setError(`Could not run the AI model: ${e.message || e}. Your browser may block WebAssembly or the download.`);
@@ -138,8 +158,8 @@ export default function VerifiedConflicts({ nodes, verified, onSave }) {
 
       {verified && !running && (
         <>
-          <PlaceGroup title="Real contradictions" color="#f87171" places={summary.places.filter((p) => p.contradictions.length)} kind="contradictions" byId={byId} />
-          <PlaceGroup title="Both can be true — depends on conditions" color="#fbbf24" places={summary.places.filter((p) => p.depends.length)} kind="depends" byId={byId} />
+          <PlaceGroup title="Real contradictions" color="#f87171" places={summary.places.filter((p) => p.contradictions.length)} kind="contradictions" byId={byId} profile={profile} />
+          <PlaceGroup title="Both can be true — depends on conditions" color="#fbbf24" places={summary.places.filter((p) => p.depends.length)} kind="depends" byId={byId} profile={profile} />
           {summary.places.length === 0 && <div style={{ fontSize: '0.68rem', color: '#34d399' }}>No real contradictions found between the sources.</div>}
         </>
       )}

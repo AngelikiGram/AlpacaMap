@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { searchNominatim } from './api.js';
 import { ollamaChatUrl } from './endpoints';
+import { BROWSER_MODELS, DEFAULT_BROWSER_MODEL, hasWebGPU, browserChatFetch, isBrowserModelLoaded } from './ai/browserLLM';
 import { Loader2, X, Sparkles, ChevronDown, ChevronUp, RotateCcw, Download, Settings, Plus, Pencil, Trash2, AlertTriangle, Calendar, CreditCard, Backpack, Lightbulb, BrainCircuit, Check, MapPin, ListChecks, GripVertical, User, Heart, Gem, Users, Briefcase, Activity, Zap, Coffee, Crown, Accessibility, Camera, TreePine, Leaf, Landmark, Utensils, Tent, Moon, Layers, Gamepad2, BookOpen, Compass, Martini } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -292,6 +293,14 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
   const [ollamaEndpoint, setOllamaEndpoint] = useState(() => localStorage.getItem('ollama_endpoint') || 'http://localhost:11434');
   const [ollamaModel,    setOllamaModel]    = useState(() => localStorage.getItem('ollama_model')    || 'llama3.1');
   const [showOllamaConfig, setShowOllamaConfig] = useState(false);
+  // Where the AI runs: 'ollama' (local server) or 'browser' (WebLLM, no install)
+  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
+  const [browserModel, setBrowserModel] = useState(() => localStorage.getItem('browser_model') || DEFAULT_BROWSER_MODEL);
+  const [browserLoad, setBrowserLoad] = useState(null); // download/initialisation progress text
+  // Same call shape as fetch(ollamaChatUrl, …); routes to the browser model when selected
+  const aiFetch = (url, init) => aiProvider === 'browser'
+    ? browserChatFetch(init, { modelId: browserModel, onProgress: (p) => setBrowserLoad(p.progress >= 1 ? null : `${p.text}`) }).finally(() => setBrowserLoad(null))
+    : fetch(url, init);
   // Real connection check: is Ollama reachable, and which models are installed?
   const [ollamaState, setOllamaState] = useState({ status: 'checking', models: [] });
   useEffect(() => {
@@ -580,7 +589,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
   };
 
   const generatePlaces = async () => {
-    if (!ollamaEndpoint.trim()) { setErr('Set Ollama endpoint first.'); return; }
+    if (aiProvider !== 'browser' && !ollamaEndpoint.trim()) { setErr('Set Ollama endpoint first.'); return; }
     const focusCity = activeCity || tripData.locations[0];
     const cityName = focusCity ? focusCity.name.split(',')[0] : 'your destination';
     setPlacesLoading(true); setErr(''); setPlacesMode(false); setPlacesList(null);
@@ -602,7 +611,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
       : `List ${count} must-visit places within 50km of ${cityName} for a ${groupType} traveler interested in ${stylesLabel}. Only include places geographically near ${cityName} — do not suggest places from other cities or regions.\nReturn JSON: {"places":[{"name":"...","type":"museum|restaurant|attraction|park|cafe|bar|historic|viewpoint","description":"One sentence why this specific traveler should visit."}]}`;
 
     try {
-      const res = await fetch(chatUrl, {
+      const res = await aiFetch(chatUrl, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -719,6 +728,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
 
   // Pre-load the model into Ollama memory as soon as this panel mounts
   useEffect(() => {
+    if (aiProvider === 'browser') { setModelReady(isBrowserModelLoaded(browserModel)); return; } // don't start a 1 GB download on mount
     if (warmupDone.current) return;
     warmupDone.current = true;
     const chatUrl = ollamaChatUrl(ollamaEndpoint);
@@ -732,11 +742,11 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
         options: { num_predict: 1 },
       }),
     }).then(() => setModelReady(true)).catch(() => setModelReady(false));
-  }, [ollamaEndpoint, ollamaModel]);
+  }, [ollamaEndpoint, ollamaModel, aiProvider, browserModel]);
   const profileKey = getProfileKey(groupType, tripStyle, tripPace);
 
   const generatePlan = async (mode = 'new') => {
-    if (!ollamaEndpoint.trim()) { setErr('Set your Ollama endpoint first.'); setShowOllamaConfig(true); return; }
+    if (aiProvider !== 'browser' && !ollamaEndpoint.trim()) { setErr('Set your Ollama endpoint first.'); setShowOllamaConfig(true); return; }
     setLoading(true); setErr(''); setTrainingInfo(null); setStreamChars(0); setElapsedSecs(0);
     const startTime = Date.now();
     generationRef.current = setInterval(() => setElapsedSecs(Math.floor((Date.now() - startTime) / 1000)), 1000);
@@ -776,7 +786,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
 
     try {
       const chatUrl = ollamaChatUrl(ollamaEndpoint);
-      const res = await fetch(chatUrl, {
+      const res = await aiFetch(chatUrl, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -1120,10 +1130,37 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
 
     return (
       <>
-        {/* Ollama Config */}
+        {/* AI model: in the browser (WebLLM) or local Ollama */}
         <div style={{ marginBottom:'1rem' }}>
+          <div style={{ fontSize:'0.65rem', color:subColor, fontWeight:'700', letterSpacing:'0.07em', marginBottom:'5px' }}>AI MODEL</div>
+          <div role="radiogroup" aria-label="Where the AI runs" style={{ display:'flex', gap:'5px', marginBottom:'7px' }}>
+            {[['browser','In your browser'],['ollama','Ollama (local server)']].map(([id,label]) => (
+              <button key={id} type="button" role="radio" aria-checked={aiProvider===id}
+                className={`chip ${aiProvider===id?'active':''}`}
+                onClick={() => { setAiProvider(id); localStorage.setItem('ai_provider', id); }}
+                style={{ fontSize:'0.68rem', padding:'3px 10px' }}>{label}</button>
+            ))}
+          </div>
+          {aiProvider === 'browser' ? (
+            <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
+              <select value={browserModel} aria-label="Browser model" style={inputStyle}
+                onChange={e => { setBrowserModel(e.target.value); localStorage.setItem('browser_model', e.target.value); }}>
+                {BROWSER_MODELS.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+              </select>
+              <div style={{ fontSize:'0.63rem', lineHeight:1.5, color: hasWebGPU() ? subColor : 'var(--warning)' }}>
+                {!hasWebGPU()
+                  ? '⚠ This browser has no WebGPU, so the model cannot run here. Use a recent Chrome or Edge on a computer with a graphics card, or choose Ollama.'
+                  : browserLoad
+                    ? <>Loading model… {browserLoad}</>
+                    : isBrowserModelLoaded(browserModel)
+                      ? <span style={{ color:'var(--success)' }}>✓ Model loaded — runs entirely on this device.</span>
+                      : 'Runs entirely on this device. The model is downloaded the first time you generate (about 1–2 GB) and cached afterwards.'}
+              </div>
+            </div>
+          ) : (
+            <>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'4px' }}>
-            <span style={{ fontSize:'0.65rem', color:subColor, fontWeight:'700', letterSpacing:'0.07em' }}>LOCAL LLM (OLLAMA)</span>
+            <span style={{ fontSize:'0.65rem', color:subColor, fontWeight:'700', letterSpacing:'0.07em' }}>OLLAMA</span>
             <button className="btn-icon" style={{ fontSize:'0.65rem', padding:'1px 6px', display:'flex', alignItems:'center', gap:'3px', border: isLight ? '1px solid #cbd5e1' : undefined, color: isLight ? '#475569' : undefined, background: isLight ? '#f1f5f9' : undefined }}
               onClick={() => setShowOllamaConfig(s=>!s)}>
               <Settings size={10}/>{showOllamaConfig ? 'done' : 'config'}
@@ -1161,6 +1198,8 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
                 {!/localhost|127\.0\.0\.1/.test(location.hostname) && <> and started with <code>OLLAMA_ORIGINS={location.origin}</code></>}.
               </>}
             </div>
+          )}
+        </>
           )}
         </div>
 

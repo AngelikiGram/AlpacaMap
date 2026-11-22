@@ -5,34 +5,19 @@ import KnowledgeConstellationView from './KnowledgeConstellationView';
 import ExtractionProgress from './ExtractionProgress';
 import KnowledgeRadarView from './KnowledgeRadarView';
 import nlpData from '../../data/nlp_data.json';
-import { API, HAS_DEV_PROXY, assetUrl } from '../../endpoints';
+import { API, HAS_DEV_PROXY, assetUrl, isReachable, OVERPASS_MIRRORS } from '../../endpoints';
 import { classifyTopic } from '../../knowledge/topics';
 import { isUsefulClaim, isJunkPlace, excerpt } from '../../knowledge/quality';
 import SourcesCredits from '../shared/SourcesCredits';
 import VerifiedConflicts from './VerifiedConflicts';
 import { summarizeVerified } from '../../knowledge/contradictions';
+import { credibility as credibilityOf } from '../../knowledge/credibility';
 
 // ── Credibility model ──────────────────────────────────────────────────────────
 // Returns { score, low, high } — the CI widens when fewer corroborating sources exist
+// Credibility now lives in src/knowledge/credibility.js (publication date, independent sources)
 function computeCredibility(node, samePlaceNodes) {
-  const isVolatile = node.knowledge_type === 'volatile';
-  const decayRate = isVolatile ? 0.8 : 0.18;
-
-  const refDate = node.source?.date ? new Date(node.source.date) : new Date(node.extractedAt || Date.now());
-  const ageYears = Math.max(0, (Date.now() - refDate.getTime()) / (365.25 * 24 * 3600 * 1000));
-  const recency = Math.exp(-decayRate * ageYears);
-
-  const sourceWeights = { blog: 0.8, review: 0.75, reddit: 0.7, manual: 1.0, wikivoyage: 0.85, wikipedia: 0.82, other: 0.65 };
-  const srcW = sourceWeights[node.source?.sourceType] ?? 0.7;
-
-  const corroborating = samePlaceNodes.filter(n => n.evaluation?.sentiment === node.evaluation?.sentiment);
-  const corroborationBonus = Math.min(0.25, corroborating.length * 0.08);
-
-  const score = Math.min(1, recency * srcW + corroborationBonus);
-  // Uncertainty interval: fewer evidence sources → wider band (Wald-style)
-  const n = samePlaceNodes.length + 1;
-  const unc = Math.min(0.32, 0.38 / Math.sqrt(n));
-  return { score, low: Math.max(0, score - unc), high: Math.min(1, score + unc) };
+  return credibilityOf(node, samePlaceNodes);
 }
 
 // ── Contradiction detector ────────────────────────────────────────────────────
@@ -1498,13 +1483,15 @@ async function fetchAreaPOIsOverpass(city, lat, lon) {
 out center;`;
 
   try {
-    const res = await fetch(`${API.overpass}/api/interpreter`, {
+    // Race the public Overpass servers; the first good answer wins (the main server is often overloaded)
+    const ctrls = OVERPASS_MIRRORS.map(() => new AbortController());
+    const res = await Promise.any(OVERPASS_MIRRORS.map((url, i) => fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `data=${encodeURIComponent(query)}`,
-      signal: AbortSignal.timeout(12000),
-    });
-    if (!res.ok) { console.log('[OverpassPOI] HTTP', res.status); return []; }
+      signal: AbortSignal.any ? AbortSignal.any([ctrls[i].signal, AbortSignal.timeout(12000)]) : AbortSignal.timeout(12000),
+    }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return { r, i }; })))
+      .then(({ r, i }) => { ctrls.forEach((c, j) => { if (j !== i) c.abort(); }); return r; }); // cancel only the slower servers
     const data = await res.json();
     const TYPE_PRIORITY = { tourism: 1, historic: 2, amenity: 3, leisure: 4 };
     const seen = new Set();
@@ -2340,8 +2327,13 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
 
     const today = new Date().toISOString().slice(0, 10);
     const SOURCE_LABELS = { wikivoyage: 'Wikivoyage', wikitravel: 'Wikitravel', wikipedia: 'Wikipedia', reddit: 'Reddit', stackexchange: 'StackExchange Travel' };
-    const checkedSources = Object.entries(fetchSources).filter(([, v]) => v).map(([k]) => k);
-    setFetchedPreviews(checkedSources.map(key => ({ sourceType: key, label: SOURCE_LABELS[key] || key, status: 'fetching' })));
+    const requestedSources = Object.entries(fetchSources).filter(([, v]) => v).map(([k]) => k);
+    setFetchedPreviews(requestedSources.map(key => ({ sourceType: key, label: SOURCE_LABELS[key] || key, status: 'fetching' })));
+    // Skip sources that are down right now instead of waiting for their timeouts
+    const reachable = await Promise.all(requestedSources.map(k => isReachable(k)));
+    const checkedSources = requestedSources.filter((_, i) => reachable[i]);
+    const down = requestedSources.filter((_, i) => !reachable[i]);
+    if (down.length) setFetchedPreviews(p => p.map(x => down.includes(x.sourceType) ? { ...x, status: 'none', title: 'Service unavailable right now — try again later' } : x));
 
     let parentCityName = null;
     try {

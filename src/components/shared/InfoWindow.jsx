@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
+import EvidenceBadge from './EvidenceBadge';
+import { buildPlaceEvidence, findEvidence } from '../../knowledge/evidence';
 import { createPortal } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 
@@ -50,10 +52,15 @@ export const cleanNameForMatching = (name) => {
     .trim();
 };
 
-export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToActiveRoute, knowledgeGraphNodes = [], allCityNames = [] }) => {
+export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToActiveRoute, knowledgeGraphNodes = [], knowledgeGraphVerified = null, allCityNames = [] }) => {
   const cityNamesSet = useMemo(() => {
     return new Set(allCityNames.map(name => name.toLowerCase().trim()));
   }, [allCityNames]);
+
+  const placeEvidence = useMemo(() => {
+    if (!knowledgeGraphNodes?.length || !place?.name || place.isCity) return null;
+    return findEvidence(place.name, buildPlaceEvidence(knowledgeGraphNodes, knowledgeGraphVerified));
+  }, [knowledgeGraphNodes, knowledgeGraphVerified, place?.name, place?.isCity]);
 
   const kgInsights = useMemo(() => {
     if (!knowledgeGraphNodes || !place?.name) return [];
@@ -175,6 +182,12 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
             )}
 
             {place.extract&&<p style={{color:'var(--text-secondary)',fontSize:'0.8rem',lineHeight:'1.7',marginBottom:'1.1rem'}}>{place.extract}</p>}
+
+            {placeEvidence && placeEvidence.level !== 'solid' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.8rem', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                <EvidenceBadge evidence={placeEvidence} /> <span>{placeEvidence.statements} statements from {placeEvidence.sources.length} source{placeEvidence.sources.length === 1 ? '' : 's'}</span>
+              </div>
+            )}
 
             {/* Knowledge claims extracted from travel sources */}
             {kgInsights.length > 0 && (

@@ -92,7 +92,7 @@ const contentWords = (t) => new Set(((t || '').toLowerCase().match(/[a-zà-ÿ]{3
  * Candidate pairs for NLI: same place/topic, different sources, at least one shared aspect.
  * Pairs with opposite sentiment and more word overlap are ranked first; capped per place and in total.
  */
-export function candidatePairs(nodes, { maxPerPlace = 12, maxTotal = 300, maxPerNode = 3 } = {}) {
+export function candidatePairs(nodes, { maxPerPlace = 12, maxTotal = 300, maxPerNode = 3, maxLength = 300, minSharedWords = 2 } = {}) {
   const byPlace = new Map();
   for (const n of nodes) {
     if (!n?.place || !n.claim) continue;
@@ -103,7 +103,12 @@ export function candidatePairs(nodes, { maxPerPlace = 12, maxTotal = 300, maxPer
   const all = [];
   for (const [placeKey, list] of byPlace) {
     if (list.length < 2) continue;
-    const prepared = list.slice(0, 200).map((n) => ({ n, asp: new Set(aspectsOf(n.claim)), words: contentWords(n.claim), s: n.evaluation?.sentiment }));
+    // Words of the place name ("eiffel", "tower") do not show that two statements talk about the same thing
+    const placeWords = contentWords(list[0].place.replace(/·/g, ' '));
+    const prepared = list
+      .filter((n) => n.claim.length <= maxLength)   // long texts (itineraries, lists) cover many things at once
+      .slice(0, 200)
+      .map((n) => ({ n, asp: new Set(aspectsOf(n.claim)), words: new Set([...contentWords(n.claim)].filter((w) => !placeWords.has(w))), s: n.evaluation?.sentiment }));
     const pairs = [];
     for (let i = 0; i < prepared.length; i++) {
       for (let j = i + 1; j < prepared.length; j++) {
@@ -112,6 +117,7 @@ export function candidatePairs(nodes, { maxPerPlace = 12, maxTotal = 300, maxPer
         const sharedAspects = [...A.asp].filter((x) => B.asp.has(x));
         if (!sharedAspects.length) continue;
         let shared = 0; for (const w of A.words) if (B.words.has(w)) shared++;
+        if (shared < minSharedWords) continue;   // must talk about the same thing, not just the same aspect
         // Near-identical text in two sources (Wikitravel shares much text with Wikivoyage) is a copy,
         // not independent evidence and never a contradiction — skip it.
         const jaccard = shared / (A.words.size + B.words.size - shared || 1);
@@ -143,7 +149,7 @@ export const plainText = (t, max = 400) => (t || '')
   .replace(/\s+/g, ' ').trim().slice(0, max);
 
 /** Turns NLI scores into a verdict for one pair. */
-export function classifyPair(scores, a, b, { threshold = 0.55 } = {}) {
+export function classifyPair(scores, a, b, { threshold = 0.8 } = {}) {
   const c = scores.contradiction ?? 0, e = scores.entailment ?? 0;
   if (c >= threshold && c > e) {
     const cond = explainByConditions(a, b);
@@ -170,3 +176,9 @@ export function summarizeVerified(pairs) {
     dependsPlaces: places.filter((p) => !p.contradictions.length && p.depends.length).length,
   };
 }
+
+// Two known examples the model must get right before its results are trusted.
+export const CALIBRATION = [
+  { a: 'The museum is open on Mondays.', b: 'The museum is closed on Mondays.', expect: 'contradiction' },
+  { a: 'The metro is the fastest way to get around the city.', b: 'Taking the metro is a quick way to travel around the city.', expect: 'entailment' },
+];

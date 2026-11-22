@@ -56,13 +56,32 @@ export async function scorePairs(pairs, { onProgress, batchSize = 8, signal } = 
   return out;
 }
 
-/** NLI is directional: check A→B and B→A and keep the stronger contradiction. */
+/**
+ * NLI is directional: score A→B and B→A and keep the *weaker* contradiction and entailment, so a pair
+ * only counts when the model is confident in both directions. (Keeping the stronger one let unrelated
+ * pairs through: small NLI models often call unrelated sentences a contradiction in one direction.)
+ */
 export async function scoreSymmetric(pairs, opts = {}) {
   const both = pairs.flatMap((p) => [{ premise: p.a, hypothesis: p.b }, { premise: p.b, hypothesis: p.a }]);
   const total = both.length;
   const scores = await scorePairs(both, { ...opts, onProgress: (d) => opts.onProgress?.(Math.floor(d / 2), total / 2) });
   return pairs.map((_, i) => {
     const x = scores[2 * i], y = scores[2 * i + 1];
-    return x.contradiction >= y.contradiction ? x : y;
+    const contradiction = Math.min(x.contradiction, y.contradiction);
+    const entailment = Math.min(x.entailment, y.entailment);
+    return { contradiction, entailment, neutral: Math.max(0, 1 - contradiction - entailment) };
   });
+}
+
+/** Self-test on known examples; throws if the model's labels look wrong. */
+export async function calibrate(examples) {
+  const scores = await scoreSymmetric(examples.map((e) => ({ a: e.a, b: e.b })));
+  const results = examples.map((e, i) => {
+    const s = scores[i];
+    const got = s.contradiction > s.entailment && s.contradiction > 0.5 ? 'contradiction' : s.entailment > 0.5 ? 'entailment' : 'neutral';
+    return { ...e, got, scores: s };
+  });
+  const failed = results.filter((r) => r.got !== r.expect);
+  if (failed.length) throw new Error(`model self-test failed (${failed.map((f) => `expected ${f.expect}, got ${f.got}`).join('; ')})`);
+  return results;
 }

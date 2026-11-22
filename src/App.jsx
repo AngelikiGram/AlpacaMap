@@ -186,6 +186,7 @@ export default function App(){
   const lastCityId      = useRef(null);
   const kgHydratedFor   = useRef(null);   // trip id whose knowledge graph has been loaded from IndexedDB
   const[storageError,    setStorageError]    =useState(null);
+  const[panelTall,       setPanelTall]       =useState(false);   // mobile: half vs. almost full height
   const autoSaveTimer   = useRef(null);
   const poiSearchTrigger = useRef(null);
 
@@ -518,8 +519,10 @@ export default function App(){
         </button>
       )}
 
-      <div className={`content-panel glass-panel ${panelOpen ? '' : 'collapsed'}`}>
-          <div className="mobile-drag-handle"/>
+      <div className={`content-panel glass-panel ${panelOpen ? '' : 'collapsed'} ${panelTall ? 'tall' : ''}`}>
+          <button type="button" className="mobile-drag-handle-hit" aria-label={panelTall ? 'Make panel smaller' : 'Make panel larger'} onClick={()=>setPanelTall(t=>!t)}>
+            <div className="mobile-drag-handle"/>
+          </button>
         <div className="panel-top">
           <div style={{display:'flex',alignItems:'center',gap:'0.6rem',flex:1,minWidth:0}}>
             <Compass size={17} style={{color:'var(--accent-primary)',filter:'drop-shadow(0 0 8px rgba(59,130,246,0.6))',flexShrink:0}}/>
@@ -549,7 +552,7 @@ export default function App(){
             <button className="btn-icon" title="My trips" aria-label="My trips" onClick={()=>setShowTripsPanel(true)} style={{padding:'0.35rem'}}>
               <FolderOpen size={15}/>
             </button>
-            <button className="btn-icon" title="Print / save as PDF" aria-label="Print or save as PDF" onClick={()=>window.print()} style={{padding:'0.35rem'}}>
+            <button className="btn-icon hide-on-mobile" title="Print / save as PDF" aria-label="Print or save as PDF" onClick={()=>window.print()} style={{padding:'0.35rem'}}>
               <FileText size={15}/>
             </button>
             <button className="btn-icon" title="Hide panel" aria-label="Hide panel" onClick={() => setPanelOpen(false)} style={{padding:'0.35rem'}}>
@@ -602,6 +605,7 @@ export default function App(){
             setActivePlaceInfo(null);
           } : null}
           knowledgeGraphNodes={tripData?.knowledgeGraph?.nodes || []}
+          knowledgeGraphVerified={tripData?.knowledgeGraph?.verified || null}
           allCityNames={[
             ...tripData.locations.map(l => l.name.split(',')[0]),
             activeCity?.name?.split(',')[0]
