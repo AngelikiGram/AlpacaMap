@@ -54,3 +54,23 @@ A verified disagreement is ranked higher for the current traveller when it conce
 the traveller group named in the statements (families, solo, couples; +0.4), an aspect linked to the
 chosen trip style (e.g. foodie → food/price; +0.25) or price when a budget is set (+0.2).
 The traveller profile is the one entered in the Planner.
+
+## 6. Disagreements on the map and in Debates (`controversy.js`, `debates.js`)
+- **Truth lens score** (0–1): verified contradiction 0.85+, condition-dependent 0.65; otherwise
+  `0.08 + 1.3 × minority share × min(1, opinionated/6)`, halved when only one source type speaks (max ≈ 0.73).
+  Map POIs use *strict* matching: a statement counts only if it names the place in full or is filed under it.
+- **Debate cards**: verified pairs first ("Which do you trust?"), then unchecked candidate pairs from
+  `candidatePairs` with opposite tone ("Do these really disagree?"), at most 3 per place/topic.
+  Answers are stored as pairs with `by: 'you'` in `knowledgeGraph.verified.pairs` and are kept when the NLI check is re-run.
+- **Learned aspects**: siding with the cautionary statement or answering "they disagree" adds +1 to that aspect
+  (localStorage `alpacamap_aspect_weights`); relevance.js adds 0.1 per point (max 0.3).
+
+## 7. Traveller reports (`travellerReports.js`)
+Quick reports from a place window become statements with source type `manual` (reliability 1.0), dated, with
+season / time of day / weekday conditions taken from the visit time.
+
+## 8. Itinerary checks (`planner/tripChecks.js`, `planner/openingHours.js`)
+Per stop: OpenStreetMap `opening_hours` (common syntax only; anything else = unknown, no warning); statements saying
+"closed on <weekday>" / "closed in <season or month>"; crowd statements whose time-of-day, weekend or season condition
+matches the visit. Rain plan: on days with ≥ 60 % precipitation probability (Open-Meteo) or a rain/snow weather code,
+each outdoor stop is matched to the nearest indoor place within 2.5 km (well-known places preferred).

@@ -180,5 +180,5 @@ export function summarizeVerified(pairs) {
 // Two known examples the model must get right before its results are trusted.
 export const CALIBRATION = [
   { a: 'The museum is open on Mondays.', b: 'The museum is closed on Mondays.', expect: 'contradiction' },
-  { a: 'The metro is the fastest way to get around the city.', b: 'Taking the metro is a quick way to travel around the city.', expect: 'entailment' },
+  { a: 'The museum is closed on Mondays.', b: 'On Mondays the museum is closed.', expect: 'entailment' },
 ];

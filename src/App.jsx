@@ -33,6 +33,11 @@ import { CoherencePanel } from "./components/panel/CoherencePanel";
 import { loadKG as idbLoadKG, saveKG as idbSaveKG, stripKG } from "./storage/kgStore";
 import { RouteSpacePanel } from "./components/panel/RouteSpacePanel.jsx";
 import { MenuPanel } from "./components/panel/MenuPanel.jsx";
+import { DebatesPanel } from "./components/panel/DebatesPanel.jsx";
+import { bundledKeyFor, hasBundled, loadBundledKnowledge, mergeStatements } from "./knowledge/bundled";
+import { buildDebates, answeredKeys } from "./knowledge/debates";
+import { makeDemoTrip } from "./demo/demoTrip";
+import "./innovation.css";
 const KnowledgePanel = lazy(() => import('./components/panel/KnowledgePanel.jsx'));
 const AnalyticsPanel = lazy(() => import('./components/panel/AnalyticsPanel.jsx'));
 import { MapBoundsTracker, MapZoomTracker, MapClickHandler, MapFlyController, SmartMapController } from "./components/map/MapControllers";
@@ -152,7 +157,7 @@ export default function App(){
   const tabScrollRef = useHorizontalScroll();
   const[calendarExpandedDays, setCalendarExpandedDays] =useState([]);
   const[tripData,        setTripData]        =useState(()=>{ const t=loadTrips(); return t.length>0?t[0].data:INITIAL_TRIP; });
-  const[activeCity,      setActiveCity]      =useState(null);
+  const[activeCity,      setActiveCity]      =useState(()=>{ const t=loadTrips()[0]?.data; return t?.demo?(t.locations?.[0]||null):null; }); // demo opens on London
   const[mapBounds,       setMapBounds]       =useState(null);
   const[searchRadius,    setSearchRadius]    =useState(5);
   const[activePlaceInfo, setActivePlaceInfo] =useState(null);
@@ -185,6 +190,9 @@ export default function App(){
   const[panelOpen,            setPanelOpen]            = useState(true);
   const lastCityId      = useRef(null);
   const kgHydratedFor   = useRef(null);   // trip id whose knowledge graph has been loaded from IndexedDB
+  const[kgReadyFor,      setKgReadyFor]      =useState(null);   // same, as state (triggers automatic knowledge loading)
+  const[kgAutoStatus,    setKgAutoStatus]    =useState(null);   // "Reading what travellers say about London…"
+  const[showWelcome,     setShowWelcome]     =useState(()=>{ try{ return !localStorage.getItem('alpacamap_welcomed'); }catch{ return false; } });
   const[storageError,    setStorageError]    =useState(null);
   const[panelTall,       setPanelTall]       =useState(false);   // mobile: half vs. almost full height
   const autoSaveTimer   = useRef(null);
@@ -215,6 +223,7 @@ export default function App(){
         setTripData(prev=>prev.knowledgeGraph?.nodes?.length?prev:{...prev,knowledgeGraph:kg});
       }
       kgHydratedFor.current=currentTripId;
+      setKgReadyFor(currentTripId);
     });
     return()=>{cancelled=true;};
   },[currentTripId]);
@@ -232,7 +241,10 @@ export default function App(){
       try{
         const trips=loadTrips();
         const idx=trips.findIndex(t=>t.id===currentTripId);
-        const entry={id:currentTripId,title:tripData.title,lastModified:new Date().toISOString(),data:kgInIdb?stripKG(tripData):tripData};
+        // Explore's search results are a cache (thousands of places for big cities like London) — keep only the
+        // first 400 per city in localStorage so a big city can't fill the 5 MB browser limit
+        const slim=(d)=>({...d,locations:(d.locations||[]).map(l=>(l.recommendations?.length||0)>400?{...l,recommendations:l.recommendations.slice(0,400)}:l)});
+        const entry={id:currentTripId,title:tripData.title,lastModified:new Date().toISOString(),data:slim(kgInIdb?stripKG(tripData):tripData)};
         if(idx>=0)trips[idx]=entry; else trips.unshift(entry);
         saveTrips(trips);
         setSavedTrips([...trips]);
@@ -245,6 +257,30 @@ export default function App(){
     },1500);
     return()=>clearTimeout(autoSaveTimer.current);
   },[tripData,currentTripId]);
+
+  // Load bundled knowledge automatically when a city that has it is in the trip (London, Paris, Rome, …)
+  const bundledCityKeys = [...new Set((tripData.locations||[]).map(l=>bundledKeyFor(l.name)).filter(Boolean))].join('|');
+  useEffect(()=>{
+    if(kgReadyFor!==currentTripId||!bundledCityKeys)return;
+    const done=tripData.knowledgeAuto||{};
+    const nodes=tripData.knowledgeGraph?.nodes||[];
+    const keys=bundledCityKeys.split('|').filter(k=>!done[k]&&!hasBundled(nodes,k));
+    if(!keys.length)return;
+    let cancelled=false;
+    const names=keys.map(k=>k[0].toUpperCase()+k.slice(1)).join(' & ');
+    setKgAutoStatus({text:`🦙 Reading what travellers say about ${names}…`});
+    Promise.all(keys.map(k=>loadBundledKnowledge(k).catch(()=>[]))).then(lists=>{
+      if(cancelled)return;
+      const incoming=lists.flat();
+      setTripData(prev=>({...prev,
+        knowledgeAuto:{...(prev.knowledgeAuto||{}),...Object.fromEntries(keys.map(k=>[k,new Date().toISOString()]))},
+        knowledgeGraph:incoming.length?{...(prev.knowledgeGraph||{edges:[]}),nodes:mergeStatements(prev.knowledgeGraph?.nodes||[],incoming),lastUpdated:new Date().toISOString()}:prev.knowledgeGraph}));
+      setKgAutoStatus(incoming.length?{text:`🦙 Read ${incoming.length.toLocaleString()} tips about ${names}. Try the Truth lens on the map →`,done:true}:null);
+      setTimeout(()=>{ if(!cancelled)setKgAutoStatus(null); },8000);
+    });
+    return()=>{cancelled=true;};
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[kgReadyFor,currentTripId,bundledCityKeys]);
 
   // Persist map layer preference
   useEffect(()=>{ savePrefs({mapLayer}); },[mapLayer]);
@@ -393,6 +429,64 @@ export default function App(){
     setShowTripsPanel(false);
   };
 
+  // One-box planner → a real trip (new, or merged into the current one)
+  const applyQuickPlan=({parsed,city,plan},mode)=>{
+    const cityShort=city.name.split(',')[0];
+    const base=Date.now();
+    const places=[]; const seen=new Set();
+    plan.days.forEach(d=>d.stops.forEach(st=>{ if(seen.has(st.name))return; seen.add(st.name);
+      places.push({id:base+places.length+1,name:st.name,type:st.type||'attraction',coords:st.coords,notes:(st.why||[]).join(' · '),osmTags:{...(st.osmTags||{}),hours:st.hours||st.osmTags?.hours||null}}); }));
+    const days=plan.days.map((d,i)=>({id:base+1000+i,date:d.date,location:cityShort,
+      events:d.stops.map((st,j)=>({id:base+2000+i*50+j,time:st.time,title:st.name,type:(st.cat==='food'||st.cat==='coffee')?'food':'activity'}))}));
+    const location={id:base,name:city.name,coords:city.coords,zoomLevel:14,places,recommendations:[]};
+    try{ // traveller profile, used to rank disagreements that matter to you
+      if(parsed.group)localStorage.setItem('tripmind_grouptype',parsed.group);
+      const styles=[...new Set(parsed.likes.map(k=>({food:'foodie',coffee:'foodie',culture:'cultural',nature:'adventure',views:'photography',nightlife:'nightlife',shopping:'shopping'}[k])).filter(Boolean))];
+      if(styles.length)localStorage.setItem('tripmind_tripstyle_arr',JSON.stringify(styles));
+      if(parsed.pace)localStorage.setItem('tripmind_trippace',parsed.pace);
+      if(parsed.budget)localStorage.setItem('tripmind_budgetinput',String(parsed.budget));
+    }catch{ /* storage blocked */ }
+    if(mode==='new'){
+      setCurrentTripId(`trip-${base}`);
+      setTripData({title:`${plan.days.length} day${plan.days.length>1?'s':''} in ${cityShort}`,locations:[location],routes:[],itinerary:days,
+        notes:{general:`Planned from: “${parsed.raw}”\n${plan.notes.join('\n')}`,cities:{}},documents:{flights:[],trains:[],hotels:[],leisure:[]},
+        budget:{total:parsed.budget||1000,currency:parsed.currency||'EUR',expenses:[]},packing:[],knowledgeGraph:{nodes:[],edges:[],lastUpdated:null}});
+      setActiveCity(location);
+    }else{
+      let target=location;
+      setTripData(prev=>{
+        const existing=prev.locations.find(l=>l.name.split(',')[0].toLowerCase()===cityShort.toLowerCase());
+        if(existing)target=existing;
+        const locs=existing?prev.locations.map(l=>l.id!==existing.id?l:{...l,places:[...l.places,...places.filter(p=>!l.places.some(q=>q.name===p.name))]}):[...prev.locations,location];
+        return{...prev,locations:locs,itinerary:[...prev.itinerary,...days].sort((a,b)=>a.date.localeCompare(b.date))};
+      });
+      setTimeout(()=>setActiveCity(target),0);
+    }
+    setCalendarExpandedDays(days.map(d=>d.id));
+    setActiveTab('calendar');
+    setPreviewFlyTarget({lat:city.coords[0],lon:city.coords[1],zoom:13,duration:1});
+  };
+
+  const loadDemoTrip=()=>{
+    setCurrentTripId(`demo-${Date.now()}`);
+    const demo=makeDemoTrip();
+    setTripData(demo);
+    setActiveCity(demo.locations[0]);
+    setShowTripsPanel(false);
+    setActiveTab('menu');
+  };
+  const dismissWelcome=()=>{ setShowWelcome(false); try{ localStorage.setItem('alpacamap_welcomed','1'); }catch{ /* ignore */ } };
+
+  // Travellers' statements (InfoWindow "Were you here?") go straight into the knowledge graph
+  const addStatement=(node)=>setTripData(prev=>({...prev,knowledgeGraph:{...(prev.knowledgeGraph||{edges:[]}),nodes:[...(prev.knowledgeGraph?.nodes||[]),node],lastUpdated:new Date().toISOString()}}));
+
+  // Debate cards still to judge (badge in the menu)
+  const debateCount = useMemo(()=>{
+    const kg=tripData.knowledgeGraph;
+    if(!kg?.nodes?.length)return 0;
+    try{ return buildDebates(kg.nodes,kg.verified,{answered:answeredKeys(kg.verified)}).length; }catch{ return 0; }
+  },[tripData.knowledgeGraph]);
+
   const loadTrip=(trip)=>{
     setCurrentTripId(trip.id);
     setTripData(trip.data);
@@ -443,7 +537,8 @@ export default function App(){
 
   const renderPanel=()=>{
     switch(activeTab){
-      case 'menu':     return<MenuPanel     activeTab={activeTab} setActiveTab={setActiveTab} gcUndiscovered={gcUndiscovered}/>;
+      case 'menu':     return<MenuPanel     activeTab={activeTab} setActiveTab={setActiveTab} gcUndiscovered={gcUndiscovered} debateCount={debateCount} onApplyQuickPlan={applyQuickPlan} hasTrip={tripData.locations.length>0} isDemo={!!tripData.demo} onLoadDemo={loadDemoTrip} onNewTrip={createNewTrip}/>;
+      case 'debates':  return<DebatesPanel  tripData={tripData} setTripData={setTripData} onOpenTab={setActiveTab}/>;
       case 'locations':return null;
       case 'route':    return<ExportPanel   tripData={tripData}/>;
       case 'calendar': return<CalendarPanel tripData={tripData} setTripData={setTripData} expandedDays={calendarExpandedDays} setExpandedDays={setCalendarExpandedDays}/>;
@@ -453,7 +548,7 @@ export default function App(){
       case 'documents':return<DocumentsPanel tripData={tripData} setTripData={setTripData}/>;
       case 'tripmind': return<TripMindPanel tripData={tripData} setTripData={setTripData} activeCity={activeCity} aiActiveDay={aiActiveDay} onDayChange={setAiActiveDay} triggerPlaceInfo={triggerPlaceInfo} onPreviewPlaces={setTripMindPreviewPlaces} onFlyTo={coords=>setPreviewFlyTarget({lat:coords[0],lon:coords[1],zoom:16,duration:0.7})} />;
       case 'analyze':  return<CoherencePanel tripData={tripData}/>;
-      case 'routespace': return<RouteSpacePanel tripData={tripData} setTripData={setTripData} activeCity={activeCity} routeSpaceRoute={routeSpaceRoute} setRouteSpaceRoute={setRouteSpaceRoute} setStopStabilityMap={setStopStabilityMap} triggerPlaceInfo={triggerPlaceInfo} aiInterests={aiInterests} onSwitchToCalendar={()=>setActiveTab('calendar')} showRouteOnMap={showRouteOnMap} setShowRouteOnMap={setShowRouteOnMap} />;
+      case 'routespace': return<RouteSpacePanel tripData={tripData} setTripData={setTripData} activeCity={activeCity} routeSpaceRoute={routeSpaceRoute} setRouteSpaceRoute={setRouteSpaceRoute} setStopStabilityMap={setStopStabilityMap} triggerPlaceInfo={triggerPlaceInfo} aiInterests={aiInterests} onSwitchToCalendar={()=>setActiveTab('calendar')} showRouteOnMap={showRouteOnMap} setShowRouteOnMap={setShowRouteOnMap} onOpenTab={setActiveTab} />;
       case 'knowledge':  return<Suspense fallback={<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'200px',color:'rgba(255,255,255,0.4)',fontSize:'0.8rem'}}>Loading Knowledge Graph…</div>}><KnowledgePanel tripData={tripData} setTripData={setTripData} triggerPlaceInfo={triggerPlaceInfo} activeCity={activeCity} /></Suspense>;
       case 'analytics':  return<Suspense fallback={<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'200px',color:'rgba(255,255,255,0.4)',fontSize:'0.8rem'}}>Loading Analytics…</div>}><AnalyticsPanel tripData={tripData} setTripData={setTripData} tripId={currentTripId} activeCity={activeCity} /></Suspense>;
       default:return null;
@@ -487,7 +582,29 @@ export default function App(){
         panelOpen={panelOpen}
         hasTimeline={tripData.itinerary && tripData.itinerary.length > 0}
         knowledgeGraph={tripData.knowledgeGraph}
+        itinerary={tripData.itinerary}
+        onOpenDebates={()=>{ setPanelOpen(true); setActiveTab('debates'); }}
       />
+      {kgAutoStatus && <div className={`alpaca-toast ${kgAutoStatus.done?'done':''}`} role="status">{kgAutoStatus.text}</div>}
+      {showWelcome && tripData.demo && (
+        <div className="welcome-card" role="dialog" aria-label="Welcome to AlpacaMap">
+          <div className="welcome-alpaca" aria-hidden>🦙</div>
+          <div>
+            <b>Welcome to AlpacaMap</b>
+            <p>A travel planner that reads guides and traveller forums and tells you where they <em>disagree</em>. This is a demo weekend in London — try:</p>
+            <ul>
+              <li><b>Truth lens</b> (top right) — green where sources agree, red where they argue</li>
+              <li><b>Time</b> — what's open, closed or packed at any hour</li>
+              <li><b>Itinerary</b> — Sunday has two ⚠ timing problems</li>
+              <li><b>Debates</b> — judge disputed tips yourself</li>
+            </ul>
+            <div className="welcome-actions">
+              <button className="btn-primary" onClick={dismissWelcome}>Explore the demo</button>
+              <button className="btn-secondary" onClick={()=>{ dismissWelcome(); setActiveTab('menu'); setPanelOpen(true); setTimeout(()=>document.querySelector('.quickplan-form input')?.focus(),50); }}>Plan my own trip</button>
+            </div>
+          </div>
+        </div>
+      )}
       <TimelineStrip tripData={tripData} setActiveCity={setActiveCity} setActiveTab={setActiveTab} setCalendarExpandedDay={dayId => setCalendarExpandedDays(prev => prev.includes(dayId) ? prev : [...prev, dayId])} panelOpen={panelOpen}/>
 
       {/* Floating Toggle Button to open the menu when collapsed */}
@@ -592,6 +709,7 @@ export default function App(){
             onClose={()=>setShowTripsPanel(false)}
             onExport={exportTrip}
             onImport={importTrip}
+            onLoadDemo={loadDemoTrip}
           />
         )}
       </div>
@@ -606,6 +724,8 @@ export default function App(){
           } : null}
           knowledgeGraphNodes={tripData?.knowledgeGraph?.nodes || []}
           knowledgeGraphVerified={tripData?.knowledgeGraph?.verified || null}
+          onAddStatement={addStatement}
+          tripDates={(tripData.itinerary||[]).map(d=>d.date)}
           allCityNames={[
             ...tripData.locations.map(l => l.name.split(',')[0]),
             activeCity?.name?.split(',')[0]

@@ -30,7 +30,7 @@ ${placemarks}
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <Document>
   <name>${escapeXml(title)}</name>
-  <description>Created with TravelScout</description>
+  <description>Created with AlpacaMap</description>
 ${folders}
 </Document>
 </kml>`;

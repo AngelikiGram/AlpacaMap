@@ -115,7 +115,10 @@ export default function VerifiedConflicts({ nodes, verified, onSave }) {
       onSave({ model: NLI_MODEL, method: 'symmetric-min, threshold 0.8', checkedAt: new Date().toISOString(), nodeCount: nodes.length, pairsChecked: pairs.length, counts, calibration: calibration.map((c) => ({ expect: c.expect, got: c.got })), pairs: results.filter((r) => r.label !== 'unrelated') });
     } catch (e) {
       console.error('[NLI]', e);
-      setError(`Could not run the AI model: ${e.message || e}. Your browser may block WebAssembly or the download.`);
+      const msg = String(e?.message || e);
+      setError(msg.includes('self-test')
+        ? `The check was stopped because the model failed its self-test (${msg.replace(/^.*?\(/, '').replace(/\)$/, '')}). No results were changed.`
+        : `Could not run the AI model: ${msg}. Your browser may block WebAssembly or the model download.`);
     } finally {
       setStatus(null);
     }
@@ -141,6 +144,7 @@ export default function VerifiedConflicts({ nodes, verified, onSave }) {
           <b style={{ color: '#fbbf24' }}>{summary.dependsPlaces}</b> that depend on conditions
           {verified.counts?.agree ? <>, {verified.counts.agree} pairs agree</> : null}.
           {stale && <span style={{ color: '#fbbf24' }}> The statements changed since — run the check again.</span>}
+          {!verified.method && <span style={{ color: '#fbbf24' }}> These results come from an earlier, less strict version of the check — run it again.</span>}
         </div>
       )}
 

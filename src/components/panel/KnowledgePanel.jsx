@@ -6,6 +6,7 @@ import ExtractionProgress from './ExtractionProgress';
 import KnowledgeRadarView from './KnowledgeRadarView';
 import nlpData from '../../data/nlp_data.json';
 import { API, HAS_DEV_PROXY, assetUrl, isReachable, OVERPASS_MIRRORS } from '../../endpoints';
+import { keepYourLabels } from '../../knowledge/debates';
 import { classifyTopic } from '../../knowledge/topics';
 import { isUsefulClaim, isJunkPlace, excerpt } from '../../knowledge/quality';
 import SourcesCredits from '../shared/SourcesCredits';
@@ -2155,7 +2156,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
   // Statement-level conflict check results (VerifiedConflicts)
   const verified = kg.verified || null;
   const saveVerified = useCallback((v) => {
-    setTripData(prev => ({ ...prev, knowledgeGraph: { ...prev.knowledgeGraph, verified: v } }));
+    setTripData(prev => ({ ...prev, knowledgeGraph: { ...prev.knowledgeGraph, verified: v ? keepYourLabels(v, prev.knowledgeGraph?.verified) : v } })); // keep your Debate answers
   }, [setTripData]);
   const verifiedSummary = useMemo(() => verified ? summarizeVerified(verified.pairs || []) : null, [verified]);
   const conflictCount = verifiedSummary ? verifiedSummary.contradictionPlaces + verifiedSummary.dependsPlaces : contradictions.length;
@@ -3011,7 +3012,8 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           {nodes.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem', fontSize: '0.78rem' }}>
               <Brain size={28} style={{ opacity: 0.3, marginBottom: '8px', display: 'block', margin: '0 auto 8px' }} />
-              No knowledge extracted yet. Use <strong>Fetch Online</strong> or <strong>Ingest</strong> tab.
+              🦙 Nothing read yet for this trip. Cities with ready-made knowledge (London, Paris, Rome, Edinburgh, Zurich) load by themselves; for others, fetch it from the web.
+              <div><button className="btn-primary" style={{ marginTop: '10px' }} onClick={() => setTab('ingest')}>Fetch knowledge</button></div>
             </div>
           ) : (
             <>
@@ -3262,7 +3264,8 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           {nodes.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem', fontSize: '0.78rem' }}>
               <Brain size={28} style={{ opacity: 0.3, marginBottom: '8px', display: 'block', margin: '0 auto 8px' }} />
-              No knowledge extracted yet. Use <strong>Fetch Online</strong> or <strong>Ingest</strong> tab.
+              🦙 Nothing read yet for this trip. Cities with ready-made knowledge (London, Paris, Rome, Edinburgh, Zurich) load by themselves; for others, fetch it from the web.
+              <div><button className="btn-primary" style={{ marginTop: '10px' }} onClick={() => setTab('ingest')}>Fetch knowledge</button></div>
             </div>
           ) : (
             <>

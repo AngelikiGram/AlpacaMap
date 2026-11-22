@@ -13,6 +13,9 @@ import { CITY_PALETTE, getCityColor, MAP_LAYERS, SENTINEL_NONE, getTypeDetails, 
 import { searchNominatim, fetchPlaceImage } from "../../api.js";
 import EvidenceBadge from "../shared/EvidenceBadge";
 import { buildPlaceEvidence, findEvidence } from "../../knowledge/evidence";
+import { checkItinerary, makePlaceResolver, fetchDailyForecast, isWetDay, suggestRainSwaps } from "../../planner/tripChecks";
+import { poiFromOsm } from "../../planner/quickPlan";
+import { osmSlugFor, loadBundledOsm } from "../../knowledge/bundled";
 import { OVERPASS_URL, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS, CATEGORY_ZOOM_PRIORITY, SEARCH_KEYWORDS, INTEREST_CATEGORIES, LOCATION_TYPE_PRESETS, EVENT_TYPES, TRANSPORT_ICON, EVT_EMOJI, DOC_SECTIONS, BUDGET_CATEGORIES, PACKING_TEMPLATES, ENTITY_PROFILES } from "../../config.jsx";
 
 import { LiveImage } from "../shared/LiveImage.jsx";
@@ -86,8 +89,45 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
 
   const sorted=[...tripData.itinerary].sort((a,b)=>a.date.localeCompare(b.date));
   // Do the sources agree about each stop? (warnings on itinerary stops)
-  const evidenceMap=useMemo(()=>buildPlaceEvidence(tripData.knowledgeGraph?.nodes||[],tripData.knowledgeGraph?.verified),[tripData.knowledgeGraph]);
+  const evidenceMap=useMemo(()=>buildPlaceEvidence(tripData.knowledgeGraph?.nodes||[],tripData.knowledgeGraph?.verified,{cityNames:(tripData.locations||[]).map(l=>l.name)}),[tripData.knowledgeGraph]);
   const fmtDate=d=>new Date(d+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+
+  // ── Trip checks: opening hours, what sources say about closures and crowds at that time ──
+  const resolvePlace=useMemo(()=>makePlaceResolver(tripData.locations),[tripData.locations]);
+  const stopWarnings=useMemo(()=>checkItinerary(tripData.itinerary,{evidenceIndex:evidenceMap,resolvePlace}),[tripData.itinerary,evidenceMap,resolvePlace]);
+  const warningDays=useMemo(()=>[...new Set([...stopWarnings.keys()].map(k=>Number(k.split(':')[0])))],[stopWarnings]);
+
+  // ── Weather per city (next 16 days, Open-Meteo) → rain plans ──
+  const cityOf=useCallback((dayLoc)=>tripData.locations.find(l=>l.name.toLowerCase().startsWith(String(dayLoc||'').toLowerCase().split(',')[0])),[tripData.locations]);
+  const[forecasts,setForecasts]=useState({});
+  const forecastKey=tripData.itinerary.map(d=>d.location).join('|');
+  useEffect(()=>{
+    let cancelled=false;
+    const cities=[...new Set(tripData.itinerary.map(d=>cityOf(d.location)).filter(Boolean))];
+    cities.forEach(c=>fetchDailyForecast(c.coords[0],c.coords[1]).then(f=>{ if(!cancelled)setForecasts(prev=>({...prev,[c.id]:f})); }));
+    return()=>{cancelled=true;};
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[forecastKey]);
+  const forecastFor=(day)=>{ const c=cityOf(day.location); return c?forecasts[c.id]?.[day.date]:null; };
+  const[rainPlans,setRainPlans]=useState({});   // dayId → { loading, swaps }
+  const makeRainPlan=async(day)=>{
+    const city=cityOf(day.location);
+    setRainPlans(p=>({...p,[day.id]:{loading:true,swaps:[]}}));
+    const extra=(await loadBundledOsm(osmSlugFor(city?.name))).map(poiFromOsm).filter(Boolean);
+    const candidates=[...(city?.places||[]),...(city?.recommendations||[]),...extra];
+    const swaps=suggestRainSwaps(day.events,(t)=>resolvePlace(t,day.location),candidates,{exclude:new Set(tripData.itinerary.flatMap(d=>d.events.map(e=>e.title)))});
+    setRainPlans(p=>({...p,[day.id]:{loading:false,swaps}}));
+  };
+  const applySwap=(day,swap)=>{
+    setTripData(prev=>{
+      const city=cityOf(day.location);
+      const known=city?.places?.some(p=>p.name===swap.to.name);
+      return{...prev,
+        locations:known||!city?prev.locations:prev.locations.map(l=>l.id!==city.id?l:{...l,places:[...l.places,{id:Date.now(),name:swap.to.name,type:swap.to.type||'museum',coords:swap.to.coords}]}),
+        itinerary:prev.itinerary.map(d=>d.id!==day.id?d:{...d,events:d.events.map(e=>e.id!==swap.eventId?e:{...e,title:swap.to.name,note:`Rain plan (instead of ${swap.from})`})})};
+    });
+    setRainPlans(p=>({...p,[day.id]:{...p[day.id],swaps:p[day.id].swaps.filter(x=>x.eventId!==swap.eventId)}}));
+  };
 
   const saveEvent=(dayId)=>{
     if(!newEvent.title.trim())return;
@@ -318,7 +358,12 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
 
   return(
     <div>
-      {sorted.length===0&&<p className="panel-hint">No days yet. Add a day below to start building your schedule.</p>}
+      {sorted.length===0&&<p className="panel-hint">No days yet. Add a day below — or type a trip like “3 days in Rome, love food” into the box on the home screen.</p>}
+      {stopWarnings.size>0&&(
+        <button type="button" className="trip-check-banner" onClick={()=>setExpandedDays?.(prev=>[...new Set([...prev,...warningDays])])}>
+          ⚠ {stopWarnings.size} stop{stopWarnings.size>1?'s':''} may clash with opening hours or crowds — {warningDays.length>1?'show days':'show day'}
+        </button>
+      )}
       {sorted.map(day=>{
         const city=tripData.locations.find(l=>l.name.toLowerCase().startsWith(day.location.toLowerCase().split(',')[0].toLowerCase()));
         const color=city?getCityColor(city.id,tripData.locations):'#64748b';
@@ -369,7 +414,12 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
                 <>
                   <div style={{flex:1}}>
                     <div style={{fontWeight:'600',fontSize:'0.875rem'}}>{fmtDate(day.date)}</div>
-                    <div style={{fontSize:'0.7rem',color:'var(--text-secondary)'}}>{day.location} · {day.events.length} event{day.events.length!==1?'s':''}</div>
+                    <div style={{fontSize:'0.7rem',color:'var(--text-secondary)',display:'flex',gap:'6px',alignItems:'center',flexWrap:'wrap'}}>
+                      <span>{day.location} · {day.events.length} event{day.events.length!==1?'s':''}</span>
+                      {(()=>{ const f=forecastFor(day); if(!f)return null; const wet=isWetDay(f);
+                        return <span className={`day-weather ${wet?'wet':''}`} title={`Forecast: max ${Math.round(f.tmax)}°, ${f.precipProb??0}% chance of rain`}>{wet?'🌧':'☀️'} {Math.round(f.tmax)}° · {f.precipProb??0}%</span>; })()}
+                      {warningDays.includes(day.id)&&<span className="day-warn">⚠ check timing</span>}
+                    </div>
                   </div>
                   <div style={{display:'flex',gap:'0.35rem',alignItems:'center'}} onClick={e=>e.stopPropagation()}>
                     <button className="btn-icon" style={{padding:'0.2rem'}} title="Edit day" onClick={e=>{e.stopPropagation();setEditingDayId(day.id);setEditDayDate(day.date);setEditDayLoc(day.location);}}>
@@ -386,6 +436,19 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
             {isOpen&&(
               <div className="cal-day-body">
                 {day.events.length===0&&<div style={{fontSize:'0.78rem',color:'var(--text-secondary)',padding:'0.3rem 0 0.5rem'}}>No events yet — add one below.</div>}
+                {isWetDay(forecastFor(day))&&(
+                  <div className="rain-plan">
+                    <div className="rain-plan-head">🌧 Rain likely ({forecastFor(day).precipProb??'?'}%) {!rainPlans[day.id]&&<button type="button" onClick={()=>makeRainPlan(day)}>Make a rain plan</button>}</div>
+                    {rainPlans[day.id]?.loading&&<div className="rain-plan-row dim">🦙 Looking for indoor places nearby…</div>}
+                    {rainPlans[day.id]&&!rainPlans[day.id].loading&&rainPlans[day.id].swaps.length===0&&<div className="rain-plan-row dim">No outdoor stops to swap — you're covered.</div>}
+                    {rainPlans[day.id]?.swaps?.map(sw=>(
+                      <div key={sw.eventId} className="rain-plan-row">
+                        <span>{sw.time} <s>{sw.from}</s> → <b>{sw.to.name}</b> <em>{sw.distKm<1?`${Math.round(sw.distKm*1000)} m`:`${sw.distKm.toFixed(1)} km`} away</em></span>
+                        <button type="button" onClick={()=>applySwap(day,sw)}>Swap</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {day.events.map(evt=>{
                   const isEditingThis=editingEvt?.dayId===day.id&&editingEvt?.evtId===evt.id;
                   if(isEditingThis) return(
@@ -407,8 +470,8 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
                     </div>
                   );
                   return(
+                    <React.Fragment key={evt.id}>
                     <div 
-                      key={evt.id} 
                       className="time-block" 
                       style={{
                         cursor:'pointer',
@@ -438,6 +501,10 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
                         <Trash2 size={11} color="var(--danger)"/>
                       </button>
                     </div>
+                    {(stopWarnings.get(`${day.id}:${evt.id}`)||[]).map((w,wi)=>(
+                      <div key={wi} className={`stop-warning ${w.severity}`} title={w.detail||''}>⚠ {w.text}{w.source==='OpenStreetMap'?' · OpenStreetMap':''}</div>
+                    ))}
+                    </React.Fragment>
                   );
                 })}
                 {/* Always-visible add event form */}

@@ -160,7 +160,7 @@ export const buildTripMindPrompt = (poiCtx, numDays, examples, learned) => {
       '\nBuild on these patterns when appropriate — but still introduce variety.'
     : '';
 
-  return `You are TripMind, an AI travel planning assistant that produces deeply personalized, evidence-grounded itineraries. You ground every recommendation in real OpenStreetMap POI data, model traveler psychology, and design days with narrative coherence — not just lists of places.
+  return `You are AlpacaMap's AI travel planning assistant that produces deeply personalized, evidence-grounded itineraries. You ground every recommendation in real OpenStreetMap POI data, model traveler psychology, and design days with narrative coherence — not just lists of places.
 
 ═══ TRAVELER PERSONA MODELING ═══
 Extract implicit and explicit signals from the user's description:
@@ -294,7 +294,10 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
   const [ollamaModel,    setOllamaModel]    = useState(() => localStorage.getItem('ollama_model')    || 'llama3.1');
   const [showOllamaConfig, setShowOllamaConfig] = useState(false);
   // Where the AI runs: 'ollama' (local server) or 'browser' (WebLLM, no install)
-  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider') || 'ollama');
+  // Default: the in-browser model when this browser supports WebGPU and the site is not running locally
+  // (most visitors of the hosted site have no Ollama); otherwise Ollama.
+  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('ai_provider')
+    || (!/localhost|127\.0\.0\.1/.test(location.hostname) ? 'browser' : 'ollama')); // hosted site: never default to an Ollama the visitor doesn't have
   const [browserModel, setBrowserModel] = useState(() => localStorage.getItem('browser_model') || DEFAULT_BROWSER_MODEL);
   const [browserLoad, setBrowserLoad] = useState(null); // download/initialisation progress text
   // Same call shape as fetch(ollamaChatUrl, …); routes to the browser model when selected
@@ -1149,7 +1152,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
               </select>
               <div style={{ fontSize:'0.63rem', lineHeight:1.5, color: hasWebGPU() ? subColor : 'var(--warning)' }}>
                 {!hasWebGPU()
-                  ? '⚠ This browser has no WebGPU, so the model cannot run here. Use a recent Chrome or Edge on a computer with a graphics card, or choose Ollama.'
+                  ? '⚠ This browser has no WebGPU, so the AI model cannot run here. Use a recent Chrome or Edge on a computer with a graphics card, or choose Ollama. 🦙 Tip: the one-box planner on the home screen (“3 days in Rome, love food”) works without any AI.'
                   : browserLoad
                     ? <>Loading model… {browserLoad}</>
                     : isBrowserModelLoaded(browserModel)
@@ -1196,6 +1199,12 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
               {ollamaState.status === 'offline' && <>
                 ⚠ Ollama is not reachable at {ollamaEndpoint}. AI features need Ollama running on this computer
                 {!/localhost|127\.0\.0\.1/.test(location.hostname) && <> and started with <code>OLLAMA_ORIGINS={location.origin}</code></>}.
+                {hasWebGPU() && (
+                  <button type="button" className="chip" style={{ display:'block', marginTop:'5px', fontSize:'0.66rem', padding:'2px 9px' }}
+                    onClick={() => { setAiProvider('browser'); localStorage.setItem('ai_provider', 'browser'); }}>
+                    Use the in-browser model instead
+                  </button>
+                )}
               </>}
             </div>
           )}
@@ -1611,7 +1620,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
       {!plan && !loading && (
         <div style={{ textAlign:'center', padding:'1.5rem 1rem', color:'var(--text-secondary)', fontSize:'0.75rem', lineHeight:1.6, marginTop:'0.5rem' }}>
           <BrainCircuit size={36} style={{ marginBottom:'0.5rem', color:'var(--text-secondary)', opacity:0.5 }}/>
-          <strong style={{ display:'block', marginBottom:'0.4rem', color:'var(--text-primary)' }}>TripMind AI Planner</strong>
+          <strong style={{ display:'block', marginBottom:'0.4rem', color:'var(--text-primary)' }}>AlpacaMap AI Planner</strong>
           Set your profile, optionally describe your trip in plain language, then generate a personalized day-by-day itinerary — grounded in real local data, with budget, packing, and map routes.
         </div>
       )}
@@ -1649,7 +1658,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', padding: '16px 24px', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <BrainCircuit size={22} style={{ color: '#6366f1' }}/>
-                <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em' }}>TripMind AI Planner</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em' }}>AlpacaMap AI Planner</span>
                 <span style={{ fontSize: '0.75rem', background: '#e0e7ff', color: '#4338ca', padding: '3px 8px', borderRadius: '12px', fontWeight: '600' }}>
                   {activeCity?.name?.split(',')[0] || tripData.locations[0]?.name?.split(',')[0] || 'Destination'} Explorer
                 </span>

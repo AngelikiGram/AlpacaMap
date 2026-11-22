@@ -68,7 +68,7 @@ import { PrintView } from "../shared/PrintView.jsx";
 
 
 
-export const MyTripsPanel = ({ savedTrips, currentTripId, onLoad, onNew, onDelete, onClose, onExport, onImport }) => {
+export const MyTripsPanel = ({ savedTrips, currentTripId, onLoad, onNew, onDelete, onClose, onExport, onImport, onLoadDemo }) => {
   const fmt = (iso) => new Date(iso).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
   return (
     <div className="trips-overlay">
@@ -91,6 +91,11 @@ export const MyTripsPanel = ({ savedTrips, currentTripId, onLoad, onNew, onDelet
             <Save size={14}/> Export
           </button>
         </div>
+        {onLoadDemo && (
+          <button className="new-trip-btn" style={{width:'100%',margin:'0 0 0.5rem',background:'rgba(250,204,21,0.08)',borderColor:'rgba(250,204,21,0.3)',color:'#facc15'}} onClick={onLoadDemo}>
+            🦙 Open the London demo trip
+          </button>
+        )}
         {savedTrips.length === 0 && (
           <p style={{ fontSize:'0.82rem', color:'var(--text-secondary)', margin:'1rem 0', lineHeight:1.5 }}>
             No saved trips yet. Start planning — your trips auto-save every few seconds.

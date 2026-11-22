@@ -1,6 +1,8 @@
 import L from 'leaflet';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
+import { Scale } from 'lucide-react';
+import { makeDemoTrip } from './demo/demoTrip';
 import { Accessibility, Activity, BookOpen, Bed, Brain, Bus, Camera, Car, Castle, Clock, Coffee, Compass, CreditCard, DollarSign, Download, Droplets, Globe, Info, Landmark, MapPin, MountainSnow, Package, Plane, Search, Ship, ShoppingBag, Sparkles, Tent, Train, TreePine, Utensils, Calendar as CalendarIcon, FileText, Layers, Satellite, Moon, Navigation, ClipboardList } from 'lucide-react';
 import { CATEGORY_ZOOM_PRIORITY, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS, OVERPASS_URL } from "./config";
 
@@ -354,7 +356,8 @@ export const filterMarkersAdaptive = (recs, zoom = 14, aiPlan = null, limitMulti
 export const loadTrips = () => {
   try {
     const raw = localStorage.getItem(TRIPS_KEY);
-    if (!raw) return [{ id: 'default', name: INITIAL_TRIP.title, data: INITIAL_TRIP }];
+    // First visit: open the London demo (knowledge, warnings and debates ready to try)
+    if (!raw) { const demo = makeDemoTrip(); return [{ id: 'demo-london', title: demo.title, data: demo }]; }
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) {
       return [{ id: 'default', name: INITIAL_TRIP.title, data: INITIAL_TRIP }];
@@ -451,10 +454,11 @@ export const PREFS_KEY = 'alpacamap_prefs_v2';
 
 export const TABS=[
   {id:'locations',  label:'Explore',    Icon:MapPin,       desc:'Find places on the map and save them to your trip'},
-  {id:'tripmind',   label:'Planner',    Icon:Sparkles,     desc:'Generate a day-by-day plan with a local AI model'},
+  {id:'tripmind',   label:'AI Planner', Icon:Sparkles,     desc:'Detailed day-by-day plans with an AI model in your browser or Ollama'},
   {id:'calendar',   label:'Itinerary',  Icon:CalendarIcon, desc:'Your days, stops and times'},
-  {id:'routespace', label:'TripSpace',  Icon:Compass,      desc:'Compare and build route options between places'},
+  {id:'routespace', label:'Routes',     Icon:Compass,      desc:'Slide between route “universes”: culture ↔ food, iconic ↔ hidden, calm ↔ lively'},
   {id:'knowledge',  label:'Knowledge',  Icon:Brain,        desc:'What guides and travellers say, and where they disagree'},
+  {id:'debates',    label:'Debates',    Icon:Scale,        desc:'Sources disagree? Swipe through disputed tips and decide'},
   {id:'analytics',  label:'Insights',   Icon:Activity,     desc:'Charts about your places and the collected knowledge'},
   {id:'analyze',    label:'Overview',   Icon:ClipboardList,desc:'Summary of saved places, budget and packing per city'},
   {id:'budget',     label:'Budget',     Icon:DollarSign,   desc:'Track expenses against your total'},

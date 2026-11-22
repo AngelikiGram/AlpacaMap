@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
 import { summarizeVerified } from '../../knowledge/contradictions';
 import { buildPlaceEvidence, findEvidence, LEVELS } from '../../knowledge/evidence';
+import { TruthLensLayer, TruthLensLegend, TimeLensLayer, TimeLensControl } from './Lenses.jsx';
+import { lensPoints, useTruthLens, useTimeLens } from './lensData';
+import { buildDebates, answeredKeys } from '../../knowledge/debates';
+import { Scale } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 
@@ -498,7 +502,7 @@ function SearchResultsPanel({ data, onSelect, onClose }) {
   );
 }
 
-export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds, triggerPlaceInfo, pendingPin, setPendingPin, mapCenter, setMapCenter, mapLayer, setMapLayer, onAddClickDestination, highlightedPlace, visibleCategories, setVisibleCategories, aiInterests, setAiInterests, aiPlan, aiActiveDay, aiDayDisplay, setAiDayDisplay, showNeighborhoods, setShowNeighborhoods, osmHardCap, setOsmHardCap, categoryDisplayLimit, setCategoryDisplayLimit, mapMarkerLimitFactor, setMapMarkerLimitFactor, poiQualityThreshold, setPoiQualityThreshold, searchRadius, setSearchRadius, recFilterText, infoOpen, previewPlaces, previewFlyTarget, routeSpaceRoute, showRouteOnMap, stopStabilityMap, activeTab, panelOpen, hasTimeline, knowledgeGraph }) => {
+export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds, triggerPlaceInfo, pendingPin, setPendingPin, mapCenter, setMapCenter, mapLayer, setMapLayer, onAddClickDestination, highlightedPlace, visibleCategories, setVisibleCategories, aiInterests, setAiInterests, aiPlan, aiActiveDay, aiDayDisplay, setAiDayDisplay, showNeighborhoods, setShowNeighborhoods, osmHardCap, setOsmHardCap, categoryDisplayLimit, setCategoryDisplayLimit, mapMarkerLimitFactor, setMapMarkerLimitFactor, poiQualityThreshold, setPoiQualityThreshold, searchRadius, setSearchRadius, recFilterText, infoOpen, previewPlaces, previewFlyTarget, routeSpaceRoute, showRouteOnMap, stopStabilityMap, activeTab, panelOpen, hasTimeline, knowledgeGraph, itinerary = [], onOpenDebates }) => {
   const [fetchedPaths, setFetchedPaths] = useState({});
   const [searchResults, setSearchResults] = useState(null); // { results: [...], query: '' } or null
   const [showLayerMenu, setShowLayerMenu] = useState(false);
@@ -521,6 +525,11 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
   const [nbrLoading, setNbrLoading] = useState(false);
   const [nbrCity, setNbrCity] = useState('');
   const [showKnowledgeOverlay, setShowKnowledgeOverlay] = useState(false);
+  // Lenses: 'truth' (where sources disagree) | 'time' (open / closed / busy at a time) | null
+  const [lensMode, setLensMode] = useState(null);
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const [lensDate, setLensDate] = useState(todayIso);
+  const [lensMinutes, setLensMinutes] = useState(() => Math.min(23 * 60, Math.max(6 * 60, Math.round((new Date().getHours() * 60 + new Date().getMinutes()) / 30) * 30)));
   const [geocacheLayers, setGeocacheLayers] = useState({ active: false, caches: [] });
   const [cityFlyToken, setCityFlyToken] = useState(0);
 
@@ -701,8 +710,24 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
   }, [showKnowledgeOverlay, knowledgeGraph?.nodes, resolvePlaceCoords]);
 
   // Pre-compute overlay panel stats — avoids 3 separate .filter() calls inside JSX on every render
-  const evidenceMap = useMemo(() => buildPlaceEvidence(knowledgeGraph?.nodes || [], knowledgeGraph?.verified), [knowledgeGraph?.nodes, knowledgeGraph?.verified]);
+  const evidenceMap = useMemo(() => buildPlaceEvidence(knowledgeGraph?.nodes || [], knowledgeGraph?.verified, { cityNames: (locations || []).map(l => l.name) }), [knowledgeGraph?.nodes, knowledgeGraph?.verified, locations]);
   const evidenceLevelFor = useCallback((name) => findEvidence(name, evidenceMap)?.level || null, [evidenceMap]);
+
+  // ── Lenses ──
+  const lensPts = useMemo(() => (lensMode ? lensPoints(locations, activeCity) : []), [lensMode, locations, activeCity]);
+  const truthItems = useTruthLens(lensPts, evidenceMap, lensMode === 'truth');
+  const topicDisputes = useMemo(() => (lensMode === 'truth' && knowledgeGraph?.nodes?.length
+    ? buildDebates(knowledgeGraph.nodes, knowledgeGraph.verified, { answered: answeredKeys(knowledgeGraph.verified) }).length : 0),
+  [lensMode, knowledgeGraph?.nodes, knowledgeGraph?.verified]);
+  const lensCityName = (activeCity?.name || '').split(',')[0];
+  const lensDates = useMemo(() => {
+    const fmt = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    const cityKey = lensCityName.toLowerCase();
+    const days = (itinerary || []).filter((d) => !cityKey || (d.location || '').toLowerCase().startsWith(cityKey)).map((d) => d.date).filter(Boolean);
+    return [...new Set([todayIso, ...days])].sort().map((d) => ({ value: d, label: d === todayIso ? `Today · ${fmt(d)}` : fmt(d) }));
+  }, [itinerary, lensCityName, todayIso]);
+  const timeLens = useTimeLens(lensPts, evidenceMap, { date: lensDate, minutes: lensMinutes, center: activeCity?.coords || null, enabled: lensMode === 'time' });
+  const pickLensPlace = useCallback((p) => triggerPlaceInfo?.({ id: p.id || `lens-${p.name}`, name: p.name, type: p.type || 'attraction', coords: p.coords, osmTags: p.osmTags }), [triggerPlaceInfo]);
 
   // City knowledge summary for the map overlay — restricted to the city in focus.
   const overlaySummary = useMemo(() => {
@@ -810,7 +835,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
   }, []);
 
   return (
-    <div className={`map-wrapper${infoOpen ? ' info-open' : ''}`}>
+    <div className={`map-wrapper${infoOpen ? ' info-open' : ''}${lensMode ? ` lens-${lensMode}` : ''}`}>
       {/* Floating map search bar */}
       <MapSearchBar onFlyTo={(t) => { setFlyTarget(t); setClickInfo(null); }} panelOpen={panelOpen} onSearchResults={(results, query) => setSearchResults({ results, query })} mapBounds={mapBounds} />
       {activeCity && (
@@ -1330,7 +1355,17 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
             </Marker>
           );
         })}
+        {lensMode === 'truth' && <TruthLensLayer items={truthItems} onPick={pickLensPlace} />}
+        {lensMode === 'time' && <TimeLensLayer items={timeLens.items} onPick={pickLensPlace} />}
       </MapContainer>
+
+      {lensMode === 'truth' && (
+        <TruthLensLegend items={truthItems} cityName={lensCityName} topicDisputes={topicDisputes} checked={!!knowledgeGraph?.verified}
+          onClose={() => setLensMode(null)} onOpenDebates={onOpenDebates} />
+      )}
+      {lensMode === 'time' && (
+        <TimeLensControl date={lensDate} setDate={setLensDate} minutes={lensMinutes} setMinutes={setLensMinutes} dates={lensDates} lens={timeLens} onClose={() => setLensMode(null)} />
+      )}
 
       {/* Search Results Sidebar Panel */}
       <SearchResultsPanel
@@ -1362,6 +1397,14 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
 
       {/* Map Controls */}
       <div className="map-layer-switcher">
+        <button className={`layer-toggle-btn lens-btn ${lensMode === 'truth' ? 'on' : ''}`} onClick={() => setLensMode((m) => (m === 'truth' ? null : 'truth'))}
+          title="Truth lens: colour the map by how much travel sources agree or disagree" aria-pressed={lensMode === 'truth'}>
+          <Scale size={15} /><span className="layer-toggle-label">Truth lens</span>
+        </button>
+        <button className={`layer-toggle-btn lens-btn ${lensMode === 'time' ? 'on' : ''}`} onClick={() => setLensMode((m) => (m === 'time' ? null : 'time'))}
+          title="Time lens: what is open, closed or busy at a chosen time" aria-pressed={lensMode === 'time'}>
+          <Clock size={15} /><span className="layer-toggle-label">Time</span>
+        </button>
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <button className="layer-toggle-btn" onClick={() => { setShowLayerMenu(v => !v); setShowPoiMenu(false); }} title="Switch map layer">
             <Layers size={15} /><span className="layer-toggle-label">{currentLayer.icon} {currentLayer.label}</span>

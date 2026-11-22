@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
 import EvidenceBadge from './EvidenceBadge';
 import { buildPlaceEvidence, findEvidence } from '../../knowledge/evidence';
+import { pickDisputePair, disputeHeadline, sourceLabel } from '../../knowledge/controversy';
+import { QUICK_REPORTS, quickReport, reportsFor } from '../../knowledge/travellerReports';
 import { createPortal } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 
@@ -52,15 +54,32 @@ export const cleanNameForMatching = (name) => {
     .trim();
 };
 
-export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToActiveRoute, knowledgeGraphNodes = [], knowledgeGraphVerified = null, allCityNames = [] }) => {
+export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToActiveRoute, knowledgeGraphNodes = [], knowledgeGraphVerified = null, allCityNames = [], onAddStatement, tripDates = [] }) => {
+  const [justReported, setJustReported] = useState(null);
+  useEffect(() => { setJustReported(null); }, [place?.name]);
   const cityNamesSet = useMemo(() => {
     return new Set(allCityNames.map(name => name.toLowerCase().trim()));
   }, [allCityNames]);
 
   const placeEvidence = useMemo(() => {
     if (!knowledgeGraphNodes?.length || !place?.name || place.isCity) return null;
-    return findEvidence(place.name, buildPlaceEvidence(knowledgeGraphNodes, knowledgeGraphVerified));
-  }, [knowledgeGraphNodes, knowledgeGraphVerified, place?.name, place?.isCity]);
+    return findEvidence(place.name, buildPlaceEvidence(knowledgeGraphNodes, knowledgeGraphVerified, { cityNames: allCityNames }));
+  }, [knowledgeGraphNodes, knowledgeGraphVerified, place?.name, place?.isCity, allCityNames]);
+
+  // The most telling disagreement about this place, shown up front
+  const dispute = useMemo(() => {
+    if (!placeEvidence) return null;
+    const pair = pickDisputePair(placeEvidence);
+    return pair ? { ...pair, headline: disputeHeadline(placeEvidence, pair) } : null;
+  }, [placeEvidence]);
+  const myReports = useMemo(() => reportsFor(knowledgeGraphNodes, place?.name), [knowledgeGraphNodes, place?.name]);
+  const report = (id) => {
+    // A report made during the trip uses today's date (season/weekday conditions); before the trip, the trip's first day
+    const today = new Date().toISOString().slice(0, 10);
+    const when = tripDates.length && tripDates.every((d) => d > today) ? new Date(`${[...tripDates].sort()[0]}T12:00:00`) : new Date();
+    const node = quickReport(id, place.name, allCityNames[0] || null, when);
+    if (node) { onAddStatement?.(node); setJustReported(id); }
+  };
 
   const kgInsights = useMemo(() => {
     if (!knowledgeGraphNodes || !place?.name) return [];
@@ -186,6 +205,29 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
             {placeEvidence && placeEvidence.level !== 'solid' && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.8rem', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
                 <EvidenceBadge evidence={placeEvidence} /> <span>{placeEvidence.statements} statements from {placeEvidence.sources.length} source{placeEvidence.sources.length === 1 ? '' : 's'}</span>
+              </div>
+            )}
+
+            {dispute && (
+              <div className={`iw-dispute ${dispute.verified ? 'verified' : ''}`}>
+                <div className="iw-dispute-head">⚖️ <b>{dispute.headline}</b><span>{dispute.verified ? 'checked by the in-browser model' : 'tone differs — not yet checked'}</span></div>
+                <div className="iw-side pos">“{dispute.a}” <cite>— {sourceLabel(dispute.aSource)}</cite></div>
+                <div className="iw-side neg">“{dispute.b}” <cite>— {sourceLabel(dispute.bSource)}</cite></div>
+                {dispute.condition && <div className="iw-cond">→ {dispute.condition}</div>}
+              </div>
+            )}
+
+            {onAddStatement && !place.isCity && (
+              <div className="iw-report">
+                <div className="iw-report-q">Been here? Tell the alpaca 🦙 <span>your answer becomes a source (reliability 1.0)</span></div>
+                <div className="iw-report-btns">
+                  {QUICK_REPORTS.map((r) => (
+                    <button key={r.id} type="button" className={justReported === r.id ? 'on' : ''} onClick={() => report(r.id)}>{r.emoji} {r.label}</button>
+                  ))}
+                </div>
+                {(justReported || myReports.length > 0) && (
+                  <div className="iw-report-done">✓ {myReports.length || 1} report{(myReports.length || 1) > 1 ? 's' : ''} from you — counted in the Truth lens and evidence badges.</div>
+                )}
               </div>
             )}
 

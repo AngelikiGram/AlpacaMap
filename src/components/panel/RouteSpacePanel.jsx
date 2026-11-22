@@ -4,6 +4,8 @@ import { Sparkles, Compass, MapPin, SlidersHorizontal, Route, Info, Layers, Sear
 import { getDistanceKm, scorePlaceQuality, getTypeDetails } from '../../utils';
 import { ENTITY_PROFILES, PACKING_TEMPLATES, INTEREST_CATEGORIES } from '../../config';
 import { searchNominatim } from '../../api';
+import { buildPlaceEvidence } from '../../knowledge/evidence';
+import { strictEvidence } from '../../knowledge/controversy';
 
 // Cluster colors: avoids blue/green/purple (radar) and food-amber/beaches-cyan/shopping-pink (type legend)
 const CLUSTER_PALETTE = ['#e879f9', '#facc15', '#2dd4bf', '#f43f5e', '#a3e635'];
@@ -332,6 +334,7 @@ export function RouteSpacePanel({
   onSwitchToCalendar,
   showRouteOnMap = true,
   setShowRouteOnMap,
+  onOpenTab,
 }) {
   const [themeText, setThemeText] = useState(() => localStorage.getItem('routespace_theme') || 'Compact loops, local cafes, and scenic views');
   const [categoryReqs, setCategoryReqs] = useState(() => JSON.parse(localStorage.getItem('routespace_cat_reqs')) || {});
@@ -411,6 +414,19 @@ export function RouteSpacePanel({
   const [pendingMutation, setPendingMutation] = useState(null);
   const [navSliders, setNavSliders] = useState({ local: 50, compact: 50, theme: 50, social: 50 });
   const [typeSliders, setTypeSliders] = useState({ museums: 50, food: 50, parks: 50, shopping: 50 });
+  // Multiverse: calm ↔ lively (null = ignore). Uses what sources say about crowds at each stop.
+  const [vibe, setVibe] = useState(null);
+  const crowdIndex = useMemo(() => buildPlaceEvidence(tripData?.knowledgeGraph?.nodes || [], tripData?.knowledgeGraph?.verified, { cityNames: (tripData?.locations || []).map(l => l.name) }), [tripData?.knowledgeGraph, tripData?.locations]);
+  const crowdCache = useRef(new Map());
+  useEffect(() => { crowdCache.current = new Map(); }, [crowdIndex]);
+  const isCrowded = useCallback((name) => {
+    if (!name || !crowdIndex.size) return false;
+    if (crowdCache.current.has(name)) return crowdCache.current.get(name);
+    const e = strictEvidence(name, crowdIndex);
+    const v = !!e && (e.statementsList || []).some(n => /\b(crowd(s|ed)?|busy|packed|queues?|touristy|heaving)\b/i.test(n.claim || '') && n.evaluation?.sentiment !== 'positive');
+    crowdCache.current.set(name, v);
+    return v;
+  }, [crowdIndex]);
   const [spatialFilter, setSpatialFilter] = useState([]);
   const [selectedRouteA, setSelectedRouteA] = useState(null);
   const [selectedRouteB, setSelectedRouteB] = useState(null);
@@ -833,11 +849,15 @@ export function RouteSpacePanel({
           + Math.abs(foodScore    - typeSliders.food)
           + Math.abs(parksScore   - typeSliders.parks)
           + Math.abs(shopScore    - typeSliders.shopping);
-        return { ...c, _sliderDist: dist };
+        // Lively = food/social stops + places sources call crowded; calm = the opposite
+        const crowded = (c.stops || []).filter(st => isCrowded(st.name)).length / n;
+        const lively = Math.min(100, socialScore * 0.5 + crowded * 100 * 0.7 + (100 - compactScore) * 0.1);
+        const vibeDist = vibe == null ? 0 : Math.abs(lively - vibe) * 1.5;
+        return { ...c, _sliderDist: dist + vibeDist, _lively: Math.round(lively) };
       })
       .sort((a, b) => a._sliderDist - b._sliderDist)
       .slice(0, 5);
-  }, [clusteredCandidates, navSliders, typeSliders, spatialFilter, pointInPolygon]);
+  }, [clusteredCandidates, navSliders, typeSliders, spatialFilter, pointInPolygon, vibe, isCrowded]);
 
   const sliderMatchIds = useMemo(() => new Set(sliderTopMatches.map(m => m.id)), [sliderTopMatches]);
 
@@ -1696,8 +1716,9 @@ export function RouteSpacePanel({
         <HelpCircle size={32} style={{ color: 'var(--accent-primary)', marginBottom: '1rem', opacity: 0.8 }} />
         <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No Destination Loaded</h4>
         <p style={{ fontSize: '0.8rem', lineHeight: 1.6, maxWidth: '280px', margin: '0 auto' }}>
-          Please go to the <strong>Explore</strong> tab, search for a city (e.g. Edinburgh, Paris), and load its recommendations first to populate the route explorer pool.
+          Routes are built from the places of a city. Open <strong>Explore</strong>, pick a city in your trip and let it load its places — then come back here.
         </p>
+        {onOpenTab && <button className="btn-primary" style={{ marginTop: '1rem' }} onClick={() => onOpenTab('locations')}>Open Explore</button>}
       </div>
     );
   }
@@ -1708,7 +1729,7 @@ export function RouteSpacePanel({
       {/* Header */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
         <div style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'0.88rem', fontWeight:'700', color:'var(--text-primary)' }}>
-          <Compass size={15} className="spin" style={{ color:'var(--accent-primary)' }}/> TripSpace
+          <Compass size={15} className="spin" style={{ color:'var(--accent-primary)' }}/> Route Multiverse
           {candidates.length > 0 && <span style={{ fontSize:'0.65rem', color:'var(--text-secondary)', fontWeight:'400', marginLeft:'4px' }}>{candidates.length} routes · {clusters.length} clusters</span>}
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:'5px' }}>
@@ -1725,6 +1746,44 @@ export function RouteSpacePanel({
           Generate routes → dots appear in the map below, grouped by experience type. <strong style={{color:'var(--text-primary)'}}>Click two dots</strong> to set A and B. Drag the <strong style={{color:'#c084fc'}}>morph slider</strong> to blend between them. The colored rhythm strip shows the day's stop sequence — each color = a place type.
         </div>
       )}
+
+      {/* Multiverse — three big sliders that reshape the route on the map live */}
+      {candidates.length > 0 && (() => {
+        const best = sliderTopMatches[0];
+        const cultureFood = Math.round((typeSliders.food + (100 - typeSliders.museums)) / 2);
+        const universes = [
+          { key: 'cf', left: '🏛️ Culture', right: 'Food 🍜', value: cultureFood, set: v => setTypeSliders(prev => ({ ...prev, museums: 100 - v, food: v })) },
+          { key: 'ih', left: '📸 Iconic', right: 'Hidden 🗝️', value: navSliders.local, set: v => setNavSliders(prev => ({ ...prev, local: v })) },
+          { key: 'cl', left: '🌿 Calm', right: 'Lively 🎉', value: vibe ?? 50, set: v => setVibe(v) },
+        ];
+        const anchors = (stabilityGroups?.anchors || []).slice(0, 5);
+        return (
+          <div className="multiverse">
+            <div className="multiverse-head">
+              <span>🌌 Route multiverse</span>
+              <button type="button" onClick={() => { const r = () => Math.round(Math.random() * 100); setTypeSliders(prev => { const v = r(); return { ...prev, museums: 100 - v, food: v }; }); setNavSliders(prev => ({ ...prev, local: r() })); setVibe(r()); }}>🎲 Surprise me</button>
+            </div>
+            {universes.map(u => (
+              <label key={u.key} className="multiverse-row">
+                <span>{u.left}</span>
+                <input type="range" min="0" max="100" value={u.value} onChange={e => u.set(Number(e.target.value))} aria-label={`${u.left} to ${u.right}`} />
+                <span>{u.right}</span>
+              </label>
+            ))}
+            {best && (
+              <div className="multiverse-now">
+                In this universe: <b>{best.name}</b> · {best.stopCount} stops · {best.totalDistance?.toFixed?.(1)} km{best._lively != null ? ` · ${best._lively > 60 ? 'lively' : best._lively < 35 ? 'calm' : 'balanced'}` : ''}
+              </div>
+            )}
+            {anchors.length > 0 && (
+              <div className="multiverse-anchors">
+                <span>Survives every universe:</span>
+                {anchors.map(a => <em key={a.name}>{a.name}</em>)}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Route Recipe — unified generation card */}
       <div style={{ background:'linear-gradient(160deg,rgba(139,92,246,0.08),rgba(59,130,246,0.05))', border:'1px solid rgba(139,92,246,0.3)', borderRadius:'14px', padding:'14px', display:'flex', flexDirection:'column', gap:'10px', marginBottom:'16px' }}>
@@ -2649,7 +2708,7 @@ export function RouteSpacePanel({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #f1f5f9', paddingBottom: '12px', marginBottom: '16px', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Compass size={22} style={{ color: '#6366f1' }}/>
-              <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>TripSpace Explorer</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>Route Multiverse</span>
               <span style={{ fontSize: '0.75rem', background: '#e0e7ff', color: '#4338ca', padding: '3px 8px', borderRadius: '12px', fontWeight: '600' }}>
                 {candidates.length} routes · {clusters.length} clusters
               </span>
