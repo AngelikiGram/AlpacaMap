@@ -30,6 +30,7 @@ import { PackingPanel } from "./components/panel/PackingPanel";
 import { NotesPanel } from "./components/panel/NotesPanel";
 import { DocumentsPanel } from "./components/panel/DocumentsPanel";
 import { CoherencePanel } from "./components/panel/CoherencePanel";
+import { loadKG as idbLoadKG, saveKG as idbSaveKG, stripKG } from "./storage/kgStore";
 import { RouteSpacePanel } from "./components/panel/RouteSpacePanel.jsx";
 import { MenuPanel } from "./components/panel/MenuPanel.jsx";
 const KnowledgePanel = lazy(() => import('./components/panel/KnowledgePanel.jsx'));
@@ -183,20 +184,49 @@ export default function App(){
   const[previewFlyTarget,     setPreviewFlyTarget]     = useState(null);
   const[panelOpen,            setPanelOpen]            = useState(true);
   const lastCityId      = useRef(null);
+  const kgHydratedFor   = useRef(null);   // trip id whose knowledge graph has been loaded from IndexedDB
+  const[storageError,    setStorageError]    =useState(null);
   const autoSaveTimer   = useRef(null);
   const poiSearchTrigger = useRef(null);
 
-  // Auto-save trip to localStorage (debounced 1.5s)
+  // Load this trip's knowledge graph from IndexedDB (statements are kept out of localStorage)
+  useEffect(()=>{
+    let cancelled=false;
+    kgHydratedFor.current=null;
+    idbLoadKG(currentTripId).then(kg=>{
+      if(cancelled)return;
+      if(kg?.nodes?.length){
+        // Keep statements already in memory (e.g. an older trip saved before this change)
+        setTripData(prev=>prev.knowledgeGraph?.nodes?.length?prev:{...prev,knowledgeGraph:kg});
+      }
+      kgHydratedFor.current=currentTripId;
+    });
+    return()=>{cancelled=true;};
+  },[currentTripId]);
+
+  // Auto-save trip (debounced 1.5s): trip → localStorage, knowledge graph → IndexedDB
   useEffect(()=>{
     clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current=setTimeout(()=>{
-      const trips=loadTrips();
-      const idx=trips.findIndex(t=>t.id===currentTripId);
-      const entry={id:currentTripId,title:tripData.title,lastModified:new Date().toISOString(),data:tripData};
-      if(idx>=0)trips[idx]=entry; else trips.unshift(entry);
-      saveTrips(trips);
-      setSavedTrips([...trips]);
-      setSavedAt(new Date());
+    autoSaveTimer.current=setTimeout(async()=>{
+      const hydrated=kgHydratedFor.current===currentTripId;
+      let kgInIdb=false;
+      if(hydrated){
+        try{ await idbSaveKG(currentTripId,tripData.knowledgeGraph||{nodes:[],edges:[],lastUpdated:null}); kgInIdb=true; }
+        catch(e){ console.warn('IndexedDB unavailable, keeping knowledge in localStorage:',e); }
+      }
+      try{
+        const trips=loadTrips();
+        const idx=trips.findIndex(t=>t.id===currentTripId);
+        const entry={id:currentTripId,title:tripData.title,lastModified:new Date().toISOString(),data:kgInIdb?stripKG(tripData):tripData};
+        if(idx>=0)trips[idx]=entry; else trips.unshift(entry);
+        saveTrips(trips);
+        setSavedTrips([...trips]);
+        setSavedAt(new Date());
+        setStorageError(null);
+      }catch(e){
+        console.error('Saving failed:',e);
+        setStorageError(e?.name==='QuotaExceededError'?'Browser storage is full — export your trip to keep it.':'Could not save — export your trip to keep it.');
+      }
     },1500);
     return()=>clearTimeout(autoSaveTimer.current);
   },[tripData,currentTripId]);
@@ -499,7 +529,9 @@ export default function App(){
             </div>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:'0.4rem',flexShrink:0}}>
-            {savedAt&&<span className="saved-badge" title="All changes saved in this browser"><Check size={12}/></span>}
+            {storageError
+              ? <span className="saved-badge" role="alert" title={storageError} style={{background:'rgba(239,68,68,0.15)',color:'#fca5a5',borderColor:'rgba(239,68,68,0.4)'}}>⚠ Not saved</span>
+              : savedAt&&<span className="saved-badge" title="All changes saved in this browser"><Check size={12}/></span>}
             <button className="btn-icon" title="My trips" aria-label="My trips" onClick={()=>setShowTripsPanel(true)} style={{padding:'0.35rem'}}>
               <FolderOpen size={15}/>
             </button>

@@ -6,6 +6,9 @@ import ExtractionProgress from './ExtractionProgress';
 import KnowledgeRadarView from './KnowledgeRadarView';
 import nlpData from '../../data/nlp_data.json';
 import { API, HAS_DEV_PROXY, assetUrl } from '../../endpoints';
+import { classifyTopic } from '../../knowledge/topics';
+import { isUsefulClaim, isJunkPlace, excerpt } from '../../knowledge/quality';
+import SourcesCredits from '../shared/SourcesCredits';
 
 // ── Credibility model ──────────────────────────────────────────────────────────
 // Returns { score, low, high } — the CI widens when fewer corroborating sources exist
@@ -269,8 +272,9 @@ nlpData.trainingData.forEach(item => mlClassifier.train(item.text, item.class));
 
 // Assigns a semantic category title from claim content using Naive Bayes classifier
 function assignSemanticCategory(claim, cityBase) {
-  const cat = mlClassifier.classify(claim);
-  return `${cityBase} · ${cat}`;
+  // Keyword rules (src/knowledge/topics.js) instead of the naive Bayes model, which always
+  // picked some topic even when nothing in the sentence matched.
+  return `${cityBase} · ${classifyTopic(claim)}`;
 }
 
 // Returns true when a node's place is a real named location (not a semantic topic category)
@@ -541,6 +545,8 @@ function extractKnowledgeNLP(text, city, placeNames = [], sourceType, sourceLabe
       const minLength = currentSourceType === 'reddit' ? 15 : 25;
       const maxLength = currentSourceType === 'reddit' ? 350 : 250;
       if (trimmed.length < minLength || trimmed.length > maxLength) return;
+      // Drop non-English text, website boilerplate and questions (src/knowledge/quality.js)
+      if (!isUsefulClaim(trimmed)) return;
 
       let foundPlace = null;
 
@@ -592,7 +598,7 @@ function extractKnowledgeNLP(text, city, placeNames = [], sourceType, sourceLabe
         }
       }
 
-      if (!foundPlace) return;
+      if (!foundPlace || isJunkPlace(foundPlace)) return;
 
       // Relax action-verb matching for Reddit because comments are casual
       const hasTipAction = currentSourceType === 'reddit' || /should|must|avoid|recommend|book|ticket|price|fee|hour|time|scam|trap|crowd|watch|keep|always|never|free|visit|see|go|walk|travel|trip|station|line|great|good|best|love|amazing|wonderful|nice|fantastic|awesome|beautiful|perfect|delicious|tasty|worth|favorite|favourite|bad|worst|terrible|awful|expensive|overpriced|cheap|buy|eat|drink/i.test(trimmed);
@@ -632,7 +638,8 @@ function extractKnowledgeNLP(text, city, placeNames = [], sourceType, sourceLabe
         id: `kg-${Date.now()}-${currentSourceType}-${nodeCount++}-${Math.random().toString(36).slice(2, 6)}`,
         place: foundPlace,
         city: city,
-        claim: trimmed,
+        // Reddit: keep only a short excerpt (the full post stays on Reddit, linked via url)
+        claim: currentSourceType === 'reddit' ? excerpt(trimmed, 280) : trimmed,
         claimType,
         knowledge_type,
         conditions,
@@ -640,10 +647,12 @@ function extractKnowledgeNLP(text, city, placeNames = [], sourceType, sourceLabe
         nextPlace: null,
         evaluation: { sentiment, intensity },
         source: {
-          snippet: trimmed,
           sourceType: currentSourceType,
           sourceLabel: currentSourceLabel,
           date: currentDate,
+          // Publication date when the source header carries one (Reddit/StackExchange posts), else unknown
+          publishedAt: currentDate !== date ? currentDate : null,
+          retrievedAt: date,
           url: currentUrl
         },
         extractedAt: new Date().toISOString()
@@ -2646,20 +2655,12 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           {/* ── OFFLINE PREPROCESSED KNOWLEDGE GRAPH SECTION ── */}
           {(() => {
             const cleanTarget = (fetchCity || cityHint || '').toLowerCase().replace(/^(greater|inner|outer)\s+/i, '').replace(/\s+(region|city|greater|area)$/i, '').trim();
+            // Only cities with real bundled data (the other files in public/preprocessed are empty)
             const PREPROCESSED_MAP = {
-              'amsterdam': 'amsterdam',
-              'barcelona': 'barcelona',
               'edinburgh': 'edinburgh',
-              'kyoto': 'kyoto',
               'london': 'london',
-              'new york': 'new_york',
-              'new york city': 'new_york',
-              'nyc': 'new_york',
               'paris': 'paris',
-              'prague': 'prague',
               'rome': 'rome',
-              'sydney': 'sydney',
-              'tokyo': 'tokyo',
               'zurich': 'zurich',
               'zürich': 'zurich'
             };
@@ -3486,6 +3487,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
         </div>
       )}
 
+      <SourcesCredits />
     </div>
   );
 }

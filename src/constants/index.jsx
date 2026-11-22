@@ -10,30 +10,30 @@ export const MAP_LAYERS = [
   {
     id: 'streets', icon: <MapPin size={14}/>, label: 'Streets (OSM)', desc: 'Detailed OSM map with places & roads',
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attr: '© OpenStreetMap', maxNative: 19, subdomains: 'abc',
+    attr: '© OpenStreetMap contributors', maxNative: 19, subdomains: 'abc',
   },
   {
     id: 'clean', icon: <Layers size={14}/>, label: 'Clean', desc: 'Clean light map (Esri)',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
     labelsUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-    attr: '© Esri', maxNative: 16, labelsMaxNative: 16, subdomains: '',
+    attr: 'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors', maxNative: 16, labelsMaxNative: 16, subdomains: '',
   },
   {
     id: 'satellite', icon: <Satellite size={14}/>, label: 'Satellite', desc: 'Aerial imagery with place labels',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     labelsUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-    attr: '© Esri', maxNative: 17, subdomains: '',
+    attr: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community', maxNative: 17, subdomains: '',
   },
   {
     id: 'terrain', icon: <MountainSnow size={14}/>, label: 'Terrain', desc: 'Topographic map — trails, elevation',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-    attr: '© Esri', maxNative: 19, subdomains: '',
+    attr: 'Tiles © Esri — Esri, HERE, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors', maxNative: 19, subdomains: '',
   },
   {
     id: 'dark', icon: <Moon size={14}/>, label: 'Dark', desc: 'Dark mode — great for night planning',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
     labelsUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-    attr: '© Esri', maxNative: 16, labelsMaxNative: 16, subdomains: '',
+    attr: 'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors', maxNative: 16, labelsMaxNative: 16, subdomains: '',
   },
   {
     id: 'osm', icon: <TreePine size={14}/>, label: 'Outdoors', desc: 'Full OSM detail — trails, parks, POIs',

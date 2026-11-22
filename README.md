@@ -1,8 +1,14 @@
 # TravelScout
 
-An interactive, privacy-first travel planning app that runs entirely in your browser. It builds trips on top of OpenStreetMap data, surfacing conflicts and credibility differences across sources.
+An interactive travel planning app that runs in your browser. It builds trips on top of OpenStreetMap data and surfaces where travel sources agree and disagree.
 
-`TravelScout` relies on local models and on-device processing to ensure your data stays private.
+## What stays on your device — and what does not
+
+- **Stays in your browser:** your trips, itinerary, budget, notes and the collected knowledge (localStorage + IndexedDB). There is no TravelScout server and no account.
+- **AI processing:** runs locally — either in the browser or through [Ollama](https://ollama.com/) on your own computer. Your plans are never sent to a cloud AI service.
+- **Sent to third-party services:** looking things up necessarily sends the *place names and map areas* you search for to the services that answer them — OpenStreetMap (Nominatim, Overpass), Wikipedia/Wikivoyage/Wikidata, StackExchange, PullPush (Reddit archive), Open-Meteo (weather), OSRM (routing) and Esri (map tiles). These requests contain no personal data beyond what any browser sends.
+
+Data sources and licenses: see [DATA_LICENSES.md](DATA_LICENSES.md).
 
 ## Quick Start
 
