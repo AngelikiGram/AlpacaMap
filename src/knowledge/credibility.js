@@ -22,13 +22,27 @@ export function freshness(node, now = Date.now()) {
   return Math.pow(0.5, age / halfLife);
 }
 
+const STOP = new Set('the a an and or but of to in on at for with from by is are was were be been it its this that these those you your we our they their there here not no do does did can will would should could have has had as if so than then just very also more most only about into out up over after before when where which who what how all any some get got one really'.split(' '));
+const words = (t) => new Set(((t || '').toLowerCase().match(/[a-zà-ÿ]{3,}/g) || []).filter((w) => !STOP.has(w)));
+
+/** True when two statements share more than 60 % of their content words. */
+export function isNearCopy(a, b, threshold = 0.6) {
+  const A = words(a), B = words(b);
+  if (!A.size || !B.size) return false;
+  let shared = 0; for (const w of A) if (B.has(w)) shared++;
+  return shared / (A.size + B.size - shared) > threshold;
+}
+
 /** { score, low, high } — the interval narrows with more independent evidence. */
 export function credibility(node, samePlaceNodes = [], now = Date.now()) {
   const src = node?.source?.sourceType || 'other';
   const reliability = SOURCE_RELIABILITY[src] ?? SOURCE_RELIABILITY.other;
   const sentiment = node?.evaluation?.sentiment;
+  // A near-copy of this statement in another source (e.g. Wikitravel repeating Wikivoyage) is the
+  // same evidence twice, not independent corroboration — same test as the pairing step (Jaccard > 0.6).
   const otherSources = new Set(samePlaceNodes
     .filter((n) => n !== node && n.source?.sourceType && n.source.sourceType !== src && n.evaluation?.sentiment === sentiment)
+    .filter((n) => !isNearCopy(node.claim, n.claim))
     .map((n) => n.source.sourceType));
   const corroboration = Math.min(0.2, otherSources.size * 0.07);
   const score = Math.min(1, reliability * freshness(node, now) + corroboration);

@@ -4,7 +4,10 @@ import { buildPlaceEvidence, findEvidence, LEVELS } from '../../knowledge/eviden
 import { TruthLensLayer, TruthLensLegend, TimeLensLayer, TimeLensControl } from './Lenses.jsx';
 import { lensPoints, useTruthLens, useTimeLens } from './lensData';
 import { buildDebates, answeredKeys } from '../../knowledge/debates';
-import { Scale } from 'lucide-react';
+import { buildTopicLens } from '../../knowledge/controversy';
+import { loadBundledOsm, osmSlugFor } from '../../knowledge/bundled';
+import { Scale, Sun } from 'lucide-react';
+import { getTheme, setTheme } from '../../theme.js';
 import { createPortal } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 
@@ -124,6 +127,23 @@ const cleanNameForMatching = (name) => {
 
 
 
+// Light / dark appearance switch (see src/theme.js)
+function ThemeToggle() {
+  const [theme, setThemeState] = useState(getTheme);
+  useEffect(() => {
+    const on = (e) => setThemeState(e.detail);
+    window.addEventListener('alpacamap-theme', on);
+    return () => window.removeEventListener('alpacamap-theme', on);
+  }, []);
+  const light = theme === 'light';
+  return (
+    <button className="layer-toggle-btn" onClick={() => setTheme(light ? 'dark' : 'light')}
+      title={light ? 'Switch to dark appearance' : 'Switch to light appearance'} aria-pressed={light}>
+      {light ? <Moon size={15} /> : <Sun size={15} />}
+      <span className="layer-toggle-label">{light ? 'Dark' : 'Light'}</span>
+    </button>
+  );
+}
 
 function MapControls({ infoOpen, hasTimeline }) {
   const map = useMap();
@@ -247,6 +267,20 @@ function PolygonDrawer({ isDrawing, setIsDrawing, polygon, setPolygon }) {
       )}
     </>
   );
+}
+
+// Flies to the place of the Debates card that is currently open (once per card)
+function DebateFocusFlyer({ coords }) {
+  const map = useMap();
+  const prev = useRef(null);
+  useEffect(() => {
+    if (!Array.isArray(coords)) return;
+    const key = coords.join(',');
+    if (prev.current === key) return;
+    prev.current = key;
+    map.flyTo(coords, Math.max(map.getZoom(), 15), { duration: 0.8 });
+  }, [coords, map]);
+  return null;
 }
 
 function HighlightTracker({ highlightedPlace }) {
@@ -720,6 +754,42 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
     ? buildDebates(knowledgeGraph.nodes, knowledgeGraph.verified, { answered: answeredKeys(knowledgeGraph.verified) }).length : 0),
   [lensMode, knowledgeGraph?.nodes, knowledgeGraph?.verified]);
   const lensCityName = (activeCity?.name || '').split(',')[0];
+  // City-wide topics ("London · Climate") have no position; the lens panel lists them
+  const topicItems = useMemo(() => (lensMode === 'truth' ? buildTopicLens(evidenceMap, lensCityName) : []), [lensMode, evidenceMap, lensCityName]);
+  // The Debates card currently open (DebatesPanel → 'alpacamap-debate-focus')
+  const [debateFocus, setDebateFocus] = useState(null);
+  useEffect(() => {
+    const on = (e) => {
+      setDebateFocus(e.detail);
+      if (e.detail) setLensMode((m) => m || 'truth');   // debates are about disagreement: show the Truth lens
+    };
+    window.addEventListener('alpacamap-debate-focus', on);
+    return () => window.removeEventListener('alpacamap-debate-focus', on);
+  }, []);
+  const localFocus = useMemo(() => {
+    if (!debateFocus?.onMap) return null;
+    const key = String(debateFocus.place).toLowerCase();
+    return truthItems.find((p) => p.name.toLowerCase() === key)
+      || lensPts.find((p) => (p.name || '').toLowerCase() === key && Array.isArray(p.coords)) || null;
+  }, [debateFocus, truthItems, lensPts]);
+  // Places that are not in the trip: look them up in the city's bundled OpenStreetMap extract
+  const [osmFocus, setOsmFocus] = useState(null);
+  useEffect(() => {
+    setOsmFocus(null);
+    if (!debateFocus?.onMap || localFocus) return;
+    const name = String(debateFocus.place);
+    const key = name.toLowerCase();
+    let alive = true;
+    loadBundledOsm(osmSlugFor(activeCity?.name)).then((els) => {
+      if (!alive) return;
+      const pos = (e) => (e.lat != null ? [e.lat, e.lon] : e.center ? [e.center.lat, e.center.lon] : null);
+      const hit = els.find((e) => (e.tags?.name || '').toLowerCase() === key && pos(e))
+        || els.find((e) => Object.entries(e.tags || {}).some(([k, v]) => /name/.test(k) && String(v).toLowerCase() === key) && pos(e));
+      if (hit) setOsmFocus({ name, coords: pos(hit) });
+    });
+    return () => { alive = false; };
+  }, [debateFocus, localFocus, activeCity?.name]);
+  const focusItem = localFocus || osmFocus;
   const lensDates = useMemo(() => {
     const fmt = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
     const cityKey = lensCityName.toLowerCase();
@@ -1355,12 +1425,14 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
             </Marker>
           );
         })}
-        {lensMode === 'truth' && <TruthLensLayer items={truthItems} onPick={pickLensPlace} />}
+        {lensMode === 'truth' && <TruthLensLayer items={truthItems} onPick={pickLensPlace} focus={focusItem} />}
+        {focusItem && <DebateFocusFlyer coords={focusItem.coords} />}
         {lensMode === 'time' && <TimeLensLayer items={timeLens.items} onPick={pickLensPlace} />}
       </MapContainer>
 
       {lensMode === 'truth' && (
-        <TruthLensLegend items={truthItems} cityName={lensCityName} topicDisputes={topicDisputes} checked={!!knowledgeGraph?.verified}
+        <TruthLensLegend items={truthItems} topics={topicItems} focusTopic={debateFocus && !debateFocus.onMap ? debateFocus.place : null}
+          cityName={lensCityName} topicDisputes={topicDisputes} checked={!!knowledgeGraph?.verified}
           onClose={() => setLensMode(null)} onOpenDebates={onOpenDebates} />
       )}
       {lensMode === 'time' && (
@@ -1405,6 +1477,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
           title="Time lens: what is open, closed or busy at a chosen time" aria-pressed={lensMode === 'time'}>
           <Clock size={15} /><span className="layer-toggle-label">Time</span>
         </button>
+        <ThemeToggle />
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <button className="layer-toggle-btn" onClick={() => { setShowLayerMenu(v => !v); setShowPoiMenu(false); }} title="Switch map layer">
             <Layers size={15} /><span className="layer-toggle-label">{currentLayer.icon} {currentLayer.label}</span>

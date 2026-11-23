@@ -206,8 +206,8 @@ function ClaimCard({ claim, onClose, onNavigate }) {
           <span style={{ fontWeight: '700', fontSize: '0.62rem', color: (claim.credibility || 0.5) > 0.7 ? '#34d399' : '#fbbf24' }}>{Math.round((claim.credibility || 0.5) * 100)}%</span>
         </div>
       </div>
-      {claim.advice && <div style={{ background: 'rgba(251,191,36,0.07)', borderLeft: '3px solid #fbbf24', padding: '5px 9px', borderRadius: '0 7px 7px 0', fontSize: '0.66rem', color: '#fef08a', lineHeight: 1.35 }}>💡 {claim.advice}</div>}
-      {claim.source?.snippet && <div style={{ fontSize: '0.63rem', color: '#94a3b8', fontStyle: 'italic', lineHeight: 1.35, background: 'rgba(255,255,255,0.02)', padding: '5px 8px', borderRadius: '6px', borderLeft: '2px solid rgba(255,255,255,0.07)' }}>"{claim.source.snippet}"</div>}
+      {claim.advice && <div style={{ background: 'rgba(251,191,36,0.07)', padding: '5px 9px', borderRadius: '7px', fontSize: '0.66rem', color: '#fef08a', lineHeight: 1.35 }}>💡 {claim.advice}</div>}
+      {claim.source?.snippet && <div style={{ fontSize: '0.63rem', color: '#94a3b8', fontStyle: 'italic', lineHeight: 1.35, background: 'rgba(255,255,255,0.02)', padding: '5px 8px', borderRadius: '6px' }}>"{claim.source.snippet}"</div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', color: '#64748b', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '5px' }}>
         <span>Source: {claim.source?.sourceLabel || claim.source?.sourceType || 'unknown'}</span>
         {claim.source?.url && <a href={claim.source.url} target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '2px' }}>Source <ExternalLink size={9}/></a>}

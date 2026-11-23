@@ -205,6 +205,29 @@
   background: rgba(10, 16, 36, 0.97);
 }
 .layer-toggle-label { white-space: nowrap; }
+
+/* Compact map toolbar: one slim column of icon buttons (labels become tooltips),
+   menus and the lens legend open to the left so the map stays visible. */
+.map-layer-switcher {
+  gap: 2px;
+  padding: 4px;
+  align-items: stretch;
+  background: rgba(8, 12, 26, 0.9);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+}
+.map-layer-switcher .layer-toggle-btn {
+  width: 36px; height: 36px; padding: 0; justify-content: center;
+  background: transparent; border: 1px solid transparent; border-radius: 10px;
+  box-shadow: none; backdrop-filter: none;
+}
+.map-layer-switcher .layer-toggle-btn:hover { background: rgba(255,255,255,0.07); border-color: transparent; }
+.map-layer-switcher .layer-toggle-label,
+.map-layer-switcher .lucide-chevron-down { display: none; }
+.map-layer-switcher > div { align-items: stretch !important; }
+.map-layer-switcher .layer-menu { top: 0 !important; right: calc(100% + 10px) !important; }
 .layer-menu {
   background: rgba(8, 12, 26, 0.97);
   border: 1px solid rgba(255,255,255,0.10);
@@ -437,7 +460,7 @@
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(0,0,0,0.3);
 }
-.city-card-bar { width: 3px; border-radius: 3px; align-self: stretch; flex-shrink: 0; min-height: 36px; }
+.city-card-bar { display: none; } /* left accent bars removed */
 
 /* ── Place Cards ─────────────────────────────────────────────────────────────── */
 .place-card {
@@ -574,7 +597,7 @@
   background: rgba(0,0,0,0.1);
   gap: 0.5rem;
 }
-.cal-day-bar { width: 3px; height: 34px; border-radius: 3px; flex-shrink: 0; }
+.cal-day-bar { display: none; } /* left accent bars removed */
 .cal-day-body { padding: 0.5rem 0.85rem 0.65rem; }
 .time-block {
   display: flex;

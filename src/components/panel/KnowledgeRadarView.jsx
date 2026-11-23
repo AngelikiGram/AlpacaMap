@@ -290,7 +290,6 @@ function RadarModal({ radarData, stats, maxCount, nodes, onClose }) {
             background: '#fff', borderRadius: '18px', padding: '32px 30px', width: '420px',
             height: '100%', overflowY: 'auto', fontFamily: 'Inter,sans-serif',
             boxShadow: '0 24px 80px rgba(0,0,0,0.35)',
-            borderLeft: `3px solid ${selectedCat.color}`,
             position: 'relative', display: 'flex', flexDirection: 'column', boxSizing: 'border-box'
           }}>
             {/* Close */}
@@ -338,7 +337,7 @@ function RadarModal({ radarData, stats, maxCount, nodes, onClose }) {
                 return (
                   <div key={i} style={{
                     padding: '12px 14px', borderRadius: '10px', background: '#fff',
-                    border: `1px solid ${col}35`, borderLeft: `4px solid ${col}`,
+                    border: `1px solid ${col}35`,
                     boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                     position: 'relative'
                   }}>
@@ -672,8 +671,6 @@ export default function KnowledgeRadarView({ nodes }) {
                     display:'flex', gap:'0',
                     background: isConflict ? 'rgba(251,146,60,0.04)' : 'transparent',
                   }}>
-                    {/* Left sentiment stripe */}
-                    <div style={{ width:'3px', flexShrink:0, background: col, marginRight:'9px', borderRadius:'0 2px 2px 0', opacity: 0.7 }}/>
                     <div style={{ flex:1, minWidth:0 }}>
                       <div style={{ fontSize:'0.63rem', color:'var(--text-primary)', lineHeight:1.45 }}>{n.claim}</div>
                       <div style={{ display:'flex', alignItems:'center', gap:'5px', marginTop:'2px', flexWrap:'wrap' }}>

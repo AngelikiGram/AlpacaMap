@@ -2,6 +2,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { initTheme } from './theme.js'
+
+initTheme()
 
 // After a new deploy, an open tab may request old file names that no longer exist —
 // reload once to pick up the new version instead of breaking.

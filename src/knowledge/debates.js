@@ -35,7 +35,10 @@ export function buildDebates(nodes, verified, { answered = new Set(), limit = 40
     if (answered.has(key) || used.has(key)) continue;
     used.add(key);
     const cond = explainByConditions(p.a, p.b);
-    const w = p.score + (cond ? 3 : 0) + Math.max(0, ...p.aspects.map((x) => PRIORITY_ASPECTS[x] || 0));
+    // Pairs about a specific place come before city-wide topics, so the deck starts with
+    // debates that can be shown on the map.
+    const onPlace = !String(p.place || '').includes(' · ');
+    const w = p.score + (cond ? 3 : 0) + (onPlace ? 4 : 0) + Math.max(0, ...p.aspects.map((x) => PRIORITY_ASPECTS[x] || 0));
     cards.push(toCard(p.a, p.b, { kind: 'unchecked', condition: cond?.text || null, aspects: p.aspects, weight: w }));
   }
   // At most 3 cards per place/topic so one topic doesn't fill the deck
@@ -56,6 +59,7 @@ function toCard(a, b, extra) {
   const aspects = extra.aspects?.length ? extra.aspects : aspectsOf(x.claim).filter((k) => aspectsOf(y.claim).includes(k));
   return {
     key: pairKey(x.id, y.id), place: x.place, topic: topicOf(x.place), city: x.city || null,
+    onMap: !String(x.place || '').includes(' · '),   // false = city-wide topic, no position on the map
     a: { id: x.id, text: plainText(x.claim, 240), source: x.source?.sourceType, sentiment: x.evaluation?.sentiment },
     b: { id: y.id, text: plainText(y.claim, 240), source: y.source?.sourceType, sentiment: y.evaluation?.sentiment },
     aspect: aspects[0] || null, ...extra, aspects,

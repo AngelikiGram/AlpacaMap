@@ -1,0 +1,496 @@
+{
+ "cities": {
+  "London": {
+   "statements": 2799,
+   "sources": {
+    "wikivoyage": 788,
+    "wikitravel": 668,
+    "wikipedia": 137,
+    "stackexchange": 29,
+    "reddit": 1177
+   },
+   "places": 128,
+   "named_places": 116,
+   "stmts_on_named_places": 180,
+   "types": {
+    "descriptive": 151,
+    "other": 1338,
+    "evaluative": 521,
+    "practical": 760,
+    "norm": 29
+   },
+   "largest_bucket": 1281,
+   "stmts_beyond_200_cap": 1370,
+   "polarity_contested_places": 12,
+   "funnel": {
+    "opposite": 104276,
+    "opposite_cross_source": 59307,
+    "same_aspect_content_not_copy": 205,
+    "comparable_types": 145
+   },
+   "candidates_any_tone": 2491,
+   "candidates_named_place": 8,
+   "candidates_condition_diff": 15,
+   "candidate_aspects": {
+    "quality": 168,
+    "crowds": 237,
+    "opening": 654,
+    "price": 377,
+    "transport": 1165,
+    "food": 83,
+    "weather": 11,
+    "noise": 1,
+    "safety": 43
+   },
+   "opp_candidates_by_source_pair": {
+    "wikitravel+wikivoyage": 137,
+    "wikipedia+wikivoyage": 5,
+    "reddit+wikivoyage": 18,
+    "wikipedia+wikitravel": 7,
+    "reddit+wikitravel": 23,
+    "reddit+wikipedia": 4,
+    "stackexchange+wikivoyage": 4,
+    "stackexchange+wikitravel": 5,
+    "reddit+stackexchange": 2
+   },
+   "candidates_by_source_pair": {
+    "wikitravel+wikivoyage": 1668,
+    "wikipedia+wikivoyage": 56,
+    "reddit+wikivoyage": 299,
+    "stackexchange+wikivoyage": 48,
+    "wikipedia+wikitravel": 66,
+    "reddit+wikitravel": 286,
+    "stackexchange+wikitravel": 30,
+    "reddit+wikipedia": 17,
+    "stackexchange+wikipedia": 1,
+    "reddit+stackexchange": 20
+   },
+   "condition_dimensions": {
+    "area": 3,
+    "traveller": 8,
+    "season": 3,
+    "week": 1
+   },
+   "copy_pairs_same_place": 57,
+   "copy_pairs_by_sources": {
+    "wikitravel+wikivoyage": 57
+   },
+   "copied_by_source": {
+    "wikivoyage": 104,
+    "wikitravel": 107,
+    "wikipedia": 1
+   },
+   "app_candidates": 87,
+   "app_candidates_opposite": 19,
+   "app_candidate_places": 14,
+   "app_candidates_named_place": 8,
+   "app_candidates_condition_diff": 4
+  },
+  "Paris": {
+   "statements": 2534,
+   "sources": {
+    "wikivoyage": 476,
+    "wikitravel": 423,
+    "wikipedia": 238,
+    "stackexchange": 35,
+    "reddit": 1362
+   },
+   "places": 195,
+   "named_places": 183,
+   "stmts_on_named_places": 271,
+   "types": {
+    "evaluative": 502,
+    "practical": 716,
+    "other": 1170,
+    "descriptive": 122,
+    "norm": 24
+   },
+   "largest_bucket": 1012,
+   "stmts_beyond_200_cap": 1081,
+   "polarity_contested_places": 15,
+   "funnel": {
+    "opposite": 64531,
+    "opposite_cross_source": 35390,
+    "same_aspect_content_not_copy": 246,
+    "comparable_types": 152
+   },
+   "candidates_any_tone": 2677,
+   "candidates_named_place": 16,
+   "candidates_condition_diff": 24,
+   "candidate_aspects": {
+    "crowds": 427,
+    "price": 154,
+    "quality": 83,
+    "transport": 1814,
+    "opening": 519,
+    "food": 60,
+    "safety": 13,
+    "weather": 2
+   },
+   "opp_candidates_by_source_pair": {
+    "reddit+wikivoyage": 58,
+    "wikitravel+wikivoyage": 98,
+    "wikipedia+wikivoyage": 8,
+    "wikipedia+wikitravel": 4,
+    "reddit+wikitravel": 76,
+    "reddit+wikipedia": 2
+   },
+   "candidates_by_source_pair": {
+    "reddit+wikivoyage": 426,
+    "wikitravel+wikivoyage": 927,
+    "reddit+wikitravel": 689,
+    "wikipedia+wikivoyage": 223,
+    "wikipedia+wikitravel": 265,
+    "reddit+wikipedia": 84,
+    "reddit+stackexchange": 34,
+    "stackexchange+wikitravel": 16,
+    "stackexchange+wikivoyage": 10,
+    "stackexchange+wikipedia": 3
+   },
+   "condition_dimensions": {
+    "traveller": 6,
+    "timeOfDay": 13,
+    "area": 3,
+    "season": 2
+   },
+   "copy_pairs_same_place": 61,
+   "copy_pairs_by_sources": {
+    "wikitravel+wikivoyage": 61
+   },
+   "copied_by_source": {
+    "wikivoyage": 102,
+    "wikitravel": 102
+   },
+   "app_candidates": 96,
+   "app_candidates_opposite": 41,
+   "app_candidate_places": 14,
+   "app_candidates_named_place": 16,
+   "app_candidates_condition_diff": 1
+  },
+  "Rome": {
+   "statements": 5162,
+   "sources": {
+    "wikivoyage": 443,
+    "wikitravel": 423,
+    "wikipedia": 169,
+    "stackexchange": 95,
+    "reddit": 4032
+   },
+   "places": 321,
+   "named_places": 309,
+   "stmts_on_named_places": 495,
+   "types": {
+    "descriptive": 284,
+    "practical": 1157,
+    "evaluative": 1065,
+    "other": 2597,
+    "norm": 59
+   },
+   "largest_bucket": 2473,
+   "stmts_beyond_200_cap": 2950,
+   "polarity_contested_places": 20,
+   "funnel": {
+    "opposite": 297900,
+    "opposite_cross_source": 97038,
+    "same_aspect_content_not_copy": 334,
+    "comparable_types": 214
+   },
+   "candidates_any_tone": 4395,
+   "candidates_named_place": 16,
+   "candidates_condition_diff": 28,
+   "candidate_aspects": {
+    "opening": 1029,
+    "price": 215,
+    "transport": 3051,
+    "quality": 213,
+    "crowds": 608,
+    "weather": 37,
+    "food": 226,
+    "safety": 54
+   },
+   "opp_candidates_by_source_pair": {
+    "reddit+wikivoyage": 76,
+    "reddit+wikitravel": 147,
+    "wikitravel+wikivoyage": 80,
+    "stackexchange+wikipedia": 1,
+    "reddit+wikipedia": 5,
+    "reddit+stackexchange": 18,
+    "wikipedia+wikivoyage": 3,
+    "wikipedia+wikitravel": 4
+   },
+   "candidates_by_source_pair": {
+    "wikitravel+wikivoyage": 910,
+    "reddit+wikivoyage": 1294,
+    "reddit+wikitravel": 1749,
+    "reddit+wikipedia": 115,
+    "wikipedia+wikivoyage": 48,
+    "stackexchange+wikivoyage": 21,
+    "wikipedia+wikitravel": 69,
+    "stackexchange+wikipedia": 3,
+    "reddit+stackexchange": 149,
+    "stackexchange+wikitravel": 37
+   },
+   "condition_dimensions": {
+    "season": 13,
+    "timeOfDay": 11,
+    "area": 2,
+    "traveller": 2
+   },
+   "copy_pairs_same_place": 63,
+   "copy_pairs_by_sources": {
+    "wikitravel+wikivoyage": 62,
+    "reddit+wikivoyage": 1
+   },
+   "copied_by_source": {
+    "wikivoyage": 119,
+    "wikitravel": 120
+   },
+   "app_candidates": 111,
+   "app_candidates_opposite": 44,
+   "app_candidate_places": 17,
+   "app_candidates_named_place": 14,
+   "app_candidates_condition_diff": 5
+  },
+  "Edinburgh": {
+   "statements": 771,
+   "sources": {
+    "wikivoyage": 241,
+    "wikitravel": 267,
+    "wikipedia": 202,
+    "stackexchange": 61
+   },
+   "places": 138,
+   "named_places": 126,
+   "stmts_on_named_places": 221,
+   "types": {
+    "norm": 2,
+    "evaluative": 92,
+    "descriptive": 111,
+    "other": 334,
+    "practical": 232
+   },
+   "largest_bucket": 216,
+   "stmts_beyond_200_cap": 16,
+   "polarity_contested_places": 16,
+   "funnel": {
+    "opposite": 2877,
+    "opposite_cross_source": 2045,
+    "same_aspect_content_not_copy": 31,
+    "comparable_types": 21
+   },
+   "candidates_any_tone": 400,
+   "candidates_named_place": 16,
+   "candidates_condition_diff": 1,
+   "candidate_aspects": {
+    "opening": 120,
+    "crowds": 8,
+    "transport": 321,
+    "price": 17,
+    "quality": 5,
+    "weather": 1
+   },
+   "opp_candidates_by_source_pair": {
+    "wikitravel+wikivoyage": 17,
+    "stackexchange+wikivoyage": 6,
+    "wikipedia+wikivoyage": 1,
+    "stackexchange+wikitravel": 3,
+    "wikipedia+wikitravel": 4
+   },
+   "candidates_by_source_pair": {
+    "wikitravel+wikivoyage": 255,
+    "wikipedia+wikivoyage": 26,
+    "wikipedia+wikitravel": 25,
+    "stackexchange+wikitravel": 38,
+    "stackexchange+wikivoyage": 55,
+    "stackexchange+wikipedia": 1
+   },
+   "condition_dimensions": {
+    "season": 1
+   },
+   "copy_pairs_same_place": 7,
+   "copy_pairs_by_sources": {
+    "wikitravel+wikivoyage": 7
+   },
+   "copied_by_source": {
+    "wikivoyage": 14,
+    "wikitravel": 14
+   },
+   "app_candidates": 50,
+   "app_candidates_opposite": 12,
+   "app_candidate_places": 13,
+   "app_candidates_named_place": 14,
+   "app_candidates_condition_diff": 1
+  },
+  "Zurich": {
+   "statements": 791,
+   "sources": {
+    "wikivoyage": 343,
+    "wikitravel": 225,
+    "wikipedia": 166,
+    "stackexchange": 57
+   },
+   "places": 62,
+   "named_places": 50,
+   "stmts_on_named_places": 70,
+   "types": {
+    "practical": 230,
+    "evaluative": 162,
+    "norm": 4,
+    "descriptive": 81,
+    "other": 314
+   },
+   "largest_bucket": 235,
+   "stmts_beyond_200_cap": 35,
+   "polarity_contested_places": 7,
+   "funnel": {
+    "opposite": 3739,
+    "opposite_cross_source": 2467,
+    "same_aspect_content_not_copy": 33,
+    "comparable_types": 21
+   },
+   "candidates_any_tone": 549,
+   "candidates_named_place": 0,
+   "candidates_condition_diff": 0,
+   "candidate_aspects": {
+    "price": 26,
+    "opening": 153,
+    "transport": 352,
+    "quality": 8,
+    "food": 42,
+    "crowds": 6
+   },
+   "opp_candidates_by_source_pair": {
+    "wikitravel+wikivoyage": 29,
+    "stackexchange+wikivoyage": 2,
+    "wikipedia+wikivoyage": 2
+   },
+   "candidates_by_source_pair": {
+    "wikitravel+wikivoyage": 450,
+    "wikipedia+wikivoyage": 29,
+    "stackexchange+wikivoyage": 22,
+    "wikipedia+wikitravel": 23,
+    "stackexchange+wikitravel": 24,
+    "stackexchange+wikipedia": 1
+   },
+   "condition_dimensions": {},
+   "copy_pairs_same_place": 49,
+   "copy_pairs_by_sources": {
+    "wikitravel+wikivoyage": 49
+   },
+   "copied_by_source": {
+    "wikivoyage": 69,
+    "wikitravel": 69
+   },
+   "app_candidates": 49,
+   "app_candidates_opposite": 14,
+   "app_candidate_places": 7,
+   "app_candidates_named_place": 0,
+   "app_candidates_condition_diff": 0
+  }
+ },
+ "type_by_source": {
+  "wikivoyage": {
+   "descriptive": 120,
+   "other": 816,
+   "evaluative": 461,
+   "practical": 867,
+   "norm": 27
+  },
+  "wikitravel": {
+   "descriptive": 96,
+   "evaluative": 320,
+   "practical": 836,
+   "other": 737,
+   "norm": 17
+  },
+  "wikipedia": {
+   "descriptive": 296,
+   "other": 421,
+   "practical": 115,
+   "evaluative": 80
+  },
+  "stackexchange": {
+   "other": 174,
+   "norm": 5,
+   "practical": 59,
+   "evaluative": 30,
+   "descriptive": 9
+  },
+  "reddit": {
+   "other": 3605,
+   "practical": 1218,
+   "evaluative": 1451,
+   "norm": 69,
+   "descriptive": 228
+  }
+ },
+ "sent_by_type": {
+  "descriptive": {
+   "positive": 314,
+   "neutral": 353,
+   "negative": 82
+  },
+  "other": {
+   "positive": 2090,
+   "neutral": 3091,
+   "negative": 572
+  },
+  "evaluative": {
+   "positive": 1861,
+   "neutral": 348,
+   "negative": 133
+  },
+  "practical": {
+   "negative": 459,
+   "neutral": 1597,
+   "positive": 1039
+  },
+  "norm": {
+   "negative": 24,
+   "neutral": 31,
+   "positive": 63
+  }
+ },
+ "pooled": {
+  "statements": 12057,
+  "places": 844,
+  "named_places": 784,
+  "stmts_on_named_places": 1237,
+  "largest_bucket": 5217,
+  "stmts_beyond_200_cap": 5452,
+  "polarity_contested_places": 70,
+  "candidates_any_tone": 10512,
+  "candidates_named_place": 56,
+  "candidates_condition_diff": 68,
+  "copy_pairs_same_place": 237,
+  "app_candidates": 393,
+  "app_candidates_opposite": 130,
+  "app_candidate_places": 65,
+  "app_candidates_named_place": 52,
+  "app_candidates_condition_diff": 11,
+  "funnel_opposite": 473323,
+  "funnel_opposite_cross_source": 196247,
+  "funnel_same_aspect_content_not_copy": 849,
+  "funnel_comparable_types": 553,
+  "aspect_quality": 477,
+  "aspect_crowds": 1286,
+  "aspect_opening": 2475,
+  "aspect_price": 789,
+  "aspect_transport": 6703,
+  "aspect_food": 411,
+  "aspect_weather": 51,
+  "aspect_noise": 1,
+  "aspect_safety": 110,
+  "copied_wikivoyage": 408,
+  "copied_wikitravel": 412,
+  "copied_wikipedia": 1,
+  "src_wikivoyage": 2291,
+  "src_wikitravel": 2006,
+  "src_wikipedia": 912,
+  "src_stackexchange": 277,
+  "src_reddit": 6571,
+  "copypair_wikitravel+wikivoyage": 236,
+  "copypair_reddit+wikivoyage": 1
+ },
+ "annotation_sample_size": 200
+}

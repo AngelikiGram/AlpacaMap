@@ -34,6 +34,25 @@
   --radius-pill: 100px;
 }
 
+/* ── Light appearance ───────────────────────────────────────────────────────────
+   The interface is designed dark and uses many inline colours, so the light theme
+   inverts the interface and turns hues back (invert + hue-rotate keeps green green and
+   red red). Map tiles, markers, lens halos, photos and videos are inverted a second time
+   so they keep their real colours. Toggle: map controls → Light/Dark, or ?theme=light. */
+html[data-theme="light"] { background: #f4f6fb; }
+html[data-theme="light"] body { background: #f4f6fb; }
+html[data-theme="light"] #root { filter: invert(1) hue-rotate(180deg); }
+html[data-theme="light"] .leaflet-map-pane,
+html[data-theme="light"] img:not(.leaflet-map-pane img),
+html[data-theme="light"] video,
+html[data-theme="light"] picture,
+html[data-theme="light"] [data-keep-colors],
+html[data-theme="light"] .lens-dot,
+html[data-theme="light"] .lens-ramp i,
+html[data-theme="light"] .lens-mix { filter: invert(1) hue-rotate(180deg); }
+/* soften the strongest shadows, which turn into glows when inverted */
+html[data-theme="light"] .glass-panel { box-shadow: 0 4px 18px rgba(255,255,255,0.18); }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {

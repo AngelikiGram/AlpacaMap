@@ -61,7 +61,7 @@ export const PrintView = ({ tripData }) => {
               const cityColor = getCityColor(loc.id, locations);
               return (
                 <div key={loc.id} style={{ pageBreakInside:'avoid', breakInside:'avoid' }}>
-                  <div style={{ borderLeft:`4px solid ${cityColor}`, paddingLeft:'0.85rem', marginBottom:'0.85rem' }}>
+                  <div style={{ marginBottom:'0.85rem' }}>
                     <div style={{ fontFamily:"'Outfit',Georgia,serif", fontSize:'1.05rem', fontWeight:'800', color:cityColor }}>{loc.name.split(',')[0]}</div>
                     <div style={{ fontSize:'0.68rem', color:'#94a3b8', marginTop:'1px' }}>{loc.name}</div>
                   </div>
@@ -75,7 +75,7 @@ export const PrintView = ({ tripData }) => {
                           </div>
                           {p.address && <div style={{ fontSize:'0.7rem', color:'#64748b', marginTop:'2px' }}>{p.address}</div>}
                           {p.notes && (
-                            <div style={{ marginTop:'6px', padding:'5px 8px', background:'#f1f5f9', borderRadius:'5px', fontSize:'0.75rem', color:'#334155', borderLeft:`3px solid ${cityColor}` }}>
+                            <div style={{ marginTop:'6px', padding:'5px 8px', background:'#f1f5f9', borderRadius:'5px', fontSize:'0.75rem', color:'#334155' }}>
                               {p.notes}
                             </div>
                           )}

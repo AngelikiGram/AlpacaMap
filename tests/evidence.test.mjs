@@ -20,6 +20,15 @@ test('credibility: only other sources corroborate', () => {
   assert.ok(credibility(a, otherSrc).score > credibility(a, sameSrc).score);
 });
 
+test('credibility: a near-copy in another source does not corroborate', () => {
+  const text = 'The museum is free to enter and very crowded on weekend afternoons.';
+  const a = n('a', 'X', 'wikivoyage', 'positive', null, text);
+  const copy = n('b', 'X', 'wikitravel', 'positive', null, 'The museum is free to enter and very crowded on weekend afternoons!');
+  const independent = n('c', 'X', 'wikitravel', 'positive', null, 'Go early, the galleries are wonderful and admission costs nothing.');
+  assert.equal(credibility(a, [a, copy]).score, credibility(a, [a]).score);
+  assert.ok(credibility(a, [a, independent]).score > credibility(a, [a]).score);
+});
+
 test('evidence levels', () => {
   const nodes = [
     n('1', 'Louvre Museum', 'reddit', 'positive', null, 'The Louvre is huge.'),

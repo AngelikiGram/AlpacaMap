@@ -291,7 +291,7 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
                           "{insight.claim}"
                         </p>
                         {insight.advice && (
-                          <div style={{ margin: '6px 0 0 0', color: '#c084fc', fontSize: '0.7rem', display: 'flex', alignItems: 'flex-start', gap: '4px', background: 'rgba(192,132,252,0.07)', padding: '4px 8px', borderRadius: '4px', borderLeft: '2.5px solid #c084fc' }}>
+                          <div style={{ margin: '6px 0 0 0', color: '#c084fc', fontSize: '0.7rem', display: 'flex', alignItems: 'flex-start', gap: '4px', background: 'rgba(192,132,252,0.07)', padding: '4px 8px', borderRadius: '4px' }}>
                             <span style={{ flexShrink: 0 }}>💡</span> <span>{insight.advice}</span>
                           </div>
                         )}

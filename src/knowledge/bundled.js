@@ -7,7 +7,7 @@ const assetUrl = (path) => `${import.meta.env?.BASE_URL ?? './'}${path.replace(/
 export const BUNDLED_KNOWLEDGE = { edinburgh: 'edinburgh', london: 'london', paris: 'paris', rome: 'rome', zurich: 'zurich', 'zürich': 'zurich' };
 
 // Cities with a bundled OpenStreetMap extract (public/preprocessed/osm_<slug>.json)
-export const BUNDLED_OSM = ['kyoto', 'london', 'new_york', 'paris', 'prague', 'rome', 'sydney', 'tokyo', 'zurich'];
+export const BUNDLED_OSM = ['edinburgh', 'kyoto', 'london', 'new_york', 'paris', 'prague', 'rome', 'sydney', 'tokyo', 'zurich'];
 
 const SOURCE_LABELS = { wikivoyage: 'Wikivoyage', wikitravel: 'Wikitravel', wikipedia: 'Wikipedia', reddit: 'Reddit', stackexchange: 'StackExchange Travel' };
 

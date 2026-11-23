@@ -3462,7 +3462,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                         <div key={label} style={{ background: bg, padding: '8px 10px', borderLeft: si === 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
                           <div style={{ fontSize: '0.57rem', color, fontWeight: '700', marginBottom: '6px', letterSpacing: '0.03em' }}>{label}</div>
                           {list.map((n, j) => (
-                            <div key={j} style={{ marginBottom: '5px', borderLeft: `2px solid ${color}35`, paddingLeft: '6px' }}>
+                            <div key={j} style={{ marginBottom: '5px' }}>
                               <div style={{ fontSize: '0.63rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>{n.claim}</div>
                               <div style={{ display: 'flex', gap: '5px', marginTop: '2px', flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: '0.53rem', color: 'rgba(255,255,255,0.28)' }}>{n.source?.date}</span>

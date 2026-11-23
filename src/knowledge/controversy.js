@@ -162,6 +162,62 @@ export function buildTruthLens(points, index, { minStatements = 2 } = {}) {
   return out.sort((a, b) => a.score - b.score); // hottest drawn last (on top)
 }
 
+/** True for city-wide topics such as "London · Climate" (statements not tied to one place). */
+export const isTopicPlace = (place) => String(place || '').includes(' · ');
+
+/**
+ * Evidence for one city-wide topic ("London · Climate"): only the statements filed under it.
+ * Same shape as findEvidence(), so controversyScore() and disputeHeadline() apply.
+ */
+export function topicEvidence(topic, index) {
+  if (!index?.size || !topic) return null;
+  const key = normalizeName(topic);
+  const keep = (index.items || []).filter((it) => it.place === key).map((it) => it.n);
+  if (!keep.length) return null;
+  const e = { place: topic, key, statements: keep.length, pos: 0, neg: 0, neu: 0, sources: [], statementsList: keep, contradictions: [], depends: [], example: null };
+  const src = new Set();
+  for (const n of keep) {
+    const s = n.evaluation?.sentiment;
+    if (s === 'positive') e.pos++; else if (s === 'negative') e.neg++; else e.neu++;
+    if (n.source?.sourceType) src.add(n.source.sourceType);
+  }
+  e.sources = [...src];
+  const ids = new Set(keep.map((n) => n.id));
+  const pairs = (index.verified?.pairs || []).filter((p) => ids.has(p.aId) && ids.has(p.bId));
+  for (const pl of summarizeVerified(pairs).places) { e.contradictions.push(...pl.contradictions); e.depends.push(...pl.depends); }
+  const opinionated = e.pos + e.neg;
+  e.agreement = opinionated ? Math.max(e.pos, e.neg) / opinionated : 1;
+  e.level = e.contradictions.length ? 'disputed' : e.depends.length ? 'conditional'
+    : (e.sources.length < 2 || e.statements < 3) ? 'thin' : (opinionated >= 3 && e.agreement < 0.65) ? 'mixed' : 'solid';
+  return e;
+}
+
+/**
+ * City-wide topics of one city for the Truth lens panel (they have no position on the map).
+ * → [{ topic, place, score, color, headline, evidence }], most argued first.
+ */
+export function buildTopicLens(index, cityName) {
+  if (!index?.size || !cityName) return [];
+  const city = normalizeName(String(cityName).split(',')[0]);
+  const topics = new Set();
+  for (const it of index.items || []) {
+    const raw = it.n?.place || '';
+    if (isTopicPlace(raw) && normalizeName(raw.split(' · ')[0]) === city) topics.add(raw);
+  }
+  const out = [];
+  for (const place of topics) {
+    const e = topicEvidence(place, index);
+    if (!e || e.statements < 3) continue;
+    const score = controversyScore(e);
+    // Label follows the colour band, so a green dot never reads "Mixed"
+    const counts = `${e.pos} 👍 / ${e.neg} 👎`;
+    const headline = e.level === 'disputed' ? 'Sources disagree' : e.level === 'conditional' ? 'Depends on conditions'
+      : score >= 0.4 ? `Split: ${counts}` : `Mostly agree: ${counts}`;
+    out.push({ place, topic: place.split(' · ').slice(1).join(' · '), score, color: controversyColor(score), headline, evidence: e });
+  }
+  return out.sort((a, b) => b.score - a.score);
+}
+
 /** Places worth a Debate card, most argued first. */
 export function debateCandidates(points, index, { limit = 30 } = {}) {
   return buildTruthLens(points, index)

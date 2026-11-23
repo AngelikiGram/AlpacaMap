@@ -2,8 +2,8 @@
 // Each answer is stored with the trip (knowledgeGraph.verified.pairs, by: 'you'), so pins,
 // the Truth lens and itinerary badges react immediately, and it teaches the app which
 // aspects (crowds, price, safety …) matter to you.
-import { useMemo, useRef, useState } from 'react';
-import { Scale, Undo2, ThumbsUp, Sparkles } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Scale, Undo2, ThumbsUp, Sparkles, MapPin, Globe } from 'lucide-react';
 import { buildDebates, applyAnswer, answeredKeys } from '../../knowledge/debates';
 import { bumpAspectWeight, readAspectWeights, caredAspects } from '../../knowledge/travellerReports';
 import { sourceLabel } from '../../knowledge/controversy';
@@ -26,6 +26,14 @@ export function DebatesPanel({ tripData, setTripData, onOpenTab }) {
   }, [fullDeck, skipped]);
   const card = deck[0];
   const total = fullDeck.length + answered.size;
+
+  // Tell the map which place or city-wide topic the current card is about (MapView listens):
+  // a place is flown to and ringed; a topic is highlighted in the Truth lens panel.
+  const focusMap = (c) => window.dispatchEvent(new CustomEvent('alpacamap-debate-focus', {
+    detail: c ? { place: c.place, onMap: c.onMap, topic: c.topic } : null,
+  }));
+  useEffect(() => { focusMap(card); }, [card?.key]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => focusMap(null), []);
 
   const answer = (choice) => {
     if (!card) return;
@@ -96,6 +104,11 @@ export function DebatesPanel({ tripData, setTripData, onOpenTab }) {
             <div className="debate-meta">
               <span className="debate-topic">{card.aspect ? ASPECT_EMOJI[card.aspect] || '⚖️' : '⚖️'} {card.topic}{card.city ? ` · ${card.city}` : ''}</span>
               <span className={`debate-kind ${checked ? 'checked' : ''}`}>{checked ? (card.label === 'depends' ? 'Model: depends' : 'Model: contradiction') : 'Unchecked'}</span>
+            </div>
+            <div className="debate-where">
+              {card.onMap
+                ? <button className="debate-where-btn" onPointerDown={(e) => e.stopPropagation()} onClick={() => focusMap(card)}><MapPin size={11} /> Shown on the map</button>
+                : <span className="debate-where-topic"><Globe size={11} /> City-wide topic · not one place on the map</span>}
             </div>
             <blockquote className="debate-side pos">
               <p>“{card.a.text}”</p>
