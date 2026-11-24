@@ -163,7 +163,7 @@ input::placeholder, textarea::placeholder { color: rgba(127,142,163,0.6); }
 .animate-slide-up { animation: slideUp 0.35s ease forwards; }
 .animate-fade-in  { animation: fadeIn 0.3s ease forwards; }
 
-/* ── Leaflet — Dark Premium Theme ────────────────────────────────────────────── */
+/* ── Leaflet dark theme ────────────────────────────────────────────── */
 .leaflet-container {
   font-family: 'Inter', sans-serif;
   background: #080c1a !important;

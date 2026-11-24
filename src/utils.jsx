@@ -1,10 +1,9 @@
 import L from 'leaflet';
-import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Scale } from 'lucide-react';
 import { makeDemoTrip } from './demo/demoTrip';
-import { Accessibility, Activity, BookOpen, Bed, Brain, Bus, Camera, Car, Castle, Clock, Coffee, Compass, CreditCard, DollarSign, Download, Droplets, Globe, Info, Landmark, MapPin, MountainSnow, Package, Plane, Search, Ship, ShoppingBag, Sparkles, Tent, Train, TreePine, Utensils, Calendar as CalendarIcon, FileText, Layers, Satellite, Moon, Navigation, ClipboardList } from 'lucide-react';
-import { CATEGORY_ZOOM_PRIORITY, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS, OVERPASS_URL } from "./config";
+import { Activity, BookOpen, Brain, Camera, Castle, Coffee, Compass, DollarSign, Download, Droplets, Info, Landmark, MapPin, MountainSnow, Package, ShoppingBag, Sparkles, Tent, TreePine, Utensils, Calendar as CalendarIcon, FileText, Layers, Satellite, Moon, ClipboardList } from 'lucide-react';
+import { CATEGORY_ZOOM_PRIORITY, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS } from "./config";
 
 export const CITY_PALETTE = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#ef4444','#84cc16','#f97316','#a78bfa'];
 

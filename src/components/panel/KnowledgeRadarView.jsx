@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Utensils, Train, ShieldCheck, Landmark, ShoppingBag, MapPin, CloudRain, Lightbulb, Building2, ExternalLink, AlertTriangle, Maximize2, X } from 'lucide-react';
 
@@ -422,17 +422,6 @@ export default function KnowledgeRadarView({ nodes }) {
   const hov      = hovKey ? RADAR_CATEGORIES.find(c => c.key === hovKey) : null;
   const hovStats = hovKey ? stats[hovKey] : null;
 
-  // Count how many nodes fall in each exact year (for button labels)
-  const yearCounts = useMemo(() => {
-    const m = {};
-    nodes.forEach(n => {
-      const d = n.date || n.source?.date || n.extractedAt;
-      if (!d) return;
-      const y = new Date(d).getFullYear();
-      m[y] = (m[y] || 0) + 1;
-    });
-    return m;
-  }, [nodes]);
 
   const YEARS = [2020, 2021, 2022, 2023, 2024, 2025];
 

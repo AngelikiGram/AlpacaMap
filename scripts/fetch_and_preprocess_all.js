@@ -232,7 +232,7 @@ function extractNodes(text, city, placeNames = [], sourceType, sourceLabel, date
 
       let foundPlace = null;
 
-      // Step 1 — known POI name match (highest precision)
+      // Step 1: known POI name match (highest precision)
       for (const orig of placeNames) {
         const cn = cleanName(orig);
         if (cn.length < 2) continue;
@@ -241,7 +241,7 @@ function extractNodes(text, city, placeNames = [], sourceType, sourceLabel, date
         if (new RegExp('\\b' + esc + '\\b', 'i').test(trimmed)) { foundPlace = orig; break; }
       }
 
-      // Step 2 — entity regex fallback
+      // Step 2: entity regex fallback
       if (!foundPlace) {
         let m; entityRegex.lastIndex = 0;
         while ((m = entityRegex.exec(trimmed)) !== null) {
@@ -255,7 +255,7 @@ function extractNodes(text, city, placeNames = [], sourceType, sourceLabel, date
         }
       }
 
-      // Step 3 — semantic category fallback
+      // Step 3: semantic category fallback
       if (!foundPlace) {
         const cb = city.split(',')[0].trim();
         if (cb.length > 2) foundPlace = `${cb} · ${mlClassifier.classify(trimmed)}`;
@@ -532,7 +532,7 @@ async function fetchOsmPois(city) {
         if (bb) {
           const latSpan = parseFloat(bb[1]) - parseFloat(bb[0]);
           const lonSpan = parseFloat(bb[3]) - parseFloat(bb[2]);
-          const MAX = 0.18; // ~20km radius cap — keeps queries fast
+          const MAX = 0.18; // ~20km radius cap, keeps queries fast
           if (latSpan > MAX * 2 || lonSpan > MAX * 2) {
             bboxStr = `${(centerLat - MAX).toFixed(5)},${(centerLon - MAX).toFixed(5)},${(centerLat + MAX).toFixed(5)},${(centerLon + MAX).toFixed(5)}`;
           } else {
@@ -549,7 +549,7 @@ async function fetchOsmPois(city) {
     bboxStr = `${(centerLat - r).toFixed(5)},${(centerLon - r).toFixed(5)},${(centerLat + r).toFixed(5)},${(centerLon + r).toFixed(5)}`;
   }
 
-  // Step 2: Overpass query — node+way only (relations are huge and rarely needed for POI names)
+  // Step 2: Overpass query, node+way only (relations are huge and rarely needed for POI names)
   const AMENITY_TYPES = 'museum|theatre|arts_centre|library|place_of_worship|cinema|restaurant|cafe|fast_food|pub|bar';
   const LEISURE_TYPES = 'park|garden|nature_reserve|stadium|sports_centre|beach_resort';
   const query = `[out:json][timeout:55][maxsize:134217728];
@@ -592,7 +592,7 @@ out center tags;`;
       console.warn(`  Overpass ${endpoint.split('/')[2]} failed: ${e.message}`);
     }
   }
-  console.warn('  All Overpass mirrors failed — skipping OSM POIs');
+  console.warn('  All Overpass mirrors failed, skipping OSM POIs');
   return [];
 }
 
@@ -696,7 +696,7 @@ async function preprocessCity(cityName) {
   try { osmPoisRaw = await fetchOsmPois(cityName); } catch (e) { console.warn('  OSM:', e.message); }
   const osmPoiNames = osmPoisRaw.map(p => typeof p === 'string' ? p : p.name);
 
-  // 4. NLP extraction — city-level sources
+  // 4. NLP extraction, city-level sources
   console.log('  → NLP extraction (city-level)…');
   const today = new Date().toISOString().slice(0, 10);
   const allNodes = [];
@@ -738,7 +738,7 @@ async function preprocessCity(cityName) {
   const pass1TopPOIs = [...placeCounts.entries()]
     .sort((a, b) => b[1] - a[1]).slice(0, pass1Limit).map(([name]) => name);
 
-  // Merge: Overpass notable POIs first, pass-1 fills gaps — cap at 60 to bound runtime
+  // Merge: Overpass notable POIs first, pass-1 fills gaps, cap at 60 to bound runtime
   const allPOIs = [...new Set([...osmPoiNames, ...pass1TopPOIs])].slice(0, 60);
   console.log(`     ${allPOIs.length} POI targets (${osmPoiNames.length} Overpass + ${pass1TopPOIs.length} pass-1 top)`);
 
@@ -776,7 +776,7 @@ async function preprocessCity(cityName) {
         }
       } catch { }
 
-      // Reddit per-POI (NLP extraction — no Ollama needed)
+      // Reddit per-POI (NLP extraction, no Ollama needed)
       try {
         await sleep(100);
         const posts = await searchRedditForPoi(target.redditQuery);
@@ -822,7 +822,7 @@ async function preprocessCity(cityName) {
   };
 
   fs.writeFileSync(outFile, JSON.stringify(output, null, 2), 'utf8');
-  console.log(`\n  ✅  ${slug}.json  —  ${uniqueNodes.length} nodes · ${osmPoiNames.length} OSM POIs\n`);
+  console.log(`\n  ✅  ${slug}.json · ${uniqueNodes.length} nodes · ${osmPoiNames.length} OSM POIs\n`);
   return output;
 }
 
@@ -879,7 +879,7 @@ console.log(`  Started : ${new Date().toLocaleString()}`);
 console.log('  Tip     : pass city names as args to process only specific cities.');
 console.log('            e.g.  node scripts/fetch_and_preprocess_all.js london paris\n');
 
-// ── Main loop — sequential to respect API rate limits ─────────────────────────
+// ── Main loop, sequential to respect API rate limits ─────────────────────────
 (async () => {
   const ok = [], fail = [];
   for (let i = 0; i < citiesToProcess.length; i++) {

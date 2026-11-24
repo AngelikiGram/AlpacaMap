@@ -33,13 +33,13 @@ export function isNearCopy(a, b, threshold = 0.6) {
   return shared / (A.size + B.size - shared) > threshold;
 }
 
-/** { score, low, high } — the interval narrows with more independent evidence. */
+/** { score, low, high }, the interval narrows with more independent evidence. */
 export function credibility(node, samePlaceNodes = [], now = Date.now()) {
   const src = node?.source?.sourceType || 'other';
   const reliability = SOURCE_RELIABILITY[src] ?? SOURCE_RELIABILITY.other;
   const sentiment = node?.evaluation?.sentiment;
   // A near-copy of this statement in another source (e.g. Wikitravel repeating Wikivoyage) is the
-  // same evidence twice, not independent corroboration — same test as the pairing step (Jaccard > 0.6).
+  // same evidence twice, not independent corroboration, same test as the pairing step (Jaccard > 0.6).
   const otherSources = new Set(samePlaceNodes
     .filter((n) => n !== node && n.source?.sourceType && n.source.sourceType !== src && n.evaluation?.sentiment === sentiment)
     .filter((n) => !isNearCopy(node.claim, n.claim))

@@ -61,7 +61,7 @@ function main() {
     if (only.length && !only.includes(slug)) continue;
     const file = path.join(DIR, f);
     const data = JSON.parse(fs.readFileSync(file, 'utf8'));
-    if (!Array.isArray(data.nodes)) { console.log(`${slug}: old per-source format, ${fs.statSync(file).size} bytes — skipped (no usable data)`); continue; }
+    if (!Array.isArray(data.nodes)) { console.log(`${slug}: old per-source format, ${fs.statSync(file).size} bytes, skipped (no usable data)`); continue; }
     const cityBase = (data.city || slug).split(',')[0].trim();
     const { nodes, stats } = cleanNodes(data.nodes, cityBase);
     const topics = {};

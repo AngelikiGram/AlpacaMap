@@ -38,10 +38,6 @@
   scrollbar-color: rgba(59,130,246,0.18) transparent;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ROUTECRAFTER — Premium Map UI
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
 /* ── App shell ───────────────────────────────────────────────────────────────── */
 .app-container {
   position: relative;
@@ -55,7 +51,7 @@
   z-index: 1;
 }
 
-/* ── Content Panel — Premium floating card ───────────────────────────────────── */
+/* ── Side panel ───────────────────────────────────── */
 .content-panel {
   position: absolute;
   left: 14px;
@@ -67,7 +63,7 @@
   flex-direction: column;
   overflow: hidden;
   border-radius: 20px;
-  /* Override glass-panel base — this IS the glass panel */
+  /* Override glass-panel base, this IS the glass panel */
   background: rgba(8, 12, 26, 0.94) !important;
   backdrop-filter: blur(32px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
@@ -750,7 +746,7 @@
 .rec-card-left { display: flex; gap: 0.6rem; align-items: center; cursor: pointer; flex: 1; min-width: 0; }
 
 
-/* ── Info Window — Google Maps style bottom card ─────────────────────────────── */
+/* ── Place window ─────────────────────────────── */
 .info-window {
   position: absolute;
   bottom: 24px;

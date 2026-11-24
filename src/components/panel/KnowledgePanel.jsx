@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Brain, FileText, AlertTriangle, GitBranch, Clock, TrendingDown, Check, Plus, Trash2, Loader2, Info, X, ChevronDown, ChevronUp, Globe, MessageSquare, Star, Zap, Shield, ArrowRight, Filter, BarChart2, Wifi, BookOpen, RefreshCw, ExternalLink, Sparkles, MapPin, Utensils, Train, Landmark, ShoppingBag, Layers, ThumbsUp, ThumbsDown, Download, CheckCircle2 } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Brain, FileText, AlertTriangle, GitBranch, TrendingDown, Check, Trash2, Loader2, ChevronDown, ChevronUp, Globe, Zap, Shield, ArrowRight, Filter, BarChart2, Wifi, RefreshCw, ExternalLink, Sparkles, MapPin, Utensils, Train, Landmark, ShoppingBag, Layers, ThumbsUp, ThumbsDown, Download, CheckCircle2 } from 'lucide-react';
 import KnowledgeGraphView from './KnowledgeGraphView';
 import KnowledgeConstellationView from './KnowledgeConstellationView';
 import ExtractionProgress from './ExtractionProgress';
@@ -13,6 +13,9 @@ import SourcesCredits from '../shared/SourcesCredits';
 import VerifiedConflicts from './VerifiedConflicts';
 import { summarizeVerified } from '../../knowledge/contradictions';
 import { credibility as credibilityOf } from '../../knowledge/credibility';
+
+// Progress messages while collecting knowledge; shown on the dev server only.
+const debugLog = import.meta.env.DEV ? console.log : () => {};
 
 // ── Credibility model ──────────────────────────────────────────────────────────
 // Returns { score, low, high }, the CI widens when fewer corroborating sources exist
@@ -318,7 +321,7 @@ async function fetchRedditFromDuckDuckGo(query) {
     const qStr = `site:reddit.com ${query} travel tips`;
     const url = `/ddg-proxy/html/?q=${encodeURIComponent(qStr)}&kl=en-us`;
     const res = await fetch(url, { credentials: 'omit', signal: AbortSignal.timeout(7000) });
-    if (!res.ok) { console.log('DDG not ok:', res.status); return []; }
+    if (!res.ok) { debugLog('DDG not ok:', res.status); return []; }
     const html = await res.text();
     const snippets = [];
     
@@ -343,7 +346,7 @@ async function fetchRedditFromDuckDuckGo(query) {
       }
     }
     
-    console.log(`DDG: ${snippets.length} snippets for: ${qStr.slice(0, 60)}`);
+    debugLog(`DDG: ${snippets.length} snippets for: ${qStr.slice(0, 60)}`);
     return snippets;
   } catch (e) {
     console.error('DDG search error:', e.message);
@@ -372,10 +375,10 @@ async function discoverCitySubreddits(cityName) {
       if (!EXCLUDE.has(sub)) found.add(sub);
     }
     const subs = [...found].slice(0, 8);
-    console.log(`[SubredditDiscover] "${cityName}" →`, subs);
+    debugLog(`[SubredditDiscover] "${cityName}" →`, subs);
     return subs;
   } catch (e) {
-    console.log('[SubredditDiscover]', e.message);
+    debugLog('[SubredditDiscover]', e.message);
     return [];
   }
 }
@@ -401,19 +404,19 @@ async function fetchRedditViaPullPush(cityName) {
           const url = `${baseUrl}/reddit/search/submission/?q=${encodeURIComponent(q)}&subreddit=${sub}&sort=score&size=${size}`;
           const res = await fetch(url, { credentials: 'omit', signal: AbortSignal.timeout(10000) });
           if (res.status === 429) { await new Promise(r => setTimeout(r, 1500 * (attempt + 1))); continue; }
-          if (!res.ok) { console.log(`[PullPush] ${res.status} for sub=${sub} q="${q}"`); return; }
+          if (!res.ok) { debugLog(`[PullPush] ${res.status} for sub=${sub} q="${q}"`); return; }
           const text = await res.text();
-          if (text.trimStart().startsWith('<')) { console.log(`[PullPush] HTML response, blocked`); return; }
+          if (text.trimStart().startsWith('<')) { debugLog(`[PullPush] HTML response, blocked`); return; }
           const data = JSON.parse(text);
           const posts = (data.data || []).filter(p =>
             p.selftext && p.selftext !== '[deleted]' && p.selftext !== '[removed]' && p.selftext.trim().length > 50
           );
-          console.log(`[PullPush] r/${sub} "${q}" → ${posts.length} posts`);
+          debugLog(`[PullPush] r/${sub} "${q}" → ${posts.length} posts`);
           results.push(...posts);
           return;
-        } catch (e) { console.log(`[PullPush] Error r/${sub} "${q}": ${e.message}`); return; }
+        } catch (e) { debugLog(`[PullPush] Error r/${sub} "${q}": ${e.message}`); return; }
       }
-      console.log(`[PullPush] still rate-limited for r/${sub} "${q}", skipped`);
+      debugLog(`[PullPush] still rate-limited for r/${sub} "${q}", skipped`);
     };
     if (HAS_DEV_PROXY) await Promise.allSettled(jobs.map(runJob));
     else for (const job of jobs) await runJob(job);
@@ -434,13 +437,13 @@ async function fetchRedditViaPullPush(cityName) {
   const discovered = discoveryResult.status === 'fulfilled' ? discoveryResult.value : [];
   const extraSubs = discovered.filter(s => !DEFAULT_SUBS.includes(s) && s !== citySlug);
   if (extraSubs.length > 0) {
-    console.log(`[PullPush] Fetching ${extraSubs.length} discovered subs: ${extraSubs.join(', ')}`);
+    debugLog(`[PullPush] Fetching ${extraSubs.length} discovered subs: ${extraSubs.join(', ')}`);
     await fetchSubs(extraSubs, GENERIC_QUERIES, PULLPUSH_BASE, 50);
   }
 
   // If direct failed entirely, retry via Vite proxy
   if (results.length === 0 && HAS_DEV_PROXY) {
-    console.log('[PullPush] Direct failed, trying Vite proxy...');
+    debugLog('[PullPush] Direct failed, trying Vite proxy...');
     await fetchSubs(DEFAULT_SUBS, GENERIC_QUERIES, PROXY_BASE, 50);
   }
 
@@ -734,7 +737,7 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
 
   // ── api.reddit.com via Vite proxy (PRIMARY, confirmed working) ────────────
   // api.reddit.com returns JSON directly without CORS blocks.
-  console.log('[Reddit] Fetching via api.reddit.com proxy...');
+  debugLog('[Reddit] Fetching via api.reddit.com proxy...');
   const TRAVEL_SUBS = [...new Set([citySlug, 'travel', 'solotravel', 'backpacking', 'shoestring'].filter(Boolean))];
   const QUERIES = [`${noCountry} travel tips`, `${noCountry} itinerary`, `${noCountry} things to do`, noCountry];
 
@@ -764,7 +767,7 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
           allPosts.push(...posts);
         }
       } catch (e) {
-        console.log(`[Reddit] DDG query "${dq}" failed:`, e.message);
+        debugLog(`[Reddit] DDG query "${dq}" failed:`, e.message);
       }
     })
   );
@@ -779,23 +782,23 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
           credentials: 'omit',
           signal: AbortSignal.timeout(8000)
         });
-        if (!res.ok) { console.log(`[Reddit] search for sub=${sub} q="${q}" → HTTP ${res.status}`); return; }
+        if (!res.ok) { debugLog(`[Reddit] search for sub=${sub} q="${q}" → HTTP ${res.status}`); return; }
         const text = await res.text();
-        if (text.trimStart().startsWith('<')) { console.log(`[Reddit] sub=${sub} q="${q}" → HTML (blocked)`); return; }
+        if (text.trimStart().startsWith('<')) { debugLog(`[Reddit] sub=${sub} q="${q}" → HTML (blocked)`); return; }
         const data = JSON.parse(text);
         const posts = (data.data?.children || []).map(c => c.data)
           .filter(p => !p.over_18 && p.selftext && p.selftext !== '[deleted]' && p.selftext !== '[removed]' && p.selftext.trim().length > 50);
-        if (posts.length > 0) { allPosts.push(...posts); console.log(`[Reddit] sub=${sub} "${q}" → ${posts.length} posts ✓`); }
-      } catch (e) { console.log(`[Reddit] search failed: ${e.message}`); }
+        if (posts.length > 0) { allPosts.push(...posts); debugLog(`[Reddit] sub=${sub} "${q}" → ${posts.length} posts ✓`); }
+      } catch (e) { debugLog(`[Reddit] search failed: ${e.message}`); }
     }))
   ]);
 
   // ── PullPush.io (fallback, often down) ───────────────────────────────────
   if (allPosts.length === 0 && HAS_DEV_PROXY) {
-    console.log('[Reddit] api.reddit.com returned 0, trying PullPush fallback...');
+    debugLog('[Reddit] api.reddit.com returned 0, trying PullPush fallback...');
     await fetchRedditViaPullPush(noCountry).then(posts => {
-      if (posts.length > 0) { allPosts.push(...posts); console.log(`[Reddit] PullPush → ${posts.length} posts`); }
-    }).catch(e => console.log('[Reddit] PullPush error:', e.message));
+      if (posts.length > 0) { allPosts.push(...posts); debugLog(`[Reddit] PullPush → ${posts.length} posts`); }
+    }).catch(e => debugLog('[Reddit] PullPush error:', e.message));
   }
 
   // ── Deduplicate ───────────────────────────────────────────────────────────
@@ -809,20 +812,20 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
 
   // ── DuckDuckGo HTML as last resort ───────────────────────────────────────
   if (unique.length === 0) {
-    console.log('[Reddit] All APIs failed, trying DuckDuckGo HTML fallback...');
+    debugLog('[Reddit] All APIs failed, trying DuckDuckGo HTML fallback...');
     const ddgSnippets = await fetchRedditFromDuckDuckGo(noCountry);
     if (ddgSnippets.length > 0) {
       const combined = ddgSnippets.map((s, idx) =>
         `[SOURCE:reddit search_result_${idx + 1}]\n${s}`
       ).join('\n\n---\n\n');
-      console.log(`[Reddit] DDG → ${ddgSnippets.length} snippets`);
+      debugLog(`[Reddit] DDG → ${ddgSnippets.length} snippets`);
       return { text: combined, count: ddgSnippets.length };
     }
-    console.log('[Reddit] No data from any source.');
+    debugLog('[Reddit] No data from any source.');
     return null;
   }
 
-  console.log(`[Reddit] Total unique posts: ${unique.length}`);
+  debugLog(`[Reddit] Total unique posts: ${unique.length}`);
   const combined = unique.map(p => {
     const cleanedText = cleanContentText(p.selftext || '');
     const dateStr = p.created_utc ? new Date(p.created_utc * 1000).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
@@ -867,13 +870,13 @@ async function fetchStackExchangeTravel(city, parentCity = null) {
       credentials: 'omit',
       signal: AbortSignal.timeout(10000)
     });
-    if (!res.ok) { console.log(`[StackExchange] HTTP ${res.status} for "${queryTerm}"`); return null; }
+    if (!res.ok) { debugLog(`[StackExchange] HTTP ${res.status} for "${queryTerm}"`); return null; }
     let textData;
-    try { textData = await res.text(); } catch (e) { console.log('[StackExchange] Response read error:', e.message); return null; }
+    try { textData = await res.text(); } catch (e) { debugLog('[StackExchange] Response read error:', e.message); return null; }
     let data;
-    try { data = JSON.parse(textData); } catch (e) { console.log('[StackExchange] JSON parse error (likely gzip):', e.message, '| text preview:', textData.slice(0, 30)); return null; }
+    try { data = JSON.parse(textData); } catch (e) { debugLog('[StackExchange] JSON parse error (likely gzip):', e.message, '| text preview:', textData.slice(0, 30)); return null; }
     const items = (data.items || []).filter(i => i.body && i.score >= 1 && i.is_answered);
-    console.log(`[StackExchange] "${queryTerm}" => ${items.length} items`);
+    debugLog(`[StackExchange] "${queryTerm}" => ${items.length} items`);
     if (items.length === 0) return null;
     const combined = items.map(i =>
       `[SOURCE:stackexchange "${i.title}" url:${i.link} votes:${i.score} ${new Date(i.creation_date * 1000).toISOString().slice(0, 10)}]\n${cleanContentText(stripHtml(i.body))}`
@@ -884,7 +887,7 @@ async function fetchStackExchangeTravel(city, parentCity = null) {
     const queryTerm = parentCity ? `${baseName} OR ${normalizeCityName(parentCity)}` : baseName;
     return (await tryQuery(queryTerm, 20)) || (await tryQuery(baseName, 15));
   } catch (e) {
-    console.log('[StackExchange] Unexpected error:', e.message);
+    debugLog('[StackExchange] Unexpected error:', e.message);
     return null;
   }
 }
@@ -1298,7 +1301,7 @@ Respond ONLY with a JSON object: {"raw name": "Clean Name or Category"}`;
       mapping = JSON.parse(data.response);
     }
   } catch (e) {
-    console.log('Ollama place refine unavailable, using heuristics:', e.message);
+    debugLog('Ollama place refine unavailable, using heuristics:', e.message);
   }
 
   // Heuristic fallback for any places not mapped by LLM
@@ -1396,7 +1399,7 @@ Reply ONLY with a JSON array of category strings, one per item. Example: ["Cultu
         if (matched) keyToClass[key] = matched;
       });
     } catch (e) {
-      console.log('[TopicClassifier] batch error:', e.message);
+      debugLog('[TopicClassifier] batch error:', e.message);
     }
     done += slice.length;
     if (onProgress) onProgress(done, uniqueItems.length);
@@ -1451,7 +1454,7 @@ async function fetchAreaPOIsOverpass(city, lat, lon) {
           }
         }
       }
-    } catch (e) { console.log('[OverpassPOI] geocode:', e.message); }
+    } catch (e) { debugLog('[OverpassPOI] geocode:', e.message); }
   }
 
   if (!centerLat || !centerLon) return [];
@@ -1505,10 +1508,10 @@ out center;`;
       .filter(p => { const k = p.name.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
       .sort((a, b) => a.priority - b.priority)
       .map(p => p.name);
-    console.log(`[OverpassPOI] ${pois.length} POIs for "${city}":`, pois.slice(0, 10).join(', ') + (pois.length > 10 ? '…' : ''));
+    debugLog(`[OverpassPOI] ${pois.length} POIs for "${city}":`, pois.slice(0, 10).join(', ') + (pois.length > 10 ? '…' : ''));
     return pois;
   } catch (e) {
-    console.log('[OverpassPOI] query error:', e.message);
+    debugLog('[OverpassPOI] query error:', e.message);
     return [];
   }
 }
@@ -1586,7 +1589,7 @@ async function runDeepResearchPass(nodes, city, localPlaceNames, lat, lon, ollam
 
   // Merge: Overpass notable POIs first, pass-1 fills any gaps (cap at 20 to bound LLM work)
   const allPOIs = [...new Set([...areaPOIs, ...passOnePOIs])].slice(0, 20);
-  console.log(`[DeepResearch] ${allPOIs.length} POI targets (${areaPOIs.length} from Overpass + ${passOnePOIs.length} from pass-1)`);
+  debugLog(`[DeepResearch] ${allPOIs.length} POI targets (${areaPOIs.length} from Overpass + ${passOnePOIs.length} from pass-1)`);
 
   // 3. Category-level overviews
   const categoryTargets = [
@@ -1620,7 +1623,7 @@ async function runDeepResearchPass(nodes, city, localPlaceNames, lat, lon, ollam
       // Wikipedia search for this specific target
       const wikiResult = await searchAndFetchWikipedia(target.wikiQuery);
       if (wikiResult) {
-        console.log(`[DeepResearch] Wikipedia: "${target.label}" → ${wikiResult.text.length} chars`);
+        debugLog(`[DeepResearch] Wikipedia: "${target.label}" → ${wikiResult.text.length} chars`);
         const extracted = ollamaAvailable
           ? await extractKnowledgeWithLLM(wikiResult.text, city, localPlaceNames, ollamaEndpoint, ollamaModel, 'wikipedia', `Wikipedia: ${target.label}`, today, wikiResult.url, deepChunkLimit)
           : extractKnowledgeNLP(wikiResult.text, city, localPlaceNames, 'wikipedia', `Wikipedia: ${target.label}`, today, wikiResult.url);
@@ -1634,7 +1637,7 @@ async function runDeepResearchPass(nodes, city, localPlaceNames, lat, lon, ollam
           const text = posts
             .map(p => `[SOURCE:reddit r/${p.subreddit || 'travel'} "${p.title || ''}" url:${p.permalink ? `https://reddit.com${p.permalink}` : ''} ${p.created_utc ? new Date(p.created_utc * 1000).toISOString().slice(0, 10) : today}]\n${cleanContentText(p.selftext || '')}`)
             .join('\n\n---\n\n');
-          console.log(`[DeepResearch] Reddit: "${target.label}" → ${posts.length} posts`);
+          debugLog(`[DeepResearch] Reddit: "${target.label}" → ${posts.length} posts`);
           const extracted = await extractKnowledgeWithLLM(text, city, localPlaceNames, ollamaEndpoint, ollamaModel, 'reddit', `Reddit: ${target.label}`, today, '', deepChunkLimit);
           allNewNodes.push(...extracted);
         }
@@ -1642,7 +1645,7 @@ async function runDeepResearchPass(nodes, city, localPlaceNames, lat, lon, ollam
     })
   );
 
-  console.log(`[DeepResearch] Second pass added ${allNewNodes.length} raw nodes from ${allTargets.length} targets`);
+  debugLog(`[DeepResearch] Second pass added ${allNewNodes.length} raw nodes from ${allTargets.length} targets`);
   return allNewNodes;
 }
 
@@ -1736,7 +1739,6 @@ async function extractKnowledgeWithLLM(text, city, placeNames, ollamaEndpoint, o
 
   const CHUNK_SIZE = 5000;  // larger chunks = fewer LLM calls
   const MAX_SEGS = 10;      // cap per source, prevents runaway on large articles
-  const CONCURRENCY = 4;    // parallel Ollama requests
 
   // Split text on SOURCE headers so each chunk retains source metadata
   const rawChunks = text.split(/\n\n---\n\n/);
@@ -1804,7 +1806,7 @@ async function extractKnowledgeWithLLM(text, city, placeNames, ollamaEndpoint, o
 
   // Cap to MAX_SEGS, extra segments yield diminishing returns and can hang the UI
   const cappedJobs = mergedJobs.slice(0, MAX_SEGS);
-  console.log(`[LLM] ${sourceLabel}: ${segmentJobs.length} raw → ${mergedJobs.length} merged → ${cappedJobs.length} capped segments`);
+  debugLog(`[LLM] ${sourceLabel}: ${segmentJobs.length} raw → ${mergedJobs.length} merged → ${cappedJobs.length} capped segments`);
 
   // ── Process all segments in parallel batches ──────────────────────────────
   const allNodes = [];
@@ -1831,7 +1833,7 @@ Respond ONLY with a valid JSON array: [{"place":"...","claim":"...","sentiment":
         body: JSON.stringify({ model: ollamaModel, prompt, stream: false, options: { num_predict: 500, temperature: 0.2 } }),
         signal: AbortSignal.timeout(16000)
       }));
-      if (!res.ok) { console.log('[LLM] Non-ok:', res.status); return; }
+      if (!res.ok) { debugLog('[LLM] Non-ok:', res.status); return; }
       const data = await res.json();
       let responseText = (data.response || '').trim()
         .replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
@@ -1883,7 +1885,7 @@ Respond ONLY with a valid JSON array: [{"place":"...","claim":"...","sentiment":
           extractedAt: new Date().toISOString()
         });
       });
-    } catch (e) { console.log('[LLM] Segment error:', e.message); }
+    } catch (e) { debugLog('[LLM] Segment error:', e.message); }
     if (onSegDone) onSegDone();
   };
 
@@ -1900,11 +1902,6 @@ Respond ONLY with a valid JSON array: [{"place":"...","claim":"...","sentiment":
   });
 }
 
-
-
-
-
-
 export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo, activeCity }) {
   const [tab, setTab] = useState('ingest');
   const [ingestText, setIngestText] = useState('');
@@ -1920,8 +1917,6 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
   const [ollamaModel] = useState(() => localStorage.getItem('ollama_model') || 'llama3.1');
   const [visualMode, setVisualMode] = useState('constellation');
   const [credibilityThreshold, setCredibilityThreshold] = useState(0.3);
-  const [refining, setRefining] = useState(false);
-  const [refineMsg, setRefineMsg] = useState('');
   const [mapOverlayActive, setMapOverlayActive] = useState(false);
   const [areaFilter, setAreaFilter] = useState('all');
   const [expandedSections, setExpandedSections] = useState({
@@ -1934,14 +1929,6 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
     'Miscellaneous': false
   });
 
-  const placesInRequiredAreaSet = useMemo(() => {
-    const set = new Set();
-    (tripData?.locations || []).forEach(loc => {
-      (loc.places || []).forEach(p => set.add(p.name.toLowerCase().trim()));
-      (loc.recommendations || []).forEach(p => set.add(p.name.toLowerCase().trim()));
-    });
-    return set;
-  }, [tripData]);
 
   const placeLookup = useMemo(() => {
     const map = new Map();
@@ -1997,27 +1984,6 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
     return new Set(allCityNames.map(name => name.toLowerCase().trim()));
   }, [allCityNames]);
 
-  const handleRefinePlaces = useCallback(async () => {
-    if (rawNodes.length === 0) return;
-    setRefining(true);
-    setRefineMsg('Refining place names...');
-    try {
-      const refined = await refinePlacesWithLLM(rawNodes, ollamaEndpoint, ollamaModel);
-      setTripData(prev => ({
-        ...prev,
-        knowledgeGraph: {
-          ...prev.knowledgeGraph,
-          nodes: refined
-        }
-      }));
-      setRefineMsg('✓ Place names refined successfully!');
-      setTimeout(() => setRefineMsg(''), 4000);
-    } catch (e) {
-      setRefineMsg(`Error: ${e.message}`);
-    } finally {
-      setRefining(false);
-    }
-  }, [rawNodes, ollamaEndpoint, ollamaModel, setTripData]);
 
   const [wikidataMsg, setWikidataMsg] = useState('');
   const [wikidataRunning, setWikidataRunning] = useState(false);
@@ -2265,11 +2231,11 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           if (geoData && geoData[0]) {
             lat = parseFloat(geoData[0].lat);
             lon = parseFloat(geoData[0].lon);
-            console.log(`Geocoded searched city to coords: [${lat}, ${lon}]`);
+            debugLog(`Geocoded searched city to coords: [${lat}, ${lon}]`);
           }
         }
       } catch (e) {
-        console.log('Error geocoding searched city:', e.message);
+        debugLog('Error geocoding searched city:', e.message);
       }
     } else {
       // Coordinate search mode
@@ -2286,10 +2252,10 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           if (revRes.ok) {
             const revData = await revRes.json();
             city = revData.address.city || revData.address.town || revData.address.municipality || revData.address.village || revData.address.county || '';
-            console.log(`Resolved coordinate to city: ${city}`);
+            debugLog(`Resolved coordinate to city: ${city}`);
           }
         } catch (e) {
-          console.log('Error reverse geocoding:', e.message);
+          debugLog('Error reverse geocoding:', e.message);
         }
 
         if (!city) {
@@ -2312,12 +2278,12 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
             const poiData = await searchRes.json();
             const poiNames = poiData.map(item => item.display_name.split(',')[0]).filter(Boolean);
             if (poiNames.length > 0) {
-              console.log(`Found POIs in radius:`, poiNames);
+              debugLog(`Found POIs in radius:`, poiNames);
               localPlaceNames = [...new Set([...localPlaceNames, ...poiNames])];
             }
           }
         } catch (e) {
-          console.log('Error searching POIs in radius:', e.message);
+          debugLog('Error searching POIs in radius:', e.message);
         }
       } else {
         setFetchStatus('Error: No active location coordinates found.');
@@ -2346,11 +2312,11 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           const address = geoData[0].address;
           parentCityName = address.city || address.town || address.municipality || address.county;
           if (parentCityName === city) parentCityName = null;
-          console.log(`Resolved location: ${city}, parent: ${parentCityName || 'none'}`);
+          debugLog(`Resolved location: ${city}, parent: ${parentCityName || 'none'}`);
         }
       }
     } catch (e) {
-      console.log('Error resolving location parent:', e.message);
+      debugLog('Error resolving location parent:', e.message);
     }
 
     const fetchers = {
@@ -2378,7 +2344,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
     const overpassPOIs = overpassSettled.status === 'fulfilled' ? (overpassSettled.value || []) : [];
     if (overpassPOIs.length > 0) {
       localPlaceNames = [...new Set([...localPlaceNames, ...overpassPOIs])];
-      console.log(`[POI] ${overpassPOIs.length} Overpass POIs (total: ${localPlaceNames.length})`);
+      debugLog(`[POI] ${overpassPOIs.length} Overpass POIs (total: ${localPlaceNames.length})`);
     }
 
     const successResults = [];
@@ -2422,7 +2388,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
         setFetchedPreviews(p => p.map(x => x.sourceType === src.sourceType
           ? { ...x, status: 'extracted', nodeCount: extracted.length }
           : x));
-        console.log(`[NLP] ${src.label}: ${extracted.length} nodes`);
+        debugLog(`[NLP] ${src.label}: ${extracted.length} nodes`);
       });
 
       // Show NLP results immediately so the user sees something fast
@@ -2474,7 +2440,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                 return { ...prev, knowledgeGraph: { ...prev.knowledgeGraph, nodes: deduped, lastUpdated: new Date().toISOString() } };
               });
             }
-            console.log(`[LLM] ${src.label}: ${llmExtracted.length} additional nodes`);
+            debugLog(`[LLM] ${src.label}: ${llmExtracted.length} additional nodes`);
           })),
           phaseTimeout,
         ]).then(result => {
@@ -3402,12 +3368,12 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button onClick={exportConflictData}
                   style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px', borderRadius: '7px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', color: '#fca5a5', cursor: 'pointer', fontSize: '0.65rem', fontWeight: '700', fontFamily: 'inherit' }}
-                  title="Export contested places JSON for validate_conflicts.py (Approach A)">
+                  title="Download the contested places as JSON">
                   <Download size={11} /> Export conflicts
                 </button>
                 <button onClick={exportKnowledgeGraph}
                   style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px', borderRadius: '7px', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.22)', color: '#c084fc', cursor: 'pointer', fontSize: '0.65rem', fontWeight: '700', fontFamily: 'inherit' }}
-                  title="Export full KG JSON for validate_novelty.py (Approach B)">
+                  title="Download the whole knowledge graph as JSON">
                   <Download size={11} /> Export KG
                 </button>
               </div>

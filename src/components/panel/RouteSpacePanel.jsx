@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Sparkles, Compass, MapPin, SlidersHorizontal, Route, Info, Layers, Search, Check, ChevronLeft, ChevronRight, Play, Pause, RefreshCw, X, ArrowRight, HelpCircle, ChevronUp, ChevronDown, Trash2, Plus, Loader2 } from 'lucide-react';
+import { Sparkles, Compass, Search, Check, ChevronRight, RefreshCw, X, ArrowRight, HelpCircle, ChevronUp, ChevronDown, Trash2, Plus, Loader2 } from 'lucide-react';
 import { getDistanceKm, scorePlaceQuality, getTypeDetails } from '../../utils';
-import { ENTITY_PROFILES, PACKING_TEMPLATES, INTEREST_CATEGORIES } from '../../config';
+import { ENTITY_PROFILES, INTEREST_CATEGORIES } from '../../config';
 import { searchNominatim } from '../../api';
 import { buildPlaceEvidence } from '../../knowledge/evidence';
 import { strictEvidence } from '../../knowledge/controversy';
@@ -140,110 +140,6 @@ function RhythmLegend({ stopsArrays }) {
   );
 }
 
-// ── Sky Lens Radar Chart ─────────────────────────────────────────────────────
-function RouteRadarChart({ data, size = 200, onRemoveA, onRemoveB }) {
-  const n = data.length;
-  if (n === 0) return null;
-  const cx = size / 2, cy = size / 2;
-  const r = size * 0.38;
-  const angles = data.map((_, i) => (2 * Math.PI * i) / n - Math.PI / 2);
-
-  const pt = (score, angle) => {
-    const s = typeof score === 'number' && !isNaN(score) ? Math.max(0, score) : 0;
-    return [cx + (r * s / 10) * Math.cos(angle), cy + (r * s / 10) * Math.sin(angle)];
-  };
-
-  const ptsA = data.map((d, i) => pt(d['Route A'], angles[i]));
-  const ptsB = data.map((d, i) => pt(d['Route B'], angles[i]));
-  const ptsM = data.map((d, i) => pt(d['Morphed'], angles[i]));
-
-  const toPath = pts => pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
-
-  return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
-      <svg width={size} height={size} style={{ display: 'block', overflow: 'visible', margin: '0 auto' }}>
-        <defs>
-          <filter id="sky-glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="2.5" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-
-        {/* Grid rings */}
-        {[2.5, 5, 7.5, 10].map(ring => (
-          <polygon key={ring}
-            points={angles.map(a => `${(cx + r * ring / 10 * Math.cos(a)).toFixed(1)},${(cy + r * ring / 10 * Math.sin(a)).toFixed(1)}`).join(' ')}
-            fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="0.75"/>
-        ))}
-
-        {/* Spokes */}
-        {angles.map((a, i) => (
-          <line key={i} x1={cx} y1={cy}
-            x2={(cx + r * Math.cos(a)).toFixed(1)} y2={(cy + r * Math.sin(a)).toFixed(1)}
-            stroke="rgba(255,255,255,0.08)" strokeWidth="0.75"/>
-        ))}
-
-        {/* Route B polygon, double-click to remove */}
-        <polygon points={toPath(ptsB)} fill="rgba(16,185,129,0.08)" stroke="#10b981" strokeWidth="1.8"
-          style={{ cursor: onRemoveB ? 'pointer' : 'default' }}
-          onDoubleClick={onRemoveB || undefined}
-          title={onRemoveB ? 'Double-click to remove Route B' : undefined}/>
-        {ptsB.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r="2.5" fill="#10b981" opacity={0.9}
-            style={{ cursor: onRemoveB ? 'pointer' : 'default' }}
-            onDoubleClick={onRemoveB || undefined}/>
-        ))}
-
-        {/* Route A polygon, double-click to remove */}
-        <polygon points={toPath(ptsA)} fill="rgba(59,130,246,0.08)" stroke="#3b82f6" strokeWidth="1.8"
-          style={{ cursor: onRemoveA ? 'pointer' : 'default' }}
-          onDoubleClick={onRemoveA || undefined}
-          title={onRemoveA ? 'Double-click to remove Route A' : undefined}/>
-        {ptsA.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r="2.5" fill="#3b82f6" opacity={0.9}
-            style={{ cursor: onRemoveA ? 'pointer' : 'default' }}
-            onDoubleClick={onRemoveA || undefined}/>
-        ))}
-
-        {/* Morphed polygon */}
-        <polygon points={toPath(ptsM)} fill="rgba(139,92,246,0.25)" stroke="#8b5cf6" strokeWidth="2.5" filter="url(#sky-glow)"/>
-        {ptsM.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="3.5" fill="#c084fc" stroke="#fff" strokeWidth="1"/>)}
-
-        {/* Axis labels */}
-        {angles.map((a, i) => {
-          const lr = r + 14;
-          const lx = cx + lr * Math.cos(a);
-          const ly = cy + lr * Math.sin(a);
-          const anchor = Math.abs(Math.cos(a)) < 0.15 ? 'middle' : Math.cos(a) > 0 ? 'start' : 'end';
-          const dyOff = Math.sin(a) < -0.5 ? -2 : Math.sin(a) > 0.5 ? 9 : 4;
-          return (
-            <text key={i} x={lx.toFixed(1)} y={(ly + dyOff).toFixed(1)}
-              textAnchor={anchor} fill="rgba(255,255,255,0.8)"
-              fontSize="7" fontFamily="Inter,sans-serif" fontWeight="700"
-              style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              {data[i].subject}
-            </text>
-          );
-        })}
-      </svg>
-
-      {/* Legend row, HTML for readability */}
-      <div style={{ display:'flex', gap:'18px', justifyContent:'center', marginTop:'2px' }}>
-        {[['#3b82f6','Route A','A'], ['#8b5cf6','Morphed',null], ['#10b981','Route B','B']].map(([color, lbl, slot]) => {
-          const onRemove = slot === 'A' ? onRemoveA : slot === 'B' ? onRemoveB : null;
-          return (
-            <div key={lbl} style={{ display:'flex', alignItems:'center', gap:'5px', cursor: onRemove ? 'pointer' : 'default', opacity: onRemove ? 1 : 1 }}
-              onClick={onRemove || undefined}
-              title={onRemove ? `Remove ${lbl}` : undefined}>
-              <div style={{ width:10, height:10, borderRadius:'50%', background:color, flexShrink:0 }}/>
-              <span style={{ fontSize:'0.68rem', fontWeight:'700', color, letterSpacing:'0.02em' }}>{lbl}{onRemove ? ' ×' : ''}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 // ── Type Bucket for Similarity Matching ─────────────────────────────────────
 function getTypeBucket(type) {
@@ -305,17 +201,6 @@ function classifyStopGene(stop, idx, allStops, stabilityLookup, themeText) {
   return genes.slice(0, 2);
 }
 
-// ── Radar Dimension Config ────────────────────────────────────────────────────
-const RADAR_DIMS = [
-  { key: 'totalDistance', subject: 'Distance', invert: false },
-  { key: 'cost',          subject: 'Budget',   invert: true  },
-  { key: 'novelty',       subject: 'Local',    invert: false },
-  { key: 'diversity',     subject: 'Variety',  invert: false },
-  { key: 'themeDensity',  subject: 'Theme',    invert: false },
-  { key: 'spread',        subject: 'Spread',   invert: false },
-  { key: 'stopCount',     subject: 'Stops',    invert: false },
-  { key: 'popularity',    subject: 'Popular',  invert: false },
-];
 
 // ── Main Component ───────────────────────────────────────────────────────────
 export function RouteSpacePanel({
@@ -403,15 +288,12 @@ export function RouteSpacePanel({
     try { return JSON.parse(localStorage.getItem('routespace_radar_axes') || 'null') || ['totalDistance','cost','novelty','diversity','themeDensity']; }
     catch { return ['totalDistance','cost','novelty','diversity','themeDensity']; }
   });
-  const [showAxisConfig, setShowAxisConfig] = useState(false);
   const [clusterPopup, setClusterPopup] = useState(null);
   const [minStops, setMinStops] = useState(() => Number(localStorage.getItem('routespace_min_stops') || '3'));
   const [maxStops, setMaxStops] = useState(() => Number(localStorage.getItem('routespace_max_stops') || '5'));
   const [hoveredPlace, setHoveredPlace] = useState(null);
   const [showGenome, setShowGenome] = useState(false);
   const [showMutationStudio, setShowMutationStudio] = useState(false);
-  const [activeMutationBtn, setActiveMutationBtn] = useState(null);
-  const [pendingMutation, setPendingMutation] = useState(null);
   const [navSliders, setNavSliders] = useState({ local: 50, compact: 50, theme: 50, social: 50 });
   const [typeSliders, setTypeSliders] = useState({ museums: 50, food: 50, parks: 50, shopping: 50 });
   // Multiverse: calm ↔ lively (null = ignore). Uses what sources say about crowds at each stop.
@@ -647,7 +529,6 @@ export function RouteSpacePanel({
       );
     }
   }, [clusteredCandidates, brushedIds, viewMode]);  
-  const [showStabilitySection, setShowStabilitySection] = useState(false);
 
   const updateRouteWithStops = useCallback((newStops) => {
     let totalDistance = 0;
@@ -1597,119 +1478,6 @@ export function RouteSpacePanel({
     setTimeout(() => setAppliedSuccess(false), 4000);
   };
 
-  const computeMutation = useCallback((mutationType) => {
-    if (!routeSpaceRoute || placesPool.length === 0) return null;
-    const stops = routeSpaceRoute.stops;
-    const usedNames = new Set(stops.map(s => s.name.toLowerCase()));
-    const pool = placesPool.filter(p => !usedNames.has(p.name.toLowerCase()));
-
-    const nearbyAlt = (fromStop, filterFn) => pool
-      .filter(filterFn)
-      .map(p => ({ p, d: getDistanceKm(fromStop.coords[0], fromStop.coords[1], p.coords[0], p.coords[1]) }))
-      .filter(x => x.d < 5)
-      .sort((a, b) => a.d - b.d)[0]?.p;
-
-    if (mutationType === 'reorder') {
-      if (stops.length <= 2) return null;
-      const first = stops[0];
-      const last = stops[stops.length - 1];
-      let remaining = stops.slice(1, -1);
-      const newMiddle = [];
-      let curr = first;
-      while (remaining.length > 0) {
-        const nearest = remaining.reduce((best, s) => {
-          const d = getDistanceKm(curr.coords[0], curr.coords[1], s.coords[0], s.coords[1]);
-          return d < best.d ? { s, d } : best;
-        }, { s: remaining[0], d: Infinity });
-        newMiddle.push(nearest.s);
-        remaining = remaining.filter(s => s !== nearest.s);
-        curr = nearest.s;
-      }
-      const newStops = [first, ...newMiddle, last];
-      const oldDist = stops.reduce((sum, s, i) => i > 0 ? sum + getDistanceKm(stops[i-1].coords[0], stops[i-1].coords[1], s.coords[0], s.coords[1]) : sum, 0);
-      const newDist = newStops.reduce((sum, s, i) => i > 0 ? sum + getDistanceKm(newStops[i-1].coords[0], newStops[i-1].coords[1], s.coords[0], s.coords[1]) : sum, 0);
-      if (oldDist - newDist < 0.05) return null;
-      return { mutationType, newStops, targetStop: null, replacement: null,
-        reason: `Reorder stops for a more efficient walking path`,
-        savings: `saves ~${(oldDist - newDist).toFixed(2)} km`,
-        diff: stops.map((s, i) => ({ gene: `Stop ${i+1}`, original: s.name, mutation: newStops[i]?.name || s.name, kept: s.name === newStops[i]?.name })) };
-    }
-
-    if (mutationType === 'local') {
-      const targets = stops
-        .map((s, i) => ({ s, i, score: (s.osmTags?.wikidata && !s.isSaved) ? 1 : 0 }))
-        .filter(x => x.score > 0).sort((a, b) => b.score - a.score);
-      if (!targets.length) return null;
-      const { s: target, i: ti } = targets[0];
-      const rep = nearbyAlt(target, p => !p.osmTags?.wikidata || p.isSaved);
-      if (!rep) return null;
-      return { mutationType, newStops: stops.map((s, i) => i === ti ? rep : s), targetStop: target, replacement: rep,
-        reason: `Replace a well-known landmark with a more local, off-the-beaten-path stop`,
-        diff: [{ gene: 'Replaced', original: target.name, mutation: rep.name, kept: false }] };
-    }
-
-    if (mutationType === 'theme') {
-      const kws = themeText.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-      const score = s => kws.reduce((n, w) => n + (s.name.toLowerCase().includes(w) ? 3 : 0) + ((s.type||'').toLowerCase().includes(w) ? 2 : 0), 0);
-      const targets = stops.map((s, i) => ({ s, i, score: score(s) })).sort((a, b) => a.score - b.score);
-      const { s: target, i: ti } = targets[0];
-      const rep = pool
-        .map(p => ({ p, score: score(p), d: getDistanceKm(target.coords[0], target.coords[1], p.coords[0], p.coords[1]) }))
-        .filter(x => x.score > targets[0].score && x.d < 5)
-        .sort((a, b) => b.score - a.score || a.d - b.d)[0]?.p;
-      if (!rep) return null;
-      return { mutationType, newStops: stops.map((s, i) => i === ti ? rep : s), targetStop: target, replacement: rep,
-        reason: `Replace the least thematic stop with one that better matches "${themeText.slice(0, 35)}…"`,
-        diff: [{ gene: 'Theme upgrade', original: target.name, mutation: rep.name, kept: false }] };
-    }
-
-    if (mutationType === 'compact') {
-      const cLat = stops.reduce((s, p) => s + p.coords[0], 0) / stops.length;
-      const cLon = stops.reduce((s, p) => s + p.coords[1], 0) / stops.length;
-      const farthest = stops.map((s, i) => ({ s, i, d: getDistanceKm(cLat, cLon, s.coords[0], s.coords[1]) })).sort((a, b) => b.d - a.d)[0];
-      if (farthest.d < 1.0) return null;
-      const rep = pool
-        .map(p => ({ p, d: getDistanceKm(cLat, cLon, p.coords[0], p.coords[1]) }))
-        .filter(x => x.d < farthest.d * 0.65)
-        .sort((a, b) => a.d - b.d)[0]?.p;
-      if (!rep) return null;
-      return { mutationType, newStops: stops.map((s, i) => i === farthest.i ? rep : s), targetStop: farthest.s, replacement: rep,
-        reason: `Remove the geographic outlier to tighten the spatial footprint`,
-        diff: [{ gene: 'Compacted', original: farthest.s.name, mutation: rep.name, kept: false }] };
-    }
-
-    if (mutationType === 'unusual') {
-      const anchors = stops.map((s, i) => ({ s, i, cat: stabilityLookup[s.name.toLowerCase()] }))
-        .filter(x => x.cat === 'anchor').sort(() => 0);
-      if (!anchors.length) return null;
-      const { s: target, i: ti } = anchors[0];
-      const outlierPool = pool.filter(p => stabilityLookup[p.name.toLowerCase()] === 'outlier' || !p.osmTags?.wikidata || p.isSaved);
-      const rep = nearbyAlt(target, p => outlierPool.includes(p));
-      if (!rep) return null;
-      return { mutationType, newStops: stops.map((s, i) => i === ti ? rep : s), targetStop: target, replacement: rep,
-        reason: `Swap a common landmark for a rarer, less-visited discovery`,
-        diff: [{ gene: 'Discovery swap', original: target.name, mutation: rep.name, kept: false }] };
-    }
-
-    if (mutationType === 'social') {
-      const socialTypes = ['restaurant', 'cafe', 'coffee', 'bar', 'market', 'food'];
-      const nonSocial = stops.map((s, i) => ({ s, i }))
-        .filter(x => !socialTypes.some(t => (x.s.type||'').toLowerCase().includes(t))).slice(-1)[0];
-      if (!nonSocial) return null;
-      const rep = nearbyAlt(nonSocial.s, p => socialTypes.some(t => (p.type||'').toLowerCase().includes(t)));
-      if (!rep) return null;
-      return { mutationType, newStops: stops.map((s, i) => i === nonSocial.i ? rep : s), targetStop: nonSocial.s, replacement: rep,
-        reason: `Add a food or social stop by swapping a non-social place`,
-        diff: [{ gene: 'Social add', original: nonSocial.s.name, mutation: rep.name, kept: false }] };
-    }
-
-    return null;
-  }, [routeSpaceRoute, placesPool, themeText, stabilityLookup]);
-
-  const getPercentageString = (val, max = 20) => {
-    return `${Math.min(100, Math.round((val / max) * 100))}%`;
-  };
-
   if (placesPool.length < 3) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-secondary)' }}>
@@ -2078,8 +1846,6 @@ export function RouteSpacePanel({
                 </text>
               );
             })}
-
-
 
             {/* Stars / Route Nodes */}
             {clusteredCandidates.map(c => {

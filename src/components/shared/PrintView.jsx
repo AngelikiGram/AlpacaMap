@@ -1,6 +1,5 @@
-import React from 'react';
 import { getCityColor } from '../../utils.jsx';
-import { Utensils, Coffee, Landmark, TreePine, ShoppingBag, Camera, MountainSnow, Tent, Castle, Bed, Activity, Bus, Ship, Train, Plane, MapPin, BookOpen, Building, Palette, Moon, Satellite, Wine, Calendar as CalendarIcon, FileText } from 'lucide-react';
+import { Utensils, Coffee, Landmark, TreePine, ShoppingBag, Camera, MountainSnow, Castle, Bed, Activity, Bus, MapPin, BookOpen, Building, Palette, Wine, Calendar as CalendarIcon, FileText } from 'lucide-react';
 
 const TYPE_GLYPH = {
   restaurant: <Utensils size={16} style={{verticalAlign:'middle'}}/>,
@@ -91,8 +90,6 @@ export const PrintView = ({ tripData }) => {
           </div>
         </div>
       )}
-
-
 
       {/* ── Daily Itinerary ──────────────────────────────────────── */}
       {itinerary.length > 0 && (

@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { searchNominatim } from './api.js';
-import { ollamaChatUrl } from './endpoints';
-import { BROWSER_MODELS, DEFAULT_BROWSER_MODEL, hasWebGPU, browserChatFetch, isBrowserModelLoaded } from './ai/browserLLM';
-import { Loader2, X, Sparkles, ChevronDown, ChevronUp, RotateCcw, Download, Settings, Plus, Pencil, Trash2, AlertTriangle, Calendar, CreditCard, Backpack, Lightbulb, BrainCircuit, Check, MapPin, ListChecks, GripVertical, User, Heart, Gem, Users, Briefcase, Activity, Zap, Coffee, Crown, Accessibility, Camera, TreePine, Leaf, Landmark, Utensils, Tent, Moon, Layers, Gamepad2, BookOpen, Compass, Martini } from 'lucide-react';
+import { searchNominatim } from '../../api.js';
+import { ollamaChatUrl } from '../../endpoints';
+import { BROWSER_MODELS, DEFAULT_BROWSER_MODEL, hasWebGPU, browserChatFetch, isBrowserModelLoaded } from '../../ai/browserLLM';
+import { Loader2, X, Sparkles, RotateCcw, Settings, Plus, Pencil, Trash2, CreditCard, BrainCircuit, Check, MapPin, ListChecks, GripVertical, User, Heart, Gem, Users, Briefcase, Activity, Zap, Coffee, Crown, Accessibility, Camera, TreePine, Leaf, Landmark, Utensils, Tent, Moon, Layers, Gamepad2, BookOpen, Compass, Martini } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    FEW-SHOT EXAMPLE LIBRARY
@@ -79,9 +79,6 @@ const FEEDBACK_KEY = 'tripmind_feedback_v2';
 function loadFeedbackStore() {
   try { return JSON.parse(localStorage.getItem(FEEDBACK_KEY) || '{}'); } catch { return {}; }
 }
-function saveFeedbackStore(store) {
-  localStorage.setItem(FEEDBACK_KEY, JSON.stringify(store));
-}
 
 function getProfileKey(groupType, style, pace) {
   const styleStr = Array.isArray(style) ? style.join('+') : style;
@@ -106,25 +103,6 @@ function getLearnedCorrections(profileKey) {
   return { corrections: corrections.slice(-8), memory };
 }
 
-function recordFeedback(profileKey, type, itemName, rating, note) {
-  const store = loadFeedbackStore();
-  store.corrections = store.corrections || [];
-  if (rating < 0 && note) {
-    store.corrections.push({ profileKey, type, itemName, rating, note, ts: Date.now() });
-    // Keep last 30 corrections
-    if (store.corrections.length > 30) store.corrections = store.corrections.slice(-30);
-  }
-  // Profile memory: track positive day themes
-  if (rating > 0 && type === 'day') {
-    store.profileMemory = store.profileMemory || {};
-    store.profileMemory[profileKey] = store.profileMemory[profileKey] || { goodThemes: [], count: 0 };
-    store.profileMemory[profileKey].goodThemes.push(itemName);
-    store.profileMemory[profileKey].count += 1;
-    if (store.profileMemory[profileKey].goodThemes.length > 10)
-      store.profileMemory[profileKey].goodThemes = store.profileMemory[profileKey].goodThemes.slice(-10);
-  }
-  saveFeedbackStore(store);
-}
 
 /* ─────────────────────────────────────────────────────────────────────────────
    SYSTEM PROMPT BUILDER
@@ -346,8 +324,6 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
   const [applyDone,      setApplyDone]    = useState(false);
   const [editingStop,    setEditingStop]  = useState(null); // {dayIndex,stopIndex}
   const [editDraft,      setEditDraft]    = useState(null);
-  const [draggedStop,    setDraggedStop]  = useState(null); // {dayIndex,stopIndex}
-  const [refineText,     setRefineText]   = useState('');
   const [placesList,     setPlacesList]   = useState(() => {
     try {
       return JSON.parse(sessionStorage.getItem('tripmind_placeslist') || 'null');
@@ -532,7 +508,6 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
   const getCoolPromptSuggestion = () => {
     return promptSuggestion;
   };
-  const [showMetrics, setShowMetrics] = useState(false);
   const [trainingInfo, setTrainingInfo] = useState(null);
   const [modelReady,   setModelReady]   = useState(false);
   const [elapsedSecs,  setElapsedSecs]  = useState(0);
@@ -583,13 +558,6 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
     setEditingStop(null);
   };
 
-  const reorderStop = (di, si, dir) => {
-    const stops = [...plan.days[di].stops];
-    const ni = si + dir;
-    if (ni < 0 || ni >= stops.length) return;
-    [stops[si], stops[ni]] = [stops[ni], stops[si]];
-    updateAiPlan(ap => ({ ...ap, days: ap.days.map((d, i) => i !== di ? d : { ...d, stops }) }));
-  };
 
   const generatePlaces = async () => {
     if (aiProvider !== 'browser' && !ollamaEndpoint.trim()) { setErr('Set Ollama endpoint first.'); return; }
@@ -652,7 +620,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
       let parsed;
       try {
         parsed = JSON.parse(m[0]);
-      } catch (parseErr) {
+      } catch {
         throw new Error('Failed to parse JSON response. The model output was malformed. Try again.');
       }
       
@@ -681,7 +649,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
       setPlacesList(mappedPlaces);
       setPlacesMode(true);
 
-      // Background-geocode: stagger 1 req/s (Nominatim rate limit) but fire all in parallel —
+      // Background-geocode: stagger 1 req/s (Nominatim rate limit) but fire all in parallel , 
       // completes in ~(places/1s + last response) instead of the old serial ~(places × 0.7s)
       const gen = (geocodeAbortRef.current = (geocodeAbortRef.current || 0) + 1);
       mappedPlaces.forEach((p, i) => {
@@ -824,7 +792,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
       let parsed;
       try {
         parsed = JSON.parse(m[0]);
-      } catch (err) {
+      } catch {
         throw new Error('Invalid JSON returned.\\nRaw Output:\\n' + m[0].slice(0, 300));
       }
       
@@ -921,170 +889,6 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
     setTimeout(() => setApplyDone(false), 4000);
   };
 
-  const exportTrainingData = () => {
-    const lines = [];
-    const basePrompt = buildTripMindPrompt('(No POI data, use destination knowledge)', 3, [], { corrections: [], memory: null });
-
-    const ARCHETYPES = [
-      {
-        key: 'couple/cultural/moderate',
-        userMsg: 'GROUP: couple | PACE: moderate | STYLE: cultural | DAYS: 3\nDESTINATIONS: Barcelona\nTRAVELER DESCRIPTION: We love art and architecture but hate tourist crowds. Great coffee is non-negotiable. Authentic local experiences over famous-landmark checkboxes.',
-        response: {
-          tripSummary: 'Three days in Barcelona for architecture-obsessed, crowd-averse art lovers, Gaudí at dawn, hidden modernista gems by afternoon, neighbourhood wine bars when tourists head to La Rambla.',
-          travelerProfile: { type:'couple', style:'cultural', pace:'moderate', budgetTier:'mid', personalityNote:'They came for the buildings, they stay for the coffee, and they know the difference between a cortado and a café con leche.' },
-          days: [
-            { dayNumber:1, date:'Day 1', theme:'Arrival & Neighbourhood Immersion', weatherNote:'', stops:[
-              { time:'15:00', name:'El Born neighbourhood walk', type:'historic', duration:'1.5 hrs', notes:'Drop bags and walk. Born is where local Barcelona lives. Head for Carrer del Rec, find a bench in Parc de la Ciutadella.', budgetEst:0, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:false },
-              { time:'17:30', name:"Cafè de l'Acadèmia", type:'cafe', duration:'45 min', notes:"Old-Barcelona café that doesn't need to advertise. Espresso and pa amb tomàquet. Arrive before 18:00.", budgetEst:12, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:false },
-              { time:'20:30', name:'El Xampanyet', type:'restaurant', duration:'1.5 hrs', notes:'Cave restaurant, cava on tap, perfect tapas. Go at 20:30 when locals arrive. Book or arrive early.', budgetEst:35, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:true },
-            ], dayBudget:47, dayTip:'The city rewards patience. Walk slowly tonight, tomorrow is the architecture.' },
-            { dayNumber:2, date:'Day 2', theme:'Gaudí at Dawn, Modernista Afternoon', weatherNote:'', stops:[
-              { time:'08:30', name:'Sagrada Família', type:'attraction', duration:'2 hrs', notes:'Book the first slot, the light through stained glass peaks before 11am and crowds are minimal. Go straight to the nave, not the towers.', budgetEst:26, transport:'metro', transportTime:'15 min', weatherSensitive:false, mustBook:true },
-              { time:'11:00', name:'Bar del Pla', type:'cafe', duration:'45 min', notes:'Post-Gaudí decompression. Great coffee, good croquetas. Not a tourist spot.', budgetEst:14, transport:'metro', transportTime:'10 min', weatherSensitive:false, mustBook:false },
-              { time:'12:30', name:'Palau de la Música Catalana', type:'historic', duration:'1 hr', notes:"Domènech i Montaner's masterpiece, most people walk past it. The facade alone is worth it.", budgetEst:22, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:false },
-              { time:'18:00', name:'Park Güell, golden hour', type:'attraction', duration:'1.5 hrs', notes:'Book timed entry for 18:00. The terrace faces southwest, golden hour is spectacular. Use the less-touristy north entrance.', budgetEst:13, transport:'bus', transportTime:'20 min', weatherSensitive:true, mustBook:true },
-            ], dayBudget:135, dayTip:"Two max-booking slots per day is the limit, otherwise you're a schedule, not a traveler." },
-            { dayNumber:3, date:'Day 3', theme:'Hidden Eixample, Slow Departure', weatherNote:'', stops:[
-              { time:'09:30', name:'Federal Café', type:'cafe', duration:'1 hr', notes:'Best brunch in Eixample. Come for the coffee, stay for the light.', budgetEst:18, transport:'metro', transportTime:'10 min', weatherSensitive:false, mustBook:false },
-              { time:'11:00', name:'Fundació Antoni Tàpies', type:'museum', duration:'1.5 hrs', notes:'Hidden gem, Tàpies in his own foundation is never crowded. A completely different encounter than MACBA.', budgetEst:12, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:false },
-              { time:'13:30', name:'Mercat de Sant Antoni', type:'attraction', duration:'1 hr', notes:"Locals' market, none of the Boqueria circus. Lunch from stalls, fresh juice, people-watch.", budgetEst:15, transport:'metro', transportTime:'10 min', weatherSensitive:false, mustBook:false },
-            ], dayBudget:65, dayTip:'Departure day ends at 13:00 max. Leave knowing your neighbourhood better than any landmark.' },
-          ],
-          budget:{ accommodation:330, food:180, activities:110, transport:45, extras:30, total:695, currency:'EUR', perDayAverage:232 },
-          packing:[ { item:'Comfortable walking shoes', reason:'Cobblestones in Born and Gothic Quarter punish anything with a heel' }, { item:'Printed booking confirmations', reason:'Sagrada Família and Park Güell require timed entry, have them offline' }, { item:'Small daypack', reason:'Camera, water, layers, not so large you look like a tourist' } ],
-          researchMetrics:{ poisGrounded:'8 of 9 stops verified', avgStopsPerDay:3, indoorOutdoorRatio:'55/45', weatherRiskStops:1, uniqueCategories:6, fewShotExamplesUsed:['Couple · Cultural · Moderate'], feedbackCorrectionsApplied:0, profileMemoryUsed:false },
-        }
-      },
-      {
-        key: 'solo/adventure/packed',
-        userMsg: 'GROUP: solo | PACE: packed | STYLE: adventure | DAYS: 3\nDESTINATIONS: Innsbruck, Austria\nTRAVELER DESCRIPTION: Solo hiker, early riser, want every hour to count. Not afraid of altitude. Happy with simple food if the scenery is exceptional.',
-        response: {
-          tripSummary: 'Three days in the Alps from Innsbruck, summits before breakfast, cable cars as commutes, and views that make you forget you are exhausted.',
-          travelerProfile:{ type:'solo', style:'adventure', pace:'packed', budgetTier:'mid', personalityNote:'Treats the 5am alarm as an opportunity, not a punishment.' },
-          days:[
-            { dayNumber:1, date:'Day 1', theme:'Arrival Summit, Nordkette Before Dark', weatherNote:'Check webcam, route closes in low visibility', stops:[
-              { time:'14:00', name:'Nordkettenbahn cable car', type:'hiking', duration:'3 hrs', notes:'Take the cable car straight to Seegrube (1905m) or Hafelekar (2334m). Arrive before 14:30 for afternoon light. Solo: stay on marked paths.', budgetEst:38, transport:'walk', transportTime:'10 min from centre', weatherSensitive:true, mustBook:false },
-              { time:'18:30', name:'Goldenes Dachl area', type:'historic', duration:'45 min', notes:'Medieval centre on your walk back from the cable car station. 15 minutes is enough, a pivot, not a stop.', budgetEst:0, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:false },
-              { time:'20:00', name:'Gasthaus Weisses Rössl', type:'restaurant', duration:'1 hr', notes:'Tyrolean food, wooden interior, local wine. Order the Tafelspitz or Tiroler Gröstl, not the tourist menu.', budgetEst:22, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:false },
-            ], dayBudget:80, dayTip:'Check the Nordkette webcam the morning before you go, alpine weather turns fast.' },
-            { dayNumber:2, date:'Day 2', theme:'Stubai Glacier, Full Alpine Day', weatherNote:'Mountain weather, start before 9am', stops:[
-              { time:'07:00', name:'Stubaier Gletscher', type:'hiking', duration:'6 hrs', notes:'Take the 07:00 Stubaigletscher bus from Innsbruck. Glacier at 3200m, hiking boots, sunglasses, sunscreen at altitude essential.', budgetEst:55, transport:'bus', transportTime:'1 hr from Innsbruck', weatherSensitive:true, mustBook:false },
-              { time:'14:30', name:'Mutterberg Alm', type:'restaurant', duration:'45 min', notes:'Mountain hut lunch at the base of the glacier. Gulasch soup, dark bread. You have earned this.', budgetEst:18, transport:'walk', transportTime:'at base station', weatherSensitive:false, mustBook:false },
-              { time:'20:00', name:'Tribaun craft beer', type:'bar', duration:'1.5 hrs', notes:'Back in Innsbruck, debrief the day at a local brewery. Sit at the bar.', budgetEst:16, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:false },
-            ], dayBudget:119, dayTip:'Glacier is above 3000m, UV reflects intensely off snow. Bring SPF 50 and glacier glasses, not regular sunglasses.' },
-            { dayNumber:3, date:'Day 3', theme:'Patscherkofel Ridge, Solo Sunrise', weatherNote:'Early start required', stops:[
-              { time:'06:30', name:'Patscherkofel cable car', type:'hiking', duration:'4 hrs', notes:'Cable car opens 07:00 in summer. Hike the Zirbenweg ridge trail, 5km, through stone pine forest, panoramic Inn valley views. Best light 07:00–10:00.', budgetEst:22, transport:'bus', transportTime:'20 min', weatherSensitive:true, mustBook:false },
-              { time:'11:30', name:'Bergisel Ski Jump', type:'attraction', duration:'1 hr', notes:'Zaha Hadid architectural landmark. Look down at Innsbruck from the jump platform.', budgetEst:11, transport:'bus', transportTime:'20 min', weatherSensitive:false, mustBook:false },
-              { time:'13:00', name:'Markthalle Innsbruck, final lunch', type:'restaurant', duration:'1 hr', notes:'Quick market lunch at Austrian delis before heading to the station. Done by 14:00.', budgetEst:12, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:false },
-            ], dayBudget:95, dayTip:'Tell your accommodation where you are hiking each day. Alpine solo hiking is safe, but someone should know your route.' },
-          ],
-          budget:{ accommodation:165, food:140, activities:200, transport:55, extras:20, total:580, currency:'EUR', perDayAverage:193 },
-          packing:[ { item:'Hiking boots (waterproof)', reason:'Glacier moraine and mountain trails, no trail runners' }, { item:'Fleece + hardshell', reason:'Temperature drops 6°C per 1000m, glacier is 15°C colder than town' }, { item:'Glacier sunglasses', reason:'UV off snow causes snow blindness in 30 minutes without proper eyewear' }, { item:'Bus schedule screenshotted', reason:'Missing the 07:00 Stubai bus costs you 2 hours' } ],
-          researchMetrics:{ poisGrounded:'7 of 8 stops verified', avgStopsPerDay:3, indoorOutdoorRatio:'75/25', weatherRiskStops:3, uniqueCategories:5, fewShotExamplesUsed:['Solo · Adventure · Packed'], feedbackCorrectionsApplied:0, profileMemoryUsed:false },
-        }
-      },
-      {
-        key: 'family/mixed/relaxed',
-        userMsg: 'GROUP: family | PACE: relaxed | STYLE: mixed | DAYS: 4\nDESTINATIONS: Lisbon, Portugal\nTRAVELER DESCRIPTION: Two parents, kids aged 6 and 9. Kids lose energy fast. No rushing, no packed schedules. Happy to sit in a café for an hour.',
-        response: {
-          tripSummary: "Four gentle Lisbon days built around kid energy levels, mornings with wonder, long lunches with no agenda, and enough open time that the 6-year-old's improvisations become the best part.",
-          travelerProfile:{ type:'family', style:'mixed', pace:'relaxed', budgetTier:'mid', personalityNote:"Parents who've learned that the best family travel day is 40% planned, 60% discovered." },
-          days:[
-            { dayNumber:1, date:'Day 1', theme:'Arrival, Alfama at Kid Speed', weatherNote:'', stops:[
-              { time:'15:00', name:'Miradouro da Graça', type:'viewpoint', duration:'45 min', notes:'First view of Lisbon together. The kids will run around the terrace. Let them. The view does the explaining.', budgetEst:0, transport:'taxi', transportTime:'15 min from airport', weatherSensitive:false, mustBook:false },
-              { time:'17:00', name:'Pastéis de Belém', type:'cafe', duration:'45 min', notes:'The original pastel de nata. Kids will love it. Queue moves fast. Order 4 each, seriously.', budgetEst:20, transport:'tram', transportTime:'20 min', weatherSensitive:false, mustBook:false },
-              { time:'19:30', name:'Time Out Market, family dinner', type:'restaurant', duration:'1.5 hrs', notes:'Everyone picks what they want, no menu argument. Eat before 20:00 when it fills up.', budgetEst:65, transport:'metro', transportTime:'15 min', weatherSensitive:false, mustBook:false },
-            ], dayBudget:105, dayTip:'First day is light, one view, one treat, one dinner. The kids need to sleep in a new place tonight.' },
-            { dayNumber:2, date:'Day 2', theme:'Tram Day, Tiles and Towers', weatherNote:'', stops:[
-              { time:'09:30', name:'Museu Nacional do Azulejo', type:'museum', duration:'1.5 hrs', notes:'Best tiles in the world. Kids aged 6–9 respond well to the storytelling scenes. The giant pre-earthquake Lisbon panorama is 30m long, kids count the buildings.', budgetEst:10, transport:'bus', transportTime:'20 min', weatherSensitive:false, mustBook:false },
-              { time:'11:30', name:'Alfama neighbourhood walk', type:'historic', duration:'1 hr', notes:'Kids lead. Let them pick the alley. Ignore the map for 20 minutes. Alfama is safe and compact.', budgetEst:0, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:false },
-              { time:'13:00', name:'A Cevicheria garden lunch', type:'restaurant', duration:'1.5 hrs', notes:'Seafood plus excellent chicken for hesitant eaters. Garden seating. Long lunch is the whole point.', budgetEst:80, transport:'taxi', transportTime:'10 min', weatherSensitive:false, mustBook:true },
-              { time:'15:30', name:'Jardim da Estrela', type:'park', duration:'1.5 hrs', notes:'Best park in Lisbon for kids, good playground, ducks, café for parents. Bring bread for the ducks.', budgetEst:5, transport:'tram', transportTime:'15 min', weatherSensitive:false, mustBook:false },
-            ], dayBudget:145, dayTip:'Build in 30 minutes of buffer at every transition. Kids need transition time, forcing them hurries everyone into a bad mood.' },
-            { dayNumber:3, date:'Day 3', theme:'Sintra Magic, Day Trip', weatherNote:'Wear layers, Sintra is 5°C cooler', stops:[
-              { time:'09:05', name:'Sintra, Pena Palace', type:'attraction', duration:'3 hrs', notes:"Book online, take the first train from Rossio (09:05). Palace is fairy-tale level for kids, turrets, drawbridges, wild colours. Start with the exterior.", budgetEst:45, transport:'train', transportTime:'40 min from Rossio', weatherSensitive:true, mustBook:true },
-              { time:'13:00', name:'Sintra town lunch', type:'restaurant', duration:'1.5 hrs', notes:"The town square has several good spots. Order travesseiros (pillowy pastries) for dessert, kids' obsession.", budgetEst:55, transport:'walk', transportTime:'10 min downhill from palace', weatherSensitive:false, mustBook:false },
-              { time:'16:00', name:'Rossio gelato stop', type:'cafe', duration:'30 min', notes:'Gelato near Rossio station is the formal end of the day trip. The kids will ask for this the whole train ride back.', budgetEst:12, transport:'train', transportTime:'40 min back', weatherSensitive:false, mustBook:false },
-            ], dayBudget:152, dayTip:'Sintra gets very busy by 11am. The 09:05 train gets you 2 hours before crowds peak.' },
-            { dayNumber:4, date:'Day 4', theme:'Belém Morning, Easy Departure', weatherNote:'', stops:[
-              { time:'09:30', name:'Mosteiro dos Jerónimos', type:'historic', duration:'1 hr', notes:'Manueline Gothic that impresses kids, the scale is dramatic. Free Sunday morning. Stay in the cloisters.', budgetEst:0, transport:'tram', transportTime:'20 min', weatherSensitive:false, mustBook:false },
-              { time:'11:00', name:'Padrão dos Descobrimentos', type:'attraction', duration:'30 min', notes:'Monument to the Discoveries on the Tagus. Kids point to Portugal on the compass rose in the square.', budgetEst:4, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:false },
-              { time:'12:00', name:'Final pastel de nata', type:'cafe', duration:'45 min', notes:'One last ritual. Box some to take home. Then taxi to airport.', budgetEst:15, transport:'taxi', transportTime:'20 min to airport', weatherSensitive:false, mustBook:false },
-            ], dayBudget:69, dayTip:"Departure day ends by 12:00. Don't book anything requiring specific arrival times on departure morning." },
-          ],
-          budget:{ accommodation:440, food:320, activities:170, transport:95, extras:40, total:1065, currency:'EUR', perDayAverage:266 },
-          packing:[ { item:'Lightweight stroller or carrier', reason:'Alfama has steep cobbled hills, a 6-year-old needs carrying after 2 hours' }, { item:'Snacks (always)', reason:'Kid energy management, a hungry 6-year-old ends the day early' }, { item:'Spare clothes (1 set per child)', reason:'Pastéis, ducks, and Lisbon cobblestones are all hazards' }, { item:'Rain layer', reason:'Sintra: Atlantic weather rolls in fast, even in summer' } ],
-          researchMetrics:{ poisGrounded:'9 of 11 stops verified', avgStopsPerDay:3, indoorOutdoorRatio:'45/55', weatherRiskStops:1, uniqueCategories:7, fewShotExamplesUsed:['Family · Mixed · Relaxed'], feedbackCorrectionsApplied:0, profileMemoryUsed:false },
-        }
-      },
-      {
-        key: 'friends/foodie/moderate',
-        userMsg: "GROUP: friends | PACE: moderate | STYLE: foodie | DAYS: 3\nDESTINATIONS: Lyon, France\nTRAVELER DESCRIPTION: Four friends planning a trip around the Lyon food scene. We've researched bouchons for months. We book ahead, we don't rush, we will spend properly on one exceptional dinner.",
-        response: {
-          tripSummary: "Three days eating through the gastronomic capital of France, Bocuse market mornings, bouchon lunches that last until 15:00, and one tasting menu you'll talk about for years.",
-          travelerProfile:{ type:'friends', style:'foodie', pace:'moderate', budgetTier:'comfort', personalityNote:'The kind of group with a shared spreadsheet of every restaurant to visit, and who actually follows through.' },
-          days:[
-            { dayNumber:1, date:'Day 1', theme:'Arrival, Halles Bocuse & First Bouchon', weatherNote:'', stops:[
-              { time:'11:00', name:'Halles Paul Bocuse', type:'attraction', duration:'1.5 hrs', notes:'Arrive at 11:00 when stalls are set and before lunch rush. Each person picks one thing to try, quenelle, Saint-Marcellin, rosette de Lyon, praline tart. Compare notes.', budgetEst:18, transport:'metro', transportTime:'15 min from centre', weatherSensitive:false, mustBook:false },
-              { time:'13:30', name:'Café des Fédérations bouchon', type:'restaurant', duration:'2.5 hrs', notes:'Most authentic traditional bouchon in Lyon. Pre-book. Order the menu complet: salade lyonnaise, quenelle de brochet, île flottante. Carafe of Côtes du Rhône. This lunch goes to 15:30.', budgetEst:38, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:true },
-              { time:'18:00', name:'La Croix-Rousse traboules walk', type:'historic', duration:'1.5 hrs', notes:"Silk workers' district. The traboules (hidden passages through buildings) are the architectural secret of Lyon, look for the unmarked doors.", budgetEst:0, transport:'metro', transportTime:'15 min', weatherSensitive:false, mustBook:false },
-              { time:'20:30', name:'Cave natural wine bar', type:'bar', duration:'1.5 hrs', notes:'Natural wine bar in Vieux Lyon. Order a Beaujolais, in Lyon, not Paris, it is actually excellent.', budgetEst:28, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:false },
-            ], dayBudget:134, dayTip:'Lyon bouchons do not rush. Plan nothing for 14:00–16:00 on bouchon days, you will still be at the table.' },
-            { dayNumber:2, date:'Day 2', theme:'Market Morning, The Tasting Menu', weatherNote:'', stops:[
-              { time:'09:00', name:'Quai Saint-Antoine market', type:'attraction', duration:'1 hr', notes:'Open-air market along the Saône. The cheese and charcuterie section is worth the early wake-up. Buy picnic components.', budgetEst:20, transport:'walk', transportTime:'', weatherSensitive:true, mustBook:false },
-              { time:'11:00', name:'Fresque des Lyonnais', type:'historic', duration:'30 min', notes:'Giant trompe-l\'oeil mural with 30 famous Lyonnais depicted. Bocuse is there. Takes 20 minutes to spot everyone.', budgetEst:0, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:false },
-              { time:'13:00', name:'Saône riverside picnic', type:'park', duration:'1.5 hrs', notes:'Deploy the market food on the Quai. This is what locals do. Bottle of white wine.', budgetEst:8, transport:'walk', transportTime:'', weatherSensitive:true, mustBook:false },
-              { time:'20:00', name:'Restaurant Têtedoie, tasting menu', type:'restaurant', duration:'3.5 hrs', notes:'Michelin-starred, rooftop views, 6-course tasting menu. Book 4–6 weeks ahead. This is the reason you came. Trust the menu, pair the wines.', budgetEst:145, transport:'taxi', transportTime:'15 min', weatherSensitive:false, mustBook:true },
-            ], dayBudget:253, dayTip:'The tasting menu is 3.5 hours. Do not plan anything before 13:00 on this day, be rested and hungry.' },
-            { dayNumber:3, date:'Day 3', theme:'Bernachon Chocolate + Departure Cooking Class', weatherNote:'', stops:[
-              { time:'09:30', name:'Bernachon chocolaterie', type:'attraction', duration:'45 min', notes:'Best chocolate in France, possibly in Europe. Family-run since 1953, bean to bar on-site. Buy 200g mixed and eat it on the walk.', budgetEst:22, transport:'metro', transportTime:'10 min', weatherSensitive:false, mustBook:false },
-              { time:'11:00', name:'Atelier de la Bûchette cooking class', type:'attraction', duration:'2.5 hrs', notes:'Small-group class (max 8) focused on Lyonnais cuisine. You make and eat quenelle and gratin dauphinois. Book 2 weeks ahead. This is what you take home.', budgetEst:85, transport:'walk', transportTime:'', weatherSensitive:false, mustBook:true },
-              { time:'14:30', name:'Final coffee and departure', type:'cafe', duration:'45 min', notes:'One last praline tart before heading to Lyon Part-Dieu. TGV to Paris: 2 hrs.', budgetEst:8, transport:'metro', transportTime:'15 min to station', weatherSensitive:false, mustBook:false },
-            ], dayBudget:195, dayTip:'Bernachon chocolate is only available at the shop, they do not sell online or wholesale. Take a box home.' },
-          ],
-          budget:{ accommodation:480, food:620, activities:220, transport:80, extras:50, total:1450, currency:'EUR', perDayAverage:483 },
-          packing:[ { item:'Smart-casual dinner outfit', reason:'Têtedoie is Michelin, dress appropriately, respect the room' }, { item:'Small insulated bag', reason:'Lyon market cheese and charcuterie needs to stay cool for the picnic' }, { item:'Restaurant booking confirmations', reason:'Bouchon, tasting menu, cooking class, all need proof of reservation' } ],
-          researchMetrics:{ poisGrounded:'8 of 10 stops verified', avgStopsPerDay:4, indoorOutdoorRatio:'50/50', weatherRiskStops:2, uniqueCategories:6, fewShotExamplesUsed:['Friends · Foodie · Moderate'], feedbackCorrectionsApplied:0, profileMemoryUsed:false },
-        }
-      },
-    ];
-
-    for (const arc of ARCHETYPES) {
-      lines.push(JSON.stringify({ messages: [
-        { role:'system',    content: basePrompt },
-        { role:'user',      content: arc.userMsg },
-        { role:'assistant', content: JSON.stringify(arc.response) },
-      ]}));
-    }
-    const store = loadFeedbackStore();
-    const corrections = store.corrections || [];
-    if (corrections.length >= 2) {
-      const byProfile = {};
-      for (const c of corrections) { byProfile[c.profileKey] = byProfile[c.profileKey] || []; byProfile[c.profileKey].push(c); }
-      for (const [pKey, corrs] of Object.entries(byProfile)) {
-        if (corrs.length < 2) continue;
-        const [grp, sty, pac] = pKey.split('/');
-        const corrPrompt = buildTripMindPrompt('(No POI data)', 3, [], { corrections: corrs, memory: store.profileMemory?.[pKey] || null });
-        const constraintSummary = corrs.map(c=>`Avoid: "${c.itemName}", ${c.note}`).join('. ');
-        lines.push(JSON.stringify({ messages: [
-          { role:'system',    content: corrPrompt },
-          { role:'user',      content: `GROUP: ${grp} | PACE: ${pac||'moderate'} | STYLE: ${sty||'mixed'} | DAYS: 3\nDESTINATIONS: (city)\nThis traveler has given feedback: ${constraintSummary}` },
-          { role:'assistant', content: JSON.stringify({ tripSummary:`A plan refined by direct feedback for the ${pKey} profile.`, travelerProfile:{ type:grp, style:sty||'mixed', pace:pac||'moderate', budgetTier:'mid', personalityNote:'Plan reflects correction history from this traveler.' }, days:[], budget:{ accommodation:0,food:0,activities:0,transport:0,extras:0,total:0,currency:'EUR',perDayAverage:0 }, packing:[], researchMetrics:{ poisGrounded:'0 of 0', avgStopsPerDay:3, indoorOutdoorRatio:'50/50', weatherRiskStops:0, uniqueCategories:4, fewShotExamplesUsed:[], feedbackCorrectionsApplied:corrs.length, profileMemoryUsed:false } }) },
-        ]}));
-      }
-    }
-
-    const jsonl = lines.join('\n');
-    const blob = new Blob([jsonl], { type:'application/x-jsonlines' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `tripmind_training_${new Date().toISOString().slice(0,10)}.jsonl`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
 
   const Chip = ({ value, current, onSelect, label, icon }) => {
     const isActive = Array.isArray(current) ? current.includes(value) : current === value;
@@ -1431,7 +1235,6 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
     const textColor = isLight ? '#0f172a' : 'var(--text-primary)';
     const subColor = isLight ? '#475569' : 'var(--text-secondary)';
     const border = isLight ? '#cbd5e1' : 'rgba(255,255,255,0.06)';
-    const cardBg = isLight ? '#ffffff' : 'rgba(255,255,255,0.015)';
 
     return (
       <div style={{ color: textColor }}>

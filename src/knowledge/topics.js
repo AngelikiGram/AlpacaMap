@@ -1,6 +1,6 @@
 // Topic classification for statements that are not about a named place.
 // Explicit keyword rules (auditable, reproducible) replace the naive Bayes model,
-// which always picked *some* topic — e.g. 987 Paris statements landed in "Accommodation".
+// which always picked *some* topic, e.g. 987 Paris statements landed in "Accommodation".
 // A statement gets the topic with the most keyword hits; with no hit it is "General".
 
 export const TOPIC_KEYWORDS = {
@@ -28,7 +28,7 @@ const PATTERNS = Object.fromEntries(Object.entries(TOPIC_KEYWORDS).map(([topic, 
   words.map((w) => (/^[\w\s'-]+$/.test(w) ? new RegExp(`\\b${escape(w)}\\b`, 'i') : new RegExp(escape(w), 'i'))),
 ]));
 
-/** Returns { topic, score, scores } — topic is 'General' when no keyword matches. */
+/** Returns { topic, score, scores }, topic is 'General' when no keyword matches. */
 export function scoreTopics(text) {
   const t = text || '';
   const scores = {};

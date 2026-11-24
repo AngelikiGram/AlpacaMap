@@ -1,4 +1,3 @@
-import React from 'react';
 import { Train, Plane, Car, Bus, Ship, Bed, Activity, Utensils } from 'lucide-react';
 
 // Overpass API endpoints for fallback

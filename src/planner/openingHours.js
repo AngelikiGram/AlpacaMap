@@ -1,4 +1,4 @@
-// Small reader for OpenStreetMap opening_hours strings — the common cases only:
+// Small reader for OpenStreetMap opening_hours strings, the common cases only:
 //   "Mo-Fr 09:00-17:00; Sa 10:00-16:00; Su off", "24/7", "Mo,We 10:00-12:00,14:00-18:00",
 //   "Tu-Su 10:00-18:00", "10:00-18:00" (every day), "PH off" (ignored), "Fr 18:00-02:00".
 // Anything it does not understand returns null ("unknown") instead of guessing.
@@ -85,7 +85,7 @@ export function closedWeekdays(str) {
 
 export const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-// ── Sun times (NOAA approximation, ±2 min) — for golden hour on the map ──────────
+// ── Sun times (NOAA approximation, ±2 min), for golden hour on the map ──────────
 /** { sunrise, sunset } as minutes after local midnight, using the timezone offset of `date`. */
 export function sunTimes(lat, lon, date = new Date(), utcOffsetMin = null) {
   const rad = Math.PI / 180;

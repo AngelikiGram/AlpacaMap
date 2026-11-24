@@ -1,4 +1,3 @@
-import { SENTINEL_NONE } from './utils';
 
 export const searchNominatim = async (query, opts = {}) => {
   const params = new URLSearchParams({

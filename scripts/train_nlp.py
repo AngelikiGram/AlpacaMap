@@ -2,7 +2,7 @@
 train_nlp.py
 ============
 Generates src/data/nlp_data.json used by KnowledgePanel.jsx.
-ALL data is fetched live from the internet — nothing is hardcoded.
+ALL data is fetched live from the internet, nothing is hardcoded.
 
 Sources used:
   - NLTK Brown corpus         → entityCommonWords, heuristicCommon
@@ -267,7 +267,7 @@ def _get(url, timeout=14, retries=3):
         except urllib.error.HTTPError as e:
             if e.code == 429:
                 wait = delay * (2 ** attempt)
-                print(f" [429 — waiting {wait:.0f}s]", end="", flush=True)
+                print(f" [429, waiting {wait:.0f}s]", end="", flush=True)
                 time.sleep(wait)
             else:
                 raise
@@ -351,7 +351,7 @@ def fetch_training_data(num_cities):
                 break
 
         if all(len(by_class[c]) >= TARGET_PER_CLASS for c in ALL_CLASSES):
-            print("  All classes at target — stopping early.")
+            print("  All classes at target, stopping early.")
             break
 
     # Report coverage
@@ -422,7 +422,7 @@ def main():
     )
     args = parser.parse_args()
 
-    print("\n=== train_nlp.py — building NLP data from live sources ===\n")
+    print("\n=== train_nlp.py, building NLP data from live sources ===\n")
 
     entity_common_words = build_entity_common_words(2450)
     heuristic_common    = build_heuristic_common(entity_common_words, 850)

@@ -219,7 +219,7 @@ def main():
     write_csv('rq4_examples.csv', [r for r in pair_rows if r['disagree'] == 'Yes' and (r['impact'] or 0) >= 4])
 
     # ── summary.md ──
-    L = ['# TravelScout user study — summary', '',
+    L = ['# TravelScout user study, summary', '',
          f'Participants analysed: **{len(sessions)}**' + (' (incl. pilots)' if args.include_pilot else ''), '',
          '## Ground truth', '',
          'T2: topics and places the app shows as "opinions split" (all sources, >= 3 statements, same score as the app).', '']
@@ -238,13 +238,13 @@ def main():
     def by(task, cond, key):
         return [r[key] for r in task_rows if r['task'] == task and r['cond'] == cond and r.get(key) is not None]
 
-    L += ['', '## RQ1 — usability', '', f"- SUS: {desc([p['sus'] for p in part_rows])}  (68 = average, 80+ = good)"]
+    L += ['', '## RQ1, usability', '', f"- SUS: {desc([p['sus'] for p in part_rows])}  (68 = average, 80+ = good)"]
     for t in ['T1', 'T2', 'T3', 'T4']:
-        L.append(f"- {t} time (s) — S: {desc(by(t, 'S', 'seconds'))} · M: {desc(by(t, 'M', 'seconds'))}")
-        L.append(f"- {t} SEQ — S: {desc(by(t, 'S', 'seq'))} · M: {desc(by(t, 'M', 'seq'))}")
+        L.append(f"- {t} time (s), S: {desc(by(t, 'S', 'seconds'))} · M: {desc(by(t, 'M', 'seconds'))}")
+        L.append(f"- {t} SEQ, S: {desc(by(t, 'S', 'seq'))} · M: {desc(by(t, 'M', 'seq'))}")
 
     tlx = lambda cond: [r['tlx_block'] for r in task_rows if r['task'] == 'T1' and r['cond'] == cond]
-    L += ['', '## RQ2 — views and workload', '', f"- NASA-TLX raw — S: {desc(tlx('S'))} · M: {desc(tlx('M'))}", '',
+    L += ['', '## RQ2, views and workload', '', f"- NASA-TLX raw, S: {desc(tlx('S'))} · M: {desc(tlx('M'))}", '',
           '| View | used | understood (1–5) | useful (1–5) | would remove | clicks |', '|---|---|---|---|---|---|']
     clicks = Counter(r['view'] for r in click_rows if r['view'])
     for view in sorted({v['view'] for v in view_rows}, key=lambda v: -clicks.get(v, 0)):
@@ -255,11 +255,11 @@ def main():
                  f"{f'{st.mean(use):.1f}' if use else '–'} | {sum(bool(v['remove']) for v in vs)}/{len(vs)} | {clicks.get(view, 0)} |")
 
     t3s, t3m = by('T3', 'S', 't3_correct'), by('T3', 'M', 't3_correct')
-    L += ['', '## RQ3 — single source (S) vs multi-source with conflicts (M)', '',
-          f"- T2 recall — S: {desc(by('T2', 'S', 't2_recall'))} · M: {desc(by('T2', 'M', 't2_recall'))}",
-          f"- T2 precision — S: {desc(by('T2', 'S', 't2_precision'))} · M: {desc(by('T2', 'M', 't2_precision'))}",
-          f"- T3 correct (see ground truth) — S: {sum(t3s)}/{len(t3s)} · M: {sum(t3m)}/{len(t3m)}",
-          f"- T3 confidence — S: {desc(by('T3', 'S', 'confidence'))} · M: {desc(by('T3', 'M', 'confidence'))}"]
+    L += ['', '## RQ3, single source (S) vs multi-source with conflicts (M)', '',
+          f"- T2 recall, S: {desc(by('T2', 'S', 't2_recall'))} · M: {desc(by('T2', 'M', 't2_recall'))}",
+          f"- T2 precision, S: {desc(by('T2', 'S', 't2_precision'))} · M: {desc(by('T2', 'M', 't2_precision'))}",
+          f"- T3 correct (see ground truth), S: {sum(t3s)}/{len(t3s)} · M: {sum(t3m)}/{len(t3m)}",
+          f"- T3 confidence, S: {desc(by('T3', 'S', 'confidence'))} · M: {desc(by('T3', 'M', 'confidence'))}"]
     try:
         from scipy import stats
 
@@ -286,7 +286,7 @@ def main():
     except ImportError:
         L.append('- _Install scipy for Wilcoxon / McNemar tests._')
 
-    L += ['', '## RQ4 — statement types', '',
+    L += ['', '## RQ4, statement types', '',
           '| statement type | n | really disagree (yes/partly/no) | impact on plans (1–5) | participants classified A as |',
           '|---|---|---|---|---|']
     for ct in ['practical', 'evaluative', 'norm']:
@@ -302,9 +302,9 @@ def main():
         v = by(task, cond, key)
         return f'{sum(v)}/{len(v)}'
 
-    L += ['', '## RQ5 — conflicts while planning (T4)', '',
-          f"- Used conflict information (topics, map panel, Debates, Knowledge) during T4 — S: {frac('T4', 'S', 't4_opened_conflict_info')} · M: {frac('T4', 'M', 't4_opened_conflict_info')}",
-          f"- Opened Debates during T4 — S: {frac('T4', 'S', 't4_opened_debates')} · M: {frac('T4', 'M', 't4_opened_debates')}",
+    L += ['', '## RQ5, conflicts while planning (T4)', '',
+          f"- Used conflict information (topics, map panel, Debates, Knowledge) during T4, S: {frac('T4', 'S', 't4_opened_conflict_info')} · M: {frac('T4', 'M', 't4_opened_conflict_info')}",
+          f"- Opened Debates during T4, S: {frac('T4', 'S', 't4_opened_debates')} · M: {frac('T4', 'M', 't4_opened_debates')}",
           f"- Influence of disagreements (M): {dict(Counter(by('T4', 'M', 't4_conflict_influence')))}",
           f"- 'Disagreements helped me decide': {desc([p.get('int_helped') for p in part_rows])}",
           f"- 'Prefer conflicts inside the planner': {desc([p.get('int_inside') for p in part_rows])}",

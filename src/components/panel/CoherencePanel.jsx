@@ -1,7 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import { MapPin, Bookmark, CalendarDays, DollarSign, Route, TrendingUp, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { MapPin, Bookmark, CalendarDays, Route, TrendingUp, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { getTypeDetails, getDistanceKm } from '../../utils.jsx';
-import { INTEREST_CATEGORIES } from '../../config.jsx';
 
 export const CoherencePanel = ({ tripData }) => {
   const [selectedCityId, setSelectedCityId] = useState(null);

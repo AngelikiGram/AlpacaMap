@@ -1,4 +1,4 @@
-// The trip a first-time visitor sees: a London long weekend that shows off what AlpacaMap does —
+// The trip a first-time visitor sees: a London long weekend that shows off what AlpacaMap does, 
 // knowledge loads automatically (bundled London statements), the Truth lens lights up, two stops
 // get timing warnings (St Paul's is closed to sightseers on Sundays; Camden Market closes at 18:00),
 // Hyde Park on Sunday gets a rain plan when the forecast is wet, and Sky Garden sits in golden hour.

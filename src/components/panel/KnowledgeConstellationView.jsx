@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { searchNominatim } from '../../api';
 
@@ -335,7 +335,6 @@ function ConstellationSVG({ places, layout, placeColors, seqLinks, stars, city, 
         // Calculate positive ratio & warning presence to encode in other channels
         const totalClaims = p.nodes.length;
         const posClaims = p.nodes.filter(n => n.evaluation?.sentiment === 'positive').length;
-        const negClaims = p.nodes.filter(n => n.evaluation?.sentiment === 'negative').length;
         const posRatio = totalClaims > 0 ? posClaims / totalClaims : 0.5;
         
         const hasWarning = p.nodes.some(n => {

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ShieldCheck, Loader2, AlertTriangle, Clock } from 'lucide-react';
 import { candidatePairs, classifyPair, plainText, summarizeVerified, CALIBRATION } from '../../knowledge/contradictions';
 import { NLI_MODEL, loadNli, scoreSymmetric, calibrate } from '../../knowledge/nli';

@@ -30,7 +30,7 @@ document.addEventListener('keydown', (e) => {
   }
 })
 
-// After a new deploy, an open tab may request old file names that no longer exist —
+// After a new deploy, an open tab may request old file names that no longer exist , 
 // reload once to pick up the new version instead of breaking.
 window.addEventListener('vite:preloadError', (e) => {
   if (sessionStorage.getItem('reloaded-after-deploy')) return

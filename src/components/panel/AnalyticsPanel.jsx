@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Activity, MapPin, Bookmark, CalendarDays, Route, TrendingUp, Brain, ShieldAlert, Sparkles, Navigation, X, Maximize2, ChevronDown, ChevronUp, FileText, Download, Upload } from 'lucide-react';
+import { Activity, MapPin, Bookmark, CalendarDays, Route, TrendingUp, Brain, ShieldAlert, Sparkles, Navigation, X, Maximize2, ChevronDown, ChevronUp, Download, Upload } from 'lucide-react';
 import { getCityColor, getDistanceKm, getTypeDetails } from '../../utils';
 
 // ── data helpers ───────────────────────────────────────────────────────────

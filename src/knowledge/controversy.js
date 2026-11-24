@@ -1,4 +1,4 @@
-// How much sources argue about a place — drives the Truth lens on the map,
+// How much sources argue about a place, drives the Truth lens on the map,
 // the dispute block in place popups and the Debate cards.
 //
 // Two kinds of disagreement:
@@ -98,7 +98,7 @@ export function pickDisputePair(e) {
     return { a: e.example.a, b: e.example.b, aSource: e.example.aSource, bSource: e.example.bSource,
       condition: e.example.condition, verified: true, aspect: aspectsOf(e.example.a).find((x) => aspectsOf(e.example.b).includes(x)) || null };
   }
-  const JUNK = /\*\*|\]\(|——|\[\s|^\W/;
+  const JUNK = /\*\*|\]\(|\u2014\u2014|\[\s|^\W/;
   const list = (e.statementsList || []).filter((n) => n.claim && n.claim.length <= 260 && !JUNK.test(n.claim));
   const nameWords = new Set(normalizeName(e.place).split(' '));
   let best = null;

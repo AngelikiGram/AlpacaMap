@@ -15,19 +15,19 @@ On ties the more decision-relevant topic wins (Safety > Money > Climate > …).
 "One positive and one negative statement about a place" is a difference in tone, not a contradiction.
 `contradictions.js` + `nli.js`:
 
-1. **Candidate pairs** — same place/topic, *different* sources, both ≤ 300 characters, at least one
+1. **Candidate pairs**: same place/topic, *different* sources, both ≤ 300 characters, at least one
    shared *aspect* (crowds, price, safety, quality, food, cleanliness, opening, transport, weather, noise)
    and at least two shared content words besides the place name. Near-identical text in two sources
-   (word Jaccard > 0.6, e.g. Wikitravel copying Wikivoyage) is skipped — it is a copy, not independent
+   (word Jaccard > 0.6, e.g. Wikitravel copying Wikivoyage) is skipped: it is a copy, not independent
    evidence. Pairs are ranked (opposite sentiment first) and capped (12 per place, 3 per statement, 300 total).
-2. **Natural-language inference** — model `Xenova/nli-deberta-v3-xsmall` (ONNX, quantised, runs in the
+2. **Natural-language inference**: model `Xenova/nli-deberta-v3-xsmall` (ONNX, quantised, runs in the
    browser via transformers.js). Each pair is scored in both directions (A→B, B→A) and the *minimum*
    contradiction/entailment probability is kept, so a pair counts only if the model is confident both ways.
-3. **Verdict** — contradiction ≥ 0.8 → *contradiction*; entailment ≥ 0.8 → *agree*; else *unrelated*.
-4. **Conditions** — if two contradicting statements name different values of the same condition
+3. **Verdict**: contradiction ≥ 0.8 → *contradiction*; entailment ≥ 0.8 → *agree*; else *unrelated*.
+4. **Conditions**: if two contradicting statements name different values of the same condition
    (season, time of day, weekday/weekend, who travels, centre/outskirts), the verdict becomes
    *depends on conditions* with an explanation ("Depends on season: summer vs winter").
-5. **Self-test** — before every run the model must label two known pairs correctly
+5. **Self-test**: before every run the model must label two known pairs correctly
    (open vs closed on Mondays → contradiction; two paraphrases → entailment), otherwise the run stops.
 
 Results are stored with the trip (`knowledgeGraph.verified`: model, method, date, counts, pairs).
@@ -36,7 +36,7 @@ Results are stored with the trip (`knowledgeGraph.verified`: model, method, date
 `score = reliability(source) × freshness + corroboration`, capped at 1.
 - reliability: manual 1.0, Wikivoyage .85, Wikipedia .82, StackExchange .78, Wikitravel .65, Reddit .60
 - freshness: half-life 1.5 years for volatile facts (prices, hours), 6 years otherwise; **only a real
-  publication date counts** — when it is unknown a fixed factor of 0.85 is used
+  publication date counts**, when it is unknown a fixed factor of 0.85 is used
 - corroboration: +0.07 per *other* source with the same sentiment about the same place (max +0.2)
 - interval: ± 0.3 / √(number of distinct sources)
 

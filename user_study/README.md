@@ -1,4 +1,4 @@
-# TravelScout — user study
+# TravelScout user study
 
 Everything needed to run the end-user evaluation requested in the Transactions in GIS review
 (manuscript 9295540): design, materials, a browser-based study runner and the analysis script.

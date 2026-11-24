@@ -1,76 +1,95 @@
-# AlpacaMap 🦙
+# AlpacaMap
 
-*(research name: TravelScout)*
+A travel planner on a map that reads travel guides, Wikipedia and traveller forums and shows where they
+agree and where they disagree. Research prototype; the research name is TravelScout.
 
-An interactive travel planning app that runs in your browser. It builds trips on top of OpenStreetMap data and surfaces where travel sources agree and disagree.
+**Live:** https://angelikigram.github.io/AlpacaMap/
 
-## What stays on your device — and what does not
+## Features
 
-- **Stays in your browser:** your trips, itinerary, budget, notes and the collected knowledge (localStorage + IndexedDB). There is no AlpacaMap server and no account.
-- **AI processing:** runs locally — either in the browser or through [Ollama](https://ollama.com/) on your own computer. Your plans are never sent to a cloud AI service.
-- **Sent to third-party services:** looking things up necessarily sends the *place names and map areas* you search for to the services that answer them — OpenStreetMap (Nominatim, Overpass), Wikipedia/Wikivoyage/Wikidata, StackExchange, PullPush (Reddit archive), Open-Meteo (weather), OSRM (routing) and Esri (map tiles). Like every web request, these include your IP address and browser details, which are personal data under the GDPR; each service handles them under its own privacy policy. Fonts and stylesheets are bundled with the app, so loading the page itself contacts no third party besides GitHub Pages. Place photos come only from Wikimedia Commons and show their author and licence. The in-app **About & privacy** page lists all services.
+- **Ask the sources:** one click shows what guides and travellers say about safety, transport, food,
+  money, climate or nightlife in a city.
+- **Truth lens:** coloured dots on the map mark places where sources agree (green) or where opinions
+  split (amber, red).
+- **Time lens:** which places are open, closed or busy at a chosen hour, plus sunrise and sunset.
+- **Debates:** pairs of statements that may disagree; you decide whether they really do.
+- **One-sentence planner:** "3 days in Paris, hate queues, love food, €800" builds a trip from
+  OpenStreetMap data and flags stops that sources warn about.
+- **Itinerary checks:** warnings for stops that are closed or busy at the planned time, and a rain plan.
+- **AI planner (optional):** day-by-day plans written by a language model that runs in your browser
+  (WebLLM, needs WebGPU) or in [Ollama](https://ollama.com/) on your own computer.
 
-Data sources and licenses: see [DATA_LICENSES.md](DATA_LICENSES.md).
+Bundled knowledge covers London, Paris, Rome, Edinburgh and Zurich; other cities are collected live.
 
+## Privacy
 
-## What you can do
+No account, no cookies, no analytics. Trips and settings stay in the browser (localStorage and
+IndexedDB). Maps, places, weather and source texts are requested directly from public services, which
+see the visitor's IP address. The in-app **About & privacy** page lists every service; data sources
+and licences are in [DATA_LICENSES.md](DATA_LICENSES.md).
 
-- **Plan in one sentence** — type “3 days in Paris, hate queues, love food, €800” on the home screen. The request is understood without AI, the plan is built from OpenStreetMap data, and stops that travel sources warn about are flagged. An AI model (in the browser or Ollama) can optionally write day stories.
-- **Truth lens** (map, top right) — colours places by how much sources agree (green) or argue (red).
-- **Time lens** — what is open, closed or reported as packed at any hour of a trip day, plus sunrise/sunset and golden hour for viewpoints.
-- **Debates** — swipe through statements where sources may disagree and judge them yourself. Your answers are stored with the trip and teach the app which aspects (crowds, price, safety …) matter to you.
-- **Be a source** — in a place's window, tell the app what you saw (“very crowded”, “not worth it” …). It becomes a statement with source type `manual`.
-- **Itinerary checks** — warnings when a stop is closed that day (OpenStreetMap opening hours or a source saying so) or reported as busy at that time; a **rain plan** swaps outdoor stops for nearby indoor ones when the forecast is wet.
-- **Route multiverse** — three sliders (culture ↔ food, iconic ↔ hidden, calm ↔ lively) reshape the route on the map live.
-- **Knowledge loads automatically** for cities with bundled data (London, Paris, Rome, Edinburgh, Zurich). First-time visitors get a London demo trip.
+## Run locally
 
-## Quick Start
-
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Start the development server:
-   ```bash
-   npm run dev
-   ```
-3. Open the app at `http://localhost:5174/`
-
-## Pretrained Models (Local LLM via Ollama)
-
-**No custom pretrained models need to be downloaded manually.** 
-The application interfaces directly with [Ollama](https://ollama.com/) for all local LLM inference. Ensure you have Ollama installed and running on your machine. The app will pull and use the standard models automatically (via `llama.cpp` bindings under the hood) when you invoke the AI planner or RouteSpace features.
-
-## Generating Knowledge Graphs (Data Ingestion)
-
-To fetch fresh data and generate the Knowledge Graph (KG) JSON for a specific city, you can use the preprocessing scripts:
+Requires Node.js 22.
 
 ```bash
-# Fetch and preprocess data for a single city
-node scripts/fetch_and_preprocess_all.js --city "London"
-
-# Or use the npm shorthand:
-npm run preprocess:city "London"
+npm install
+npm run dev        # http://localhost:5174
+npm test           # unit tests (node:test)
+npm run build      # production build in dist/
 ```
 
-*Note: Fetching data for all cities (`npm run preprocess`) may take 5-10 minutes per city due to rate limits.*
+For the Ollama option: install Ollama, run `ollama pull llama3.1`, and keep `ollama serve` running.
+To use it from the hosted site, start Ollama with `OLLAMA_ORIGINS=https://angelikigram.github.io`.
 
-## Setting up the Validation Process & Results
+## Project structure
 
-The validation pipeline reproduces the figures from the manuscript directly from the exported Knowledge Graph JSON data. 
+```
+src/
+  components/map/      map, lenses and map controls
+  components/panel/    side-panel views (Knowledge, Debates, Itinerary, AI planner, ...)
+  components/shared/   small shared components
+  knowledge/           statement pairing, contradiction check (NLI), credibility, debates
+  planner/             one-sentence planner, opening hours, itinerary checks
+  ai/                  browser and Ollama language-model clients
+  net/                 rate limiting for the public APIs
+public/preprocessed/   bundled statements and OpenStreetMap places per city
+scripts/               data collection and preprocessing
+analysis/              reproduces the numbers in the paper
+user_study/            study protocol, materials, browser runner and analysis
+tests/                 unit tests
+```
 
-1. Ensure the Python dependencies are installed:
-   ```bash
-   pip install matplotlib numpy scipy
-   ```
+## Data
 
-2. Generate the validation plots using an existing or newly generated knowledge graph:
-   ```bash
-   python scripts/generate_validation_plots.py --kg kg_London_2026-07-07.json --out validation/
-   ```
+```bash
+npm run preprocess:city "London"   # collect and preprocess one city (about 5 to 10 minutes)
+npm run preprocess                 # all cities
+npm run clean-data                 # drop unusable statements from public/preprocessed/
+```
 
-The plots (e.g., credibility vs. age, appearance frequency histograms, sentiment distribution) will be outputted directly to the `validation/` folder.
+`scripts/train_nlp.py` rebuilds the keyword and sentiment lists in `src/data/nlp_data.json`
+(`pip install -r scripts/requirements.txt`).
 
-## Notes for Contributors
-- Scripts and code related to local network and LLM training (`llama.cpp`, `train_nlp.py`, `evaluate_extraction.py`) must be kept intact.
-- If deploying online via GitHub Pages (`.github/workflows/deploy.yml`), be aware that the frontend will be a static site. Features dependent on local models (`llama.cpp`, Ollama) or proxy endpoints will not function without a separate backend.
+## Paper analysis
+
+```bash
+python analysis/conflict_analysis.py public/preprocessed analysis/out   # standard library only
+node analysis/run_nli.mjs                                               # NLI verdicts, downloads the model once
+```
+
+Results are written to `analysis/out/`. The method is described in [docs/METHODS.md](docs/METHODS.md).
+
+## User study
+
+See [user_study/README.md](user_study/README.md). The study runner is published at
+https://angelikigram.github.io/AlpacaMap/study/.
+
+## Deployment
+
+Every push to `main` builds the app and publishes it to GitHub Pages
+(`.github/workflows/deploy.yml`), together with the study runner under `/study/`.
+
+## Licence
+
+Code: [MIT](LICENSE). Bundled data keeps the licences of its sources, see [DATA_LICENSES.md](DATA_LICENSES.md).

@@ -1,26 +1,14 @@
-import React, { useState, useEffect, useRef, useLayoutEffect, Suspense, lazy, useMemo } from 'react';
-import { createPortal } from 'react-dom';
-import { renderToString } from 'react-dom/server';
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, ZoomControl, Polyline, Circle, Polygon, ScaleControl, useMap, useMapEvents } from 'react-leaflet';
-import TripMindPanel from './TripMindPanel.jsx';
-import { Navigation, MapPin, Calendar as CalendarIcon, Search, Compass, ChevronRight, ChevronLeft, Menu, FileText, Plus, ArrowLeft, Trash2, Loader2, SlidersHorizontal, X, Info, Upload, BookOpen, ExternalLink, ChevronDown, ChevronUp, DollarSign, Package, Check, Pencil, Layers, FolderOpen, Save, Clock, Phone, Globe, Accessibility, Utensils, Coffee, Landmark, TreePine, ShoppingBag, Camera, MountainSnow, Tent, Castle, Plane, Train, Bed, Activity, Bus, Ship, CreditCard, Droplets, Car, Moon, Satellite, Eye, Sparkles } from 'lucide-react';
+import { useState, useEffect, useRef, Suspense, lazy, useMemo } from 'react';
+import TripMindPanel from './components/panel/TripMindPanel.jsx';
+import { Compass, ChevronLeft, Menu, FileText, Check, Pencil, FolderOpen } from 'lucide-react';
 import './App.css';
 import L from 'leaflet';
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-import { LiveImage } from "./components/shared/LiveImage";
-import { PortalDropdown } from "./components/shared/PortalDropdown";
-import { WeatherWidget } from "./components/shared/WeatherWidget";
-import { DonutChart } from "./components/shared/DonutChart";
 import { InfoWindow } from "./components/shared/InfoWindow";
 import { PrintView } from "./components/shared/PrintView";
 import { MapView } from "./components/map/MapView";
-import { MapSearchBar } from "./components/map/MapSearchBar";
-import { MapClickBar } from "./components/map/MapClickBar";
-import { PinNameOverlay } from "./components/map/PinNameOverlay";
-import { SearchResultMarker } from "./components/map/SearchResultMarker";
 import { TimelineStrip } from "./components/panel/TimelineStrip";
-import { TripInsights } from "./components/panel/TripInsights";
 import { MyTripsPanel } from "./components/panel/MyTripsPanel";
 import { LocationPlannerPanel } from "./components/panel/LocationPlannerPanel";
 import { ExportPanel } from "./components/panel/ExportPanel";
@@ -38,124 +26,22 @@ import { DebatesPanel } from "./components/panel/DebatesPanel.jsx";
 import { bundledKeyFor, hasBundled, loadBundledKnowledge, mergeStatements } from "./knowledge/bundled";
 import { buildDebates, answeredKeys } from "./knowledge/debates";
 import { makeDemoTrip } from "./demo/demoTrip";
-import "./innovation.css";
+import "./features.css";
 const KnowledgePanel = lazy(() => import('./components/panel/KnowledgePanel.jsx'));
 const AnalyticsPanel = lazy(() => import('./components/panel/AnalyticsPanel.jsx'));
-import { MapBoundsTracker, MapZoomTracker, MapClickHandler, MapFlyController, SmartMapController } from "./components/map/MapControllers";
-import { CITY_PALETTE, getCityColor, MAP_LAYERS, SENTINEL_NONE, getTypeDetails, createDayStopIcon, createGlyphIcon, createCityIcon, classifyWeather, detectOSMCategory, processOverpassResults, scorePlaceQuality, nameSim, semanticDedup, getZoomParams, filterMarkersAdaptive, loadTrips, loadPrefs, saveTrips, savePrefs, detectLocationType, createSearchResultIcon, getAllMapPoints, buildArc, getDistanceKm, INITIAL_TRIP, TRIPS_KEY, PREFS_KEY, TABS, wmoIcon, formatDur, searchOverpass } from "./utils";
-import { searchNominatim, fetchPlaceImage, isWikimediaImage } from "./api";
-import { OVERPASS_URL, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS, CATEGORY_ZOOM_PRIORITY, SEARCH_KEYWORDS, INTEREST_CATEGORIES, LOCATION_TYPE_PRESETS, EVENT_TYPES, TRANSPORT_ICON, EVT_EMOJI, DOC_SECTIONS, BUDGET_CATEGORIES, PACKING_TEMPLATES, ENTITY_PROFILES } from "./config";
+import { SENTINEL_NONE, loadTrips, loadPrefs, saveTrips, savePrefs, getDistanceKm, INITIAL_TRIP, TABS } from "./utils";
+import { fetchPlaceImage, isWikimediaImage } from "./api";
 
 let DefaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow, iconSize: [25,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-/* ── City color palette ──────────────────────────────────────────────────────── */
-/* ── Map layers ──────────────────────────────────────────────────────────────── */
-/* ── Geocoding (direct Nominatim) ────────────────────────────────────────────── */
-/* ── Type helpers ────────────────────────────────────────────────────────────── */
-/* ── AI Plan day-stop map icon ───────────────────────────────────────────────── */
-/* ── SVG Glyph Marker System ─────────────────────────────────────────────────── */
-/* ── Images ──────────────────────────────────────────────────────────────────── */
-/* ── Distance / Arc ──────────────────────────────────────────────────────────── */
-/* ── Weather ─────────────────────────────────────────────────────────────────── */
-/* ── Weather classification ──────────────────────────────────────────────────── */
-/* ── Overpass API (full OSM data) ────────────────────────────────────────────── */
-/* ── Adaptive marker filtering (quality-scored, spatially deduped) ───────────── */
-/* ── Portal dropdown (bypasses panel overflow:hidden) ────────────────────────── */
-/* ── localStorage helpers ────────────────────────────────────────────────────── */
-/* ── Constants ───────────────────────────────────────────────────────────────── */
-/* ── Map sub-components ──────────────────────────────────────────────────────── */
-
-function HighlightTracker({highlightedPlace}){ const map = useMap(); useEffect(()=>{ if(highlightedPlace) { map.flyTo(highlightedPlace.coords, 16, {duration: 0.8}); } }, [highlightedPlace, map]); return null; }
-
-/* ── Map location info bar ───────────────────────────────────────────────────── */
-/* ── Search result marker ────────────────────────────────────────────────────── */
-/* ── Map search + fly ────────────────────────────────────────────────────────── */
-/* ── MapView ─────────────────────────────────────────────────────────────────── */
-/* ── Timeline Strip ──────────────────────────────────────────────────────────── */
-/* ── Donut Chart ─────────────────────────────────────────────────────────────── */
-/* ── Trip Insights ───────────────────────────────────────────────────────────── */
-/* ── MyTripsPanel ────────────────────────────────────────────────────────────── */
-/* ── Entity profiles for trip intelligence ───────────────────────────────────── */
-/* ── LocationPlannerPanel ────────────────────────────────────────────────────── */
-/* ── RoutePanel ──────────────────────────────────────────────────────────────── */
-/* ── CalendarPanel ───────────────────────────────────────────────────────────── */
-/* ── BudgetPanel ─────────────────────────────────────────────────────────────── */
-/* ── PackingPanel ────────────────────────────────────────────────────────────── */
-/* ── NotesPanel ──────────────────────────────────────────────────────────────── */
-/* ── DocumentsPanel ──────────────────────────────────────────────────────────── */
-/* ── WeatherWidget ───────────────────────────────────────────────────────────── */
-/* ── InfoWindow ──────────────────────────────────────────────────────────────── */
-/* ── Print View ──────────────────────────────────────────────────────────────── */
 /* ── Tabs ────────────────────────────────────────────────────────────────────── */
 
-function useHorizontalScroll() {
-  const elRef = useRef();
-  useEffect(() => {
-    const el = elRef.current;
-    if (el) {
-      const onWheel = e => {
-        if (e.deltaY == 0) return;
-        
-        // Let it scroll vertically if there's no horizontal overflow
-        if (el.scrollWidth <= el.clientWidth) return;
-        
-        e.preventDefault();
-        el.scrollTo({
-          left: el.scrollLeft + e.deltaY,
-          behavior: 'auto'
-        });
-      };
-      
-      let isDown = false;
-      let startX;
-      let scrollLeft;
-      
-      const onMouseDown = e => {
-        isDown = true;
-        el.classList.add('active');
-        startX = e.pageX - el.offsetLeft;
-        scrollLeft = el.scrollLeft;
-      };
-      const onMouseLeave = () => {
-        isDown = false;
-        el.classList.remove('active');
-      };
-      const onMouseUp = () => {
-        isDown = false;
-        el.classList.remove('active');
-      };
-      const onMouseMove = e => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - el.offsetLeft;
-        const walk = (x - startX) * 2; // Scroll-fast
-        el.scrollLeft = scrollLeft - walk;
-      };
-      
-      el.addEventListener('wheel', onWheel, { passive: false });
-      el.addEventListener('mousedown', onMouseDown);
-      el.addEventListener('mouseleave', onMouseLeave);
-      el.addEventListener('mouseup', onMouseUp);
-      el.addEventListener('mousemove', onMouseMove);
-      
-      return () => {
-        el.removeEventListener('wheel', onWheel);
-        el.removeEventListener('mousedown', onMouseDown);
-        el.removeEventListener('mouseleave', onMouseLeave);
-        el.removeEventListener('mouseup', onMouseUp);
-        el.removeEventListener('mousemove', onMouseMove);
-      }
-    }
-  }, []);
-  return elRef;
-}
 
 /* ── App ─────────────────────────────────────────────────────────────────────── */
 export default function App(){
   const[activeTab,       setActiveTab]       =useState('menu');
   const [recFilterText, setRecFilterText] = useState('');
-  const tabScrollRef = useHorizontalScroll();
   const[calendarExpandedDays, setCalendarExpandedDays] =useState([]);
   const[tripData,        setTripData]        =useState(()=>{ const t=loadTrips(); return t.length>0?t[0].data:INITIAL_TRIP; });
   const[activeCity,      setActiveCity]      =useState(()=>{ const t=loadTrips()[0]?.data; return t?.demo?(t.locations?.[0]||null):null; }); // demo opens on London

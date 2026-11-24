@@ -60,7 +60,7 @@ const CONDITION_RULES = {
 };
 export const CONDITION_DIMENSIONS = Object.keys(CONDITION_RULES);
 
-/** { season?: 'summer', timeOfDay?: 'morning', ... } — first matching value per dimension. */
+/** { season?: 'summer', timeOfDay?: 'morning', ... }, first matching value per dimension. */
 export function extractConditions(text, given = {}) {
   const out = {};
   for (const [dim, rules] of Object.entries(CONDITION_RULES)) {
@@ -119,7 +119,7 @@ export function candidatePairs(nodes, { maxPerPlace = 12, maxTotal = 300, maxPer
         let shared = 0; for (const w of A.words) if (B.words.has(w)) shared++;
         if (shared < minSharedWords) continue;   // must talk about the same thing, not just the same aspect
         // Near-identical text in two sources (Wikitravel shares much text with Wikivoyage) is a copy,
-        // not independent evidence and never a contradiction — skip it.
+        // not independent evidence and never a contradiction, skip it.
         const jaccard = shared / (A.words.size + B.words.size - shared || 1);
         if (jaccard > 0.6) continue;
         const opposite = (A.s === 'positive' && B.s === 'negative') || (A.s === 'negative' && B.s === 'positive');

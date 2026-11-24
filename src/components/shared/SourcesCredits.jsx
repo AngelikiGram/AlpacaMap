@@ -1,4 +1,3 @@
-import React from 'react';
 
 // Attribution for every source whose text the app shows or bundles.
 // Required by CC BY-SA (Wikivoyage, Wikitravel, Wikipedia, StackExchange) and by the

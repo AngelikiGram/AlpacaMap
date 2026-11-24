@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Pencil, Eye, Trash2, X, Maximize2 } from 'lucide-react';
+import { Pencil, Eye, Trash2, X, Maximize2 } from 'lucide-react';
 
 // Notes are shown with simple markup (==highlight==, *bold*). The text is escaped first, so HTML or scripts
 // in a note (for example from an imported trip file) are shown as text and never run.

@@ -7,7 +7,7 @@ const NON_EN = new Set('der die das und ist nicht sie ihre ihr mit für auf den 
 /** Rough language check: true when the text is (most likely) English. */
 export function isEnglish(text) {
   const words = (text || '').toLowerCase().match(/[a-zà-ÿäöüß]+/g) || [];
-  if (words.length < 4) return true; // too short to judge — let other filters decide
+  if (words.length < 4) return true; // too short to judge, let other filters decide
   let en = 0, other = 0;
   for (const w of words) { if (EN.has(w)) en++; else if (NON_EN.has(w)) other++; }
   return en >= 2 && en >= other * 1.5;

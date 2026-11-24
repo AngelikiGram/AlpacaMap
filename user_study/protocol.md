@@ -1,4 +1,4 @@
-# TravelScout user study — protocol
+# TravelScout user study: protocol
 
 ## Goal
 Evaluate TravelScout with end users (reviewer comment C1) and answer RQ1–RQ5
@@ -6,8 +6,8 @@ Evaluate TravelScout with end users (reviewer comment C1) and answer RQ1–RQ5
 
 ## Design
 - **Within-subjects**, two conditions, two cities, fully counterbalanced.
-  - **S — Single source:** the app is preloaded with Wikivoyage statements only.
-  - **M — Multi-source:** the app is preloaded with all sources (Wikivoyage, Wikitravel, Wikipedia, Reddit, StackExchange), so cross-source conflicts are visible.
+  - **S, Single source:** the app is preloaded with Wikivoyage statements only.
+  - **M, Multi-source:** the app is preloaded with all sources (Wikivoyage, Wikitravel, Wikipedia, Reddit, StackExchange), so cross-source conflicts are visible.
   - Cities: **Paris** and **Rome** (both have preprocessed data bundled in the app, so the study does not depend on live APIs).
 - Order is assigned from the participant number (`P01`, `P02`, …):
 
@@ -43,14 +43,14 @@ Evaluate TravelScout with end users (reviewer comment C1) and answer RQ1–RQ5
 | 9. Export | 1 min | Runner downloads `P##_session.json`; facilitator copies it into `user_study/data/` |
 
 ## Measures
-- **Task success** — T2 and T3 are scored automatically against ground truth computed from the app's data; T2 is also coded by two raters for real disagreements, and T1 and T4 are coded by two raters (see `tasks.md`, report Cohen's κ).
-- **Time on task** — start/stop in the runner.
-- **Confidence** — 1–7 after T1–T3.
-- **SEQ** — Single Ease Question (1–7) after each task.
-- **NASA-TLX (raw)** — after each block.
-- **SUS** — once, at the end.
-- **Interaction log** — clicks in the app (tab/view names), with task id and timestamp.
-- **View ratings, integration, open comments** — post-study.
+- **Task success**: T2 and T3 are scored automatically against ground truth computed from the app's data; T2 is also coded by two raters for real disagreements, and T1 and T4 are coded by two raters (see `tasks.md`, report Cohen's κ).
+- **Time on task**: start/stop in the runner.
+- **Confidence**: 1–7 after T1–T3.
+- **SEQ**: Single Ease Question (1–7) after each task.
+- **NASA-TLX (raw)**: after each block.
+- **SUS**: once, at the end.
+- **Interaction log**: clicks in the app (tab/view names), with task id and timestamp.
+- **View ratings, integration, open comments**: post-study.
 
 ## Ground truth
 T2 is scored against the topics and places that the app's *Do sources agree?* panel shows as "opinions split" with all sources: the same score as `src/knowledge/controversy.js` (`controversyScore` ≥ 0.4, at least 3 statements). `analysis/analyze.py` recomputes this from `public/preprocessed/<city>.json`. Because this score is based on the tone of statements, T2 answers are also coded by hand for whether they name a real disagreement about the same thing (the paper's definition, Section 3). T3's correct answer is computed per condition from the Safety & Health statements visible in it (see `tasks.md`).

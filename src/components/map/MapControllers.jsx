@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useLayoutEffect, useCallback } from 'react';
+import { useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 

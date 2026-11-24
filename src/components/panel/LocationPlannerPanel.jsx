@@ -1,93 +1,16 @@
-import React, { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import { renderToString } from 'react-dom/server';
+import { useState, useEffect, useRef } from 'react';
 
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, ZoomControl, Polyline, Circle, Polygon, ScaleControl, useMap, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
 
-import { Navigation, MapPin, Calendar as CalendarIcon, Search, Compass, ChevronRight, FileText, Plus, ArrowLeft, Trash2, Loader2, SlidersHorizontal, X, Info, Upload, BookOpen, ExternalLink, ChevronDown, ChevronUp, DollarSign, Package, Check, Pencil, Layers, FolderOpen, Save, Clock, Phone, Globe, Accessibility, Utensils, Coffee, Landmark, TreePine, ShoppingBag, Camera, MountainSnow, Tent, Castle, Plane, Train, Bed, Activity, Bus, Ship, CreditCard, Droplets, Car, Moon, Satellite, Eye, Sparkles, Building } from 'lucide-react';
+import { MapPin, ChevronRight, Plus, ArrowLeft, Trash2, Loader2, ExternalLink, ChevronDown, ChevronUp, Globe, TreePine, MountainSnow, Droplets, Building } from 'lucide-react';
 
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend } from 'recharts';
 
-import { CITY_PALETTE, getCityColor, MAP_LAYERS, SENTINEL_NONE, getTypeDetails, createDayStopIcon, createGlyphIcon, createCityIcon, classifyWeather, detectOSMCategory, processOverpassResults, scorePlaceQuality, nameSim, semanticDedup, getZoomParams, filterMarkersAdaptive, loadTrips, loadPrefs, saveTrips, savePrefs, detectLocationType, createSearchResultIcon, getAllMapPoints, buildArc, getDistanceKm, INITIAL_TRIP, TRIPS_KEY, PREFS_KEY, TABS, wmoIcon, formatDur, searchOverpass, getCachedElementsInView, seedOverpassElements } from "../../utils.jsx";
-import { searchNominatim, fetchPlaceImage } from "../../api.js";
-import { OVERPASS_URL, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS, CATEGORY_ZOOM_PRIORITY, SEARCH_KEYWORDS, INTEREST_CATEGORIES, LOCATION_TYPE_PRESETS, EVENT_TYPES, TRANSPORT_ICON, EVT_EMOJI, DOC_SECTIONS, BUDGET_CATEGORIES, PACKING_TEMPLATES, ENTITY_PROFILES } from "../../config.jsx";
-
+import { getCityColor, getTypeDetails, classifyWeather, processOverpassResults, scorePlaceQuality, detectLocationType, getDistanceKm, searchOverpass, getCachedElementsInView, seedOverpassElements } from "../../utils.jsx";
+import { searchNominatim } from "../../api.js";
+import { OVERPASS_TAGS, INTEREST_CATEGORIES, LOCATION_TYPE_PRESETS, ENTITY_PROFILES } from "../../config.jsx";
 import { LiveImage } from "../shared/LiveImage.jsx";
 import { PortalDropdown } from "../shared/PortalDropdown.jsx";
 import { WeatherWidget } from "../shared/WeatherWidget.jsx";
-import { DonutChart } from "../shared/DonutChart.jsx";
-import { InfoWindow } from "../shared/InfoWindow.jsx";
-import { PrintView } from "../shared/PrintView.jsx";
-
-
-import { MapBoundsTracker, MapZoomTracker, MapClickHandler, MapFlyController, SmartMapController } from "../map/MapControllers.jsx";
-
-import { MapSearchBar } from "../map/MapSearchBar.jsx";
-
-import { MapClickBar } from "../map/MapClickBar.jsx";
-
-import { PinNameOverlay } from "../map/PinNameOverlay.jsx";
-
-import { SearchResultMarker } from "../map/SearchResultMarker.jsx";
 import { TripInsights } from "./TripInsights.jsx";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCity,mapBounds,addPlaceToCity,removePlaceFromCity,updatePlaceInCity,triggerPlaceInfo,mapCenter,setActiveTab,visibleCategories,setVisibleCategories, aiInterests, setAiInterests, searchRadius, poiSearchTrigger, activePlaceInfo, osmHardCap, categoryDisplayLimit, mapMarkerLimitFactor })=>{
       // For scrolling/highlighting selected place
@@ -116,7 +39,6 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
           }, 100);
         }
       }, [activePlaceInfo, activeCity?.id]);
-    const [pendingPin, setPendingPin] = useState(null);
   const [newCityName,  setNewCityName]  =useState('');
   const [newPlaceName, setNewPlaceName] =useState('');
   const [isSearching,  setIsSearching]  =useState(false);
@@ -129,9 +51,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
   const [citySearching,     setCitySearching]     = useState(false);
   const debRef       = useRef(null);
   const pDebRef      = useRef(null);
-  const initialMount = useRef(true);
   const requestCountRef = useRef(0);
-  const prevCenterRef = useRef(null);
   const cityAnchorRef  = useRef(null);
   const placeAnchorRef = useRef(null);
   const findRecsRef  = useRef(null);
@@ -246,7 +166,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
     return () => clearTimeout(preloadTimerRef.current);
   }, [activeCity?.id, mapBounds != null]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-search as the map pans to a new area or radius changes (Google Maps style)
+  // Auto-search as the map pans to a new area or radius changes
   // Note: aiInterests changes do NOT re-query because we always fetch ALL_CATEGORIES;
   // interest chips are purely a display filter.
   useEffect(() => {
@@ -310,7 +230,6 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
     setNewPlaceName('');setPlaceSuggestions([]);setShowPlaceSugg(false);
   };
 
-  const ALL_CATEGORIES = Object.keys(OVERPASS_TAGS);
 
   const applyResults = (results, reqId, rawCount, dedupedCount) => {
     if (reqId !== requestCountRef.current) return;
@@ -427,8 +346,6 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
       }
     }
   };
-
-
 
   const deleteCity=(cityId,e)=>{
     e.stopPropagation();
@@ -564,8 +481,6 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
           </div>
         </div>
       )}
-
-
 
       {llmStatus&&(
         <div style={{fontSize:'0.7rem',color:cityColor,marginBottom:'0.5rem',textAlign:'center',display:'flex',justifyContent:'center',alignItems:'center',gap:'4px'}}>
@@ -779,8 +694,6 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
           </div>
         );
       })}
-
-
 
       {/* Place search with portal suggestions */}
       <div ref={placeAnchorRef} style={{marginTop:'1rem'}}>

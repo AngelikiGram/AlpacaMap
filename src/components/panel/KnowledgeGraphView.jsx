@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import ForceGraph2D from 'react-force-graph-2d';
 import { X, ExternalLink, Maximize2 } from 'lucide-react';
@@ -455,7 +455,7 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
       const ry = node.y - size - rectH - 1.2;
       const radius = 1.0;
 
-      // Draw premium rounded pill in simulation-space
+      // Rounded label pill, in simulation coordinates
       ctx.beginPath();
       ctx.moveTo(rx + radius, ry);
       ctx.lineTo(rx + rectW - radius, ry);

@@ -1,11 +1,2 @@
-tabulate
-scipy
-nltk
-requests
-matplotlib
-pandas
-networkx
-node2vec
-scikit-learn
-numpy
-umap-learn
+nltk    # scripts/train_nlp.py
+scipy   # optional: significance tests in user_study/analysis/analyze.py

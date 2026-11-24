@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Download, ExternalLink, MapPin, Navigation, CheckCircle, Copy } from 'lucide-react';
 import { getCityColor } from '../../utils.jsx';
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { summarizeVerified } from '../../knowledge/contradictions';
 import { buildPlaceEvidence, findEvidence, LEVELS } from '../../knowledge/evidence';
 import { TruthLensLayer, TruthLensLegend, TimeLensLayer, TimeLensControl } from './Lenses.jsx';
@@ -10,35 +10,17 @@ import { Scale, Sun } from 'lucide-react';
 import { getTheme, setTheme } from '../../theme.js';
 import { createPortal } from 'react-dom';
 import { renderToString } from 'react-dom/server';
-
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, Polyline, Circle, Polygon, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Tooltip, Polyline, Circle, Polygon, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import { Navigation, MapPin, SlidersHorizontal, X, ChevronDown, Check, Pencil, Layers, Clock, Moon, Eye, Star, Brain } from 'lucide-react';
 
-import { Navigation, MapPin, Calendar as CalendarIcon, Search, Compass, ChevronRight, FileText, Plus, ArrowLeft, Trash2, Loader2, SlidersHorizontal, X, Info, Upload, BookOpen, ExternalLink, ChevronDown, ChevronUp, DollarSign, Package, Check, Pencil, Layers, FolderOpen, Save, Clock, Phone, Globe, Accessibility, Utensils, Coffee, Landmark, TreePine, ShoppingBag, Camera, MountainSnow, Tent, Castle, Plane, Train, Bed, Activity, Bus, Ship, CreditCard, Droplets, Car, Moon, Satellite, Eye, Sparkles, Star, Brain } from 'lucide-react';
-
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend } from 'recharts';
-
-import { CITY_PALETTE, getCityColor, MAP_LAYERS, SENTINEL_NONE, getTypeDetails, createDayStopIcon, createGlyphIcon, createSavedGlyphIcon, createPreviewIcon, createCityIcon, classifyWeather, detectOSMCategory, processOverpassResults, scorePlaceQuality, nameSim, semanticDedup, getZoomParams, filterMarkersAdaptive, loadTrips, loadPrefs, saveTrips, savePrefs, detectLocationType, createSearchResultIcon, getAllMapPoints, buildArc, getDistanceKm, INITIAL_TRIP, TRIPS_KEY, PREFS_KEY, TABS, wmoIcon, formatDur, searchOverpass } from "../../utils.jsx";
-import { searchNominatim, fetchPlaceImage } from "../../api.js";
-import { OVERPASS_URL, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS, CATEGORY_ZOOM_PRIORITY, SEARCH_KEYWORDS, INTEREST_CATEGORIES, LOCATION_TYPE_PRESETS, EVENT_TYPES, TRANSPORT_ICON, EVT_EMOJI, DOC_SECTIONS, BUDGET_CATEGORIES, PACKING_TEMPLATES, ENTITY_PROFILES } from "../../config.jsx";
-
-import { LiveImage } from "../shared/LiveImage.jsx";
-import { PortalDropdown } from "../shared/PortalDropdown.jsx";
-import { WeatherWidget } from "../shared/WeatherWidget.jsx";
-import { DonutChart } from "../shared/DonutChart.jsx";
-import { InfoWindow } from "../shared/InfoWindow.jsx";
-import { PrintView } from "../shared/PrintView.jsx";
-
-
+import { getCityColor, MAP_LAYERS, getTypeDetails, createDayStopIcon, createPreviewIcon, getAllMapPoints, buildArc, getDistanceKm } from "../../utils.jsx";
+import { INTEREST_CATEGORIES } from "../../config.jsx";
 import { MapBoundsTracker, MapZoomTracker, MapClickHandler, MapFlyController, SmartMapController } from "../map/MapControllers.jsx";
-
 import { MapSearchBar } from "../map/MapSearchBar.jsx";
-
 import { MapClickBar } from "../map/MapClickBar.jsx";
-
 import { PinNameOverlay } from "../map/PinNameOverlay.jsx";
 
-import { SearchResultMarker } from "../map/SearchResultMarker.jsx";
 
 const GENERIC_WORDS = new Set([
   'solo', 'travel', 'traveller', 'travellers', 'trip', 'trips', 'cafe', 'cafes', 'coffee', 'restaurant', 'restaurants', 
@@ -70,62 +52,6 @@ const cleanNameForMatching = (name) => {
     .replace(/\s+(station|tube station|underground station|museum|gallery|park)$/g, '')
     .trim();
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Light / dark appearance switch (see src/theme.js)
 function ThemeToggle() {
@@ -303,20 +229,6 @@ function HighlightTracker({ highlightedPlace }) {
   return null;
 }
 
-
-const createRouteStopIcon = (num, slot) => {
-  const fill = slot === 'A' ? '#2563eb' : '#059669';
-  const stroke = slot === 'A' ? '#93c5fd' : '#6ee7b7';
-  const label = `${slot}${num}`;
-  const html = `<svg width="22" height="28" viewBox="0 0 22 28" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));overflow:visible">
-    <path d="M11 1C6 1 2 5 2 10c0 6.8 9 17 9 17S20 16.8 20 10C20 5 16 1 11 1z"
-          fill="${fill}" stroke="${stroke}" stroke-width="1.8"/>
-    <circle cx="11" cy="10" r="5" fill="rgba(255,255,255,0.18)"/>
-    <text x="11" y="13.5" text-anchor="middle" fill="#ffffff" font-size="${label.length > 2 ? '6' : '7'}" font-weight="900" font-family="Inter,-apple-system,sans-serif">${label}</text>
-  </svg>`;
-  return L.divIcon({ className: '', html, iconSize: [22, 28], iconAnchor: [11, 28], popupAnchor: [0, -30] });
-};
-
 const createStabilityIcon = (num, group) => {
   let strokeColor = '#fbbf24';
   let fillColor = '#b45309';
@@ -374,7 +286,7 @@ const createComplexMarkerIcon = (place, isSaved = false, isCity = false, showKno
     // Wave color matches the pin color to be cohesive and avoid mismatches
     const waveColor = color;
 
-    // Sleek flat perspective ground-level ripple wave centered at the anchor base of the pin
+    // Flat ripple at the base of the pin
     pulsingHalo = `<div style="
       position: absolute;
       width: ${isCity ? 36 : 28}px;
@@ -1206,7 +1118,6 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                   }
 
                   if (coords) {
-                    const cleanPName = cleanNameForMatching(pName);
                     const claimsCount = getClaimsForPlace(pName);
                     const sentimentInfo = getPlaceSentimentInfo(pName);
                     const isHL = highlightedPlace?.name?.toLowerCase() === pName;
