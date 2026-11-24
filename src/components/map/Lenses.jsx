@@ -29,11 +29,11 @@ export function TruthLensLayer({ items, onPick, focus = null }) {
       </CircleMarker>
     </React.Fragment>
   )),
-  // Place of the Debates card currently open: ringed and labelled
+  // Place in focus (open Debates card, or picked in the lens panel): ringed and labelled
   focus && (
     <CircleMarker key={`tl-focus-${focus.name}`} center={focus.coords} radius={17} interactive={false}
       pathOptions={{ color: '#facc15', weight: 3, dashArray: '5,4', fillOpacity: 0 }}>
-      <Tooltip permanent direction="right" offset={[16, 0]} className="lens-focus-tip">⚖️ Debating: <b>{focus.name}</b></Tooltip>
+      <Tooltip permanent direction="right" offset={[16, 0]} className="lens-focus-tip">{focus.label ?? '⚖️ Debating: '}<b>{focus.name}</b></Tooltip>
     </CircleMarker>
   )];
 }
@@ -81,7 +81,7 @@ function TopicDetail({ topic, onOpenKnowledge }) {
   );
 }
 
-export function TruthLensLegend({ items, topics = [], focusTopic = null, openTopic = null, setOpenTopic, onOpenKnowledge, cityName, topicDisputes = 0, checked, onClose, onOpenDebates }) {
+export function TruthLensLegend({ items, topics = [], focusTopic = null, openTopic = null, setOpenTopic, onPickPlace, onOpenKnowledge, cityName, topicDisputes = 0, checked, onClose, onOpenDebates }) {
   const [showAll, setShowAll] = React.useState(false);
   const hot = [...items].sort((a, b) => b.score - a.score).filter((p) => p.score >= 0.4).slice(0, 3);
   const counts = items.reduce((m, p) => ((m[band(p.score)] += 1), m), { agree: 0, mixed: 0, disagree: 0 });
@@ -107,11 +107,20 @@ export function TruthLensLegend({ items, topics = [], focusTopic = null, openTop
           </div>
           {hot.length > 0 && (
             <>
-              <div className="lens-topics-head">Places where opinions split</div>
-              {hot.map((p) => (
-                <div key={p.name} className="lens-hot"><span className="lens-dot" style={{ background: p.color }} />{p.name}
-                  <em>{p.evidence.pos + p.evidence.neg} opinions</em></div>
-              ))}
+              <div className="lens-topics-head">Places where opinions split (click a place)</div>
+              {hot.map((p) => {
+                const open = openTopic === p.name;
+                const toggle = () => { setOpenTopic?.(open ? null : p.name); onPickPlace?.(open ? null : p); };
+                return (
+                  <React.Fragment key={p.name}>
+                    <button type="button" className={`lens-hot lens-topic-btn ${open ? 'focus' : ''}`} aria-expanded={open} onClick={toggle}>
+                      <span className="lens-dot" style={{ background: p.color }} />{p.name}
+                      <em>{p.evidence.pos + p.evidence.neg} opinions {open ? '▴' : '▾'}</em>
+                    </button>
+                    {open && <TopicDetail topic={p} onOpenKnowledge={onOpenKnowledge} />}
+                  </React.Fragment>
+                );
+              })}
             </>
           )}
         </>

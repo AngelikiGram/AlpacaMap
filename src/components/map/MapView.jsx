@@ -680,11 +680,20 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
     window.addEventListener('alpacamap-open-topic', on);
     return () => window.removeEventListener('alpacamap-open-topic', on);
   }, [lensCityName, activeCity?.name]);
+  // The guided tour switches lenses: detail is 'truth', 'time' or null
+  useEffect(() => {
+    const on = (e) => { setLensMode(e.detail ?? null); setOpenTopic(null); };
+    window.addEventListener('alpacamap-lens', on);
+    return () => window.removeEventListener('alpacamap-lens', on);
+  }, []);
   // The Debates card currently open (DebatesPanel → 'alpacamap-debate-focus')
   const [debateFocus, setDebateFocus] = useState(null);
+  // Place picked in the lens panel's "Places where opinions split" list
+  const [lensPicked, setLensPicked] = useState(null);
   useEffect(() => {
     const on = (e) => {
       setDebateFocus(e.detail);
+      setLensPicked(null);
       if (e.detail) setLensMode((m) => m || 'truth');   // debates are about disagreement: show the Truth lens
     };
     window.addEventListener('alpacamap-debate-focus', on);
@@ -713,7 +722,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
     });
     return () => { alive = false; };
   }, [debateFocus, localFocus, activeCity?.name]);
-  const focusItem = localFocus || osmFocus;
+  const focusItem = lensPicked || localFocus || osmFocus;
   const lensDates = useMemo(() => {
     const fmt = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
     const cityKey = lensCityName.toLowerCase();
@@ -1357,7 +1366,8 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
         <TruthLensLegend items={truthItems} topics={topicItems} focusTopic={debateFocus && !debateFocus.onMap ? debateFocus.place : null}
           openTopic={openTopic} setOpenTopic={setOpenTopic} onOpenKnowledge={onOpenKnowledge}
           cityName={lensCityName} topicDisputes={topicDisputes} checked={!!knowledgeGraph?.verified}
-          onClose={() => setLensMode(null)} onOpenDebates={onOpenDebates} />
+          onPickPlace={(p) => setLensPicked(p ? { name: p.name, coords: p.coords, label: '' } : null)}
+          onClose={() => { setLensMode(null); setLensPicked(null); }} onOpenDebates={onOpenDebates} />
       )}
       {lensMode === 'time' && (
         <TimeLensControl date={lensDate} setDate={setLensDate} minutes={lensMinutes} setMinutes={setLensMinutes} dates={lensDates} lens={timeLens} onClose={() => setLensMode(null)} />

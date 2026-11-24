@@ -22,6 +22,7 @@ import { loadKG as idbLoadKG, saveKG as idbSaveKG, stripKG } from "./storage/kgS
 import { RouteSpacePanel } from "./components/panel/RouteSpacePanel.jsx";
 import { MenuPanel } from "./components/panel/MenuPanel.jsx";
 import { AboutPanel } from "./components/panel/AboutPanel.jsx";
+import { GuidedTour } from "./components/shared/GuidedTour.jsx";
 import { DebatesPanel } from "./components/panel/DebatesPanel.jsx";
 import { bundledKeyFor, hasBundled, loadBundledKnowledge, mergeStatements } from "./knowledge/bundled";
 import { buildDebates, answeredKeys } from "./knowledge/debates";
@@ -29,7 +30,7 @@ import { makeDemoTrip } from "./demo/demoTrip";
 import "./features.css";
 const KnowledgePanel = lazy(() => import('./components/panel/KnowledgePanel.jsx'));
 const AnalyticsPanel = lazy(() => import('./components/panel/AnalyticsPanel.jsx'));
-import { SENTINEL_NONE, loadTrips, loadPrefs, saveTrips, savePrefs, getDistanceKm, INITIAL_TRIP, TABS } from "./utils";
+import { SENTINEL_NONE, loadTrips, loadPrefs, saveTrips, savePrefs, getDistanceKm, INITIAL_TRIP, TABS, spreadSample } from "./utils";
 import { fetchPlaceImage, isWikimediaImage } from "./api";
 
 let DefaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow, iconSize: [25,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
@@ -128,9 +129,9 @@ export default function App(){
       try{
         const trips=loadTrips();
         const idx=trips.findIndex(t=>t.id===currentTripId);
-        // Explore's search results are a cache (thousands of places for big cities like London), keep only the
-        // first 400 per city in localStorage so a big city can't fill the 5 MB browser limit
-        const slim=(d)=>({...d,locations:(d.locations||[]).map(l=>(l.recommendations?.length||0)>400?{...l,recommendations:l.recommendations.slice(0,400)}:l)});
+        // Explore's search results are a cache (thousands of places for big cities like London): keep 400 per city,
+        // spread over the whole search area, so a big city can't fill the 5 MB browser limit
+        const slim=(d)=>({...d,locations:(d.locations||[]).map(l=>(l.recommendations?.length||0)>400?{...l,recommendations:spreadSample(l.recommendations,400)}:l)});
         const entry={id:currentTripId,title:tripData.title,lastModified:new Date().toISOString(),data:slim(kgInIdb?stripKG(tripData):tripData)};
         if(idx>=0)trips[idx]=entry; else trips.unshift(entry);
         saveTrips(trips);
@@ -168,6 +169,14 @@ export default function App(){
     return()=>{cancelled=true;};
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[kgReadyFor,currentTripId,bundledCityKeys]);
+
+  // Short notices from other parts of the app (e.g. "OpenStreetMap is busy"), shown in the same toast
+  useEffect(()=>{
+    let timer;
+    const on=(e)=>{ setKgAutoStatus({text:e.detail,done:true}); clearTimeout(timer); timer=setTimeout(()=>setKgAutoStatus(null),7000); };
+    window.addEventListener('alpacamap-notice',on);
+    return()=>{ window.removeEventListener('alpacamap-notice',on); clearTimeout(timer); };
+  },[]);
 
   // Persist map layer preference
   useEffect(()=>{ savePrefs({mapLayer}); },[mapLayer]);
@@ -368,6 +377,35 @@ export default function App(){
   };
   const dismissWelcome=()=>{ setShowWelcome(false); try{ localStorage.setItem('alpacamap_welcomed','1'); }catch{ /* ignore */ } };
 
+  // Guided tour. It runs on the London example trip, so it switches to it when another trip is open
+  // (the other trip stays in My trips).
+  const [tourOn,setTourOn]=useState(false);
+  const startTour=()=>{ dismissWelcome(); if(!tripData.demo)loadDemoTrip(); setPanelOpen(true); setActiveTab('menu'); setTourOn(true); };
+  const lens=(mode)=>window.dispatchEvent(new CustomEvent('alpacamap-lens',{detail:mode}));
+  const openPanel=(tab)=>{ setPanelOpen(true); setActiveTab(tab); };
+  const tourSteps=useMemo(()=>[
+    { target:'.ask-sources', title:'Ask the sources',
+      text:'Pick a topic, such as Safety & Health, to see what travel guides and traveller forums say about it.',
+      run:()=>{ lens(null); openPanel('menu'); } },
+    { target:'.lens-btn', title:'Truth lens',
+      text:'This button colours the map by how much the sources agree: green where they agree, amber and red where opinions split.' },
+    { target:'.lens-legend', title:'Where opinions split',
+      text:'The panel lists the places and city-wide topics where sources disagree. Click one to read both sides.',
+      run:()=>lens('truth') },
+    { target:'.lens-topic-detail', title:'Both sides, with their sources',
+      text:'The map moves to the place and shows positive and negative statements, each with the source it comes from.',
+      run:()=>{ if(!document.querySelector('.lens-topic-detail'))document.querySelector('.lens-legend .lens-topic-btn')?.click(); } },
+    { target:'.debates', title:'Debates',
+      text:'Pairs of statements that may disagree. You decide whether they really do; your answers are saved with the trip.',
+      run:()=>{ lens(null); openPanel('debates'); } },
+    { target:'.lens-legend.time', title:'Time lens',
+      text:'Drag the slider to see which places are open, closed or busy at any hour of your trip days.',
+      run:()=>lens('time') },
+    { target:'.quickplan-form', title:'Plan your own trip',
+      text:'Describe a trip in one sentence, for example "3 days in Paris, love food, hate queues". You can restart this tour from the menu at any time.',
+      run:()=>{ lens(null); openPanel('menu'); } },
+  ],[]);
+
   // Travellers' statements (InfoWindow "Were you here?") go straight into the knowledge graph
   const addStatement=(node)=>setTripData(prev=>({...prev,knowledgeGraph:{...(prev.knowledgeGraph||{edges:[]}),nodes:[...(prev.knowledgeGraph?.nodes||[]),node],lastUpdated:new Date().toISOString()}}));
 
@@ -428,7 +466,7 @@ export default function App(){
 
   const renderPanel=()=>{
     switch(activeTab){
-      case 'menu':     return<MenuPanel     activeTab={activeTab} setActiveTab={setActiveTab} gcUndiscovered={gcUndiscovered} debateCount={debateCount} onApplyQuickPlan={applyQuickPlan} hasTrip={tripData.locations.length>0} isDemo={!!tripData.demo} onLoadDemo={loadDemoTrip} onNewTrip={createNewTrip} hasKnowledge={(tripData.knowledgeGraph?.nodes?.length||0)>0}/>;
+      case 'menu':     return<MenuPanel     activeTab={activeTab} setActiveTab={setActiveTab} gcUndiscovered={gcUndiscovered} debateCount={debateCount} onApplyQuickPlan={applyQuickPlan} hasTrip={tripData.locations.length>0} isDemo={!!tripData.demo} onLoadDemo={loadDemoTrip} onNewTrip={createNewTrip} onStartTour={startTour} hasKnowledge={(tripData.knowledgeGraph?.nodes?.length||0)>0}/>;
       case 'debates':  return<DebatesPanel  tripData={tripData} setTripData={setTripData} onOpenTab={setActiveTab}/>;
       case 'about':    return<AboutPanel/>;
       case 'locations':return null;
@@ -479,21 +517,20 @@ export default function App(){
         onOpenKnowledge={()=>{ setPanelOpen(true); setActiveTab('knowledge'); }}
       />
       {kgAutoStatus && <div className={`alpaca-toast ${kgAutoStatus.done?'done':''}`} role="status">{kgAutoStatus.text}</div>}
-      {showWelcome && tripData.demo && (
+      {tourOn && <GuidedTour steps={tourSteps} onClose={()=>{ setTourOn(false); lens(null); }} />}
+      {showWelcome && tripData.demo && !tourOn && (
         <div className="welcome-card" role="dialog" aria-label="Welcome to AlpacaMap">
           <div className="welcome-alpaca" aria-hidden>🦙</div>
           <div>
             <b>Welcome to AlpacaMap</b>
-            <p>A travel planner that reads guides and traveller forums and tells you where they <em>disagree</em>. This is a demo weekend in London, try:</p>
-            <ul>
-              <li><b>Truth lens</b> (top right), green where sources agree, red where they argue</li>
-              <li><b>Time</b>: what's open, closed or packed at any hour</li>
-              <li><b>Itinerary</b>: Sunday has two ⚠ timing problems</li>
-              <li><b>Debates</b>: judge disputed tips yourself</li>
-            </ul>
-            <div className="welcome-actions">
-              <button className="btn-primary" onClick={dismissWelcome}>Explore the demo</button>
-              <button className="btn-secondary" onClick={()=>{ dismissWelcome(); setActiveTab('menu'); setPanelOpen(true); setTimeout(()=>document.querySelector('.quickplan-form input')?.focus(),50); }}>Plan my own trip</button>
+            <p>A travel planner that reads guides and traveller forums and shows where they <em>disagree</em>. How would you like to start?</p>
+            <div className="start-choices">
+              <button type="button" className="start-choice primary" onClick={startTour}>
+                <b>Show me around</b><span>A one-minute tour of the main features</span></button>
+              <button type="button" className="start-choice" onClick={dismissWelcome}>
+                <b>Look at an example</b><span>A long weekend in London, ready to explore</span></button>
+              <button type="button" className="start-choice" onClick={()=>{ dismissWelcome(); createNewTrip(); openPanel('menu'); setTimeout(()=>document.querySelector('.quickplan-form input')?.focus(),50); }}>
+                <b>Plan my own trip</b><span>Start empty and describe your trip in one sentence</span></button>
             </div>
             <p className="welcome-privacy">No account, no cookies, no tracking: your trips stay in this browser. Maps and texts are loaded from public services. <button type="button" className="link-btn" onClick={()=>{ dismissWelcome(); setActiveTab('about'); setPanelOpen(true); }}>About &amp; privacy</button></p>
           </div>

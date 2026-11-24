@@ -320,6 +320,9 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
       if (data.fetchPromise) {
         data = await data.fetchPromise;
         if (reqId !== requestCountRef.current) return;
+        if (data.failed) lastSearchCenterRef.current = null;   // any map move retries the search
+        if (data.failed) window.dispatchEvent(new CustomEvent('alpacamap-notice', {
+          detail: 'OpenStreetMap is busy, so only part of this area has places. Move the map a little to try again.' }));
       }
 
       const results = processOverpassResults(data, cats, currentCenter, searchRadius, osmHardCap);

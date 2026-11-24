@@ -156,6 +156,20 @@ export const detectOSMCategory = (tags, requestedCategories) => {
   return requestedCategories[0] || 'Attractions';
 };
 
+/** Up to n places spread evenly over the area (round robin over a ~2 km grid), not just the nearest n. */
+export const spreadSample = (places, n) => {
+  if (places.length <= n) return places;
+  const cells = new Map();
+  for (const p of places) {
+    const key = Array.isArray(p.coords) ? `${Math.floor(p.coords[0] / 0.02)},${Math.floor(p.coords[1] / 0.02)}` : '?';
+    if (!cells.has(key)) cells.set(key, []);
+    cells.get(key).push(p);
+  }
+  const lists = [...cells.values()]; const out = [];
+  for (let i = 0; out.length < n; i++) for (const l of lists) { if (i < l.length && out.length < n) out.push(l[i]); }
+  return out;
+};
+
 export const processOverpassResults = (data, categories, centerCoords = null, maxRadiusKm = 3, hardCap = 500) => {
   if (!data.elements) return [];
   const seen = new Set();
@@ -502,12 +516,16 @@ try {
   }
 } catch {}
 
+const OVERPASS_CACHE_MAX = 8000;
 const persistCache = () => {
   try {
+    // When elements have to be cut to fit, the stored areas would claim more than is stored;
+    // keep only the elements then, so the next visit fetches the areas again
+    const complete = overpassCache.elements.size <= OVERPASS_CACHE_MAX;
     sessionStorage.setItem(OVERPASS_CACHE_KEY, JSON.stringify({
       ts: Date.now(),
-      queries: overpassCache.queries.map(q => ({ ...q, categories: [...q.categories] })),
-      elements: [...overpassCache.elements.entries()].slice(0, 8000),
+      queries: complete ? overpassCache.queries.map(q => ({ ...q, categories: [...q.categories] })) : [],
+      elements: [...overpassCache.elements.entries()].slice(0, OVERPASS_CACHE_MAX),
     }));
   } catch {} // ignore quota errors
 };
@@ -711,8 +729,15 @@ export const searchOverpass = async (center, radiusKm, categories) => {
     // Single combined query: nw for point categories + nwr for area categories.
     // One request avoids the 4-connection overload that caused nw to time out.
     const q = `[out:json][timeout:30];\n(\n${allLines.join('\n')}\n);\nout center tags;`;
-    const els = await raceOverpass(q, uncachedCats, 28000).then(filterToView).catch(() => []);
-    return { elements: els };
+    // The public servers are often overloaded: try once more after a short pause before giving up
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try { return { elements: filterToView(await raceOverpass(q, uncachedCats, 28000)) }; }
+      catch (e) {
+        if (signal.aborted || e?.name === 'AbortError') throw e;
+        if (attempt === 0) await new Promise(r => setTimeout(r, 4000));
+      }
+    }
+    return { elements: getCachedElements(), failed: true };
   })();
 
   return { elements: getCachedElements(), isFresh: false, fetchPromise };
