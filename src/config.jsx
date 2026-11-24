@@ -114,14 +114,14 @@ export const PACKING_TEMPLATES={
 
 export const ENTITY_PROFILES = {
   Museums:     {duration:'2–3 hrs', budget:'€10–20 entry fee',  packing:['Camera','Comfortable shoes'],          tip:'Great for a rainy day',      weatherSafe:true},
-  Art:         {duration:'1–2 hrs', budget:'Free – €15',       packing:['Camera'],                               tip:'Check for temporary exhibitions', weatherSafe:true},
-  Historic:    {duration:'1–2 hrs', budget:'Free – €10',       packing:['Good walking shoes','Water'],           tip:'Best in morning light',     weatherSafe:false},
+  Art:         {duration:'1–2 hrs', budget:'Free to €15',       packing:['Camera'],                               tip:'Check for temporary exhibitions', weatherSafe:true},
+  Historic:    {duration:'1–2 hrs', budget:'Free to €10',       packing:['Good walking shoes','Water'],           tip:'Best in morning light',     weatherSafe:false},
   Restaurants: {duration:'1–1.5 hrs',budget:'€20–50/person',  packing:['Reservation confirmation'],             tip:'Book ahead for dinner',     weatherSafe:true},
   Coffee:      {duration:'30–60 min',budget:'€5–15',          packing:[],                                       tip:'Good Wi-Fi spot often',    weatherSafe:true},
   Shopping:    {duration:'1–3 hrs', budget:'Variable',         packing:['Reusable bag'],                         tip:'Check opening hours',      weatherSafe:true},
   Attractions: {duration:'1–3 hrs', budget:'€10–30',          packing:['Camera','Sunscreen'],                   tip:'Buy tickets online',       weatherSafe:false},
   Parks:       {duration:'1–3 hrs', budget:'Free',            packing:['Water','Sunscreen','Snacks'],           tip:'Perfect for a picnic',     weatherSafe:false},
-  Hiking:      {duration:'3–6 hrs', budget:'Free – €5',       packing:['Water (2L+)','Hiking boots','Rain jacket','Snacks'],tip:'Start before 9am',weatherSafe:false},
+  Hiking:      {duration:'3–6 hrs', budget:'Free to €5',       packing:['Water (2L+)','Hiking boots','Rain jacket','Snacks'],tip:'Start before 9am',weatherSafe:false},
   Viewpoints:  {duration:'30–60 min',budget:'Free',           packing:['Camera','Sunscreen','Layers'],          tip:'Golden hour is magic',     weatherSafe:false},
   Beaches:     {duration:'2–4 hrs', budget:'€10–20 sunbed',   packing:['Sunscreen','Swimwear','Towel','Water'], tip:'Go early or late afternoon',weatherSafe:false},
   Camping:     {duration:'Overnight',budget:'€20–40/night',  packing:['Tent','Sleeping bag','Torch','Food'],   tip:'Book pitches in advance',  weatherSafe:false},

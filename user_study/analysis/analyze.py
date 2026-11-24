@@ -18,30 +18,63 @@ STUDY = os.path.dirname(HERE)
 REPO = os.path.dirname(STUDY)
 OUT = os.path.join(HERE, 'out')
 CITIES = ['paris', 'rome']
-# Click text inside the app -> view name (first match wins, so order matters)
+# Click text inside the app -> view name (first match wins, so order matters).
+# Names match config.js VIEWS. Topic buttons and topics in the map panel have the same text, so both count as topics.
+TOPIC_NAMES = ['safety & health', 'transport', 'food & drink', 'money & costs', 'climate', 'nightlife', 'accommodation',
+               'shopping', 'history', 'culture', 'districts', 'general']
 VIEW_KEYWORDS = {
-    'Knowledge · Conflicts': ['conflicts'],
-    'Knowledge · Claims': ['claims', 'graph', 'constellation', 'radar', 'bubbles', 'force graph'],
-    'Knowledge · Visual': ['visual'],
-    'Knowledge · Ingest': ['ingest', 'fetch online', 'load offline'],
-    'Knowledge': ['knowledge'], 'Explore': ['explore'], 'Planner': ['planner'], 'TripSpace': ['tripspace'],
-    'Insights': ['insights'], 'Overview': ['overview'], 'Itinerary': ['itinerary'], 'Budget': ['budget'], 'Packing': ['packing'],
-    'Notes': ['notes'], 'Docs': ['docs'], 'Export': ['export'],
+    'Debates': ['debates', 'not the same thing', 'they disagree', 'both true', 'trust the', 'skip'],
+    'Map panel (Do sources agree?)': ['truth lens', 'do sources agree', 'judge', 'read all', 'show ', 'close truth lens'],
+    'Topic buttons (What do sources say about…)': TOPIC_NAMES,
+    'Time lens': ['time lens'],
+    'Place window (click on a pin)': ['worth it', 'not worth it', 'very crowded', 'quiet', 'overpriced', 'was closed', 'add to'],
+    'Knowledge': ['knowledge', 'conflicts', 'claims', 'ingest'],
+    'Explore': ['explore'], 'Itinerary': ['itinerary', 'add event'],
 }
+CONFLICT_VIEWS = {'Debates', 'Map panel (Do sources agree?)', 'Topic buttons (What do sources say about…)', 'Knowledge'}
 
 
 # ───────────────────────── ground truth ─────────────────────────
-def contested_topics(city):
-    """Topics with >=1 positive and >=1 negative statement from different sources."""
+# Same rule as the app's "Do sources agree?" panel (src/knowledge/controversy.js, controversyScore):
+# a topic or place is shown as "opinions split" when its score is >= 0.4.
+def split_score(nodes):
+    pos = sum(1 for n in nodes if (n.get('evaluation') or {}).get('sentiment') == 'positive')
+    neg = sum(1 for n in nodes if (n.get('evaluation') or {}).get('sentiment') == 'negative')
+    sources = {n['source']['sourceType'] for n in nodes}
+    op = pos + neg
+    if not op:
+        return 0.05, pos, neg, len(sources)
+    minority = min(pos, neg) / op
+    score = 0.08 + minority * 1.3 * min(1, op / 6) * (1 if len(sources) >= 2 else 0.5)
+    return min(1, score), pos, neg, len(sources)
+
+
+def load_nodes(city, sources=None):
     with open(os.path.join(REPO, 'public', 'preprocessed', f'{city}.json'), encoding='utf-8') as f:
         nodes = json.load(f)['nodes']
-    pol = defaultdict(lambda: {'positive': set(), 'negative': set()})
-    for n in nodes:
-        s = (n.get('evaluation') or {}).get('sentiment')
-        if s in ('positive', 'negative'):
-            pol[n['place']][s].add(n['source']['sourceType'])
-    return sorted(p for p, d in pol.items()
-                  if d['positive'] and d['negative'] and any(a != b for a in d['positive'] for b in d['negative']))
+    return [n for n in nodes if not sources or n['source']['sourceType'] in sources]
+
+
+def contested_topics(city):
+    """Topics and places the app shows as 'opinions split' with all sources (>= 3 statements)."""
+    groups = defaultdict(list)
+    for n in load_nodes(city):
+        groups[n['place']].append(n)
+    return sorted(p for p, ns in groups.items() if len(ns) >= 3 and split_score(ns)[0] >= 0.4)
+
+
+T3_TOPIC = 'Safety & Health'   # T3 claim: "{CITY} is not safe for tourists." (a negative claim)
+
+
+def t3_expected(city, cond):
+    """Correct T3 answer, from the statements visible in that condition (S = Wikivoyage only)."""
+    ns = [n for n in load_nodes(city, ['wikivoyage'] if cond == 'S' else None) if n['place'].endswith(T3_TOPIC)]
+    score, pos, neg, _ = split_score(ns)
+    if len(ns) < 3:
+        return 'no information', pos, neg, score
+    if score >= 0.4:
+        return 'mixed', pos, neg, score
+    return ('agree' if neg > pos else 'disagree'), pos, neg, score
 
 
 def topic_keywords(topic):
@@ -104,7 +137,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
 
     gt = {c: contested_topics(c) for c in CITIES}
-    shopping_ok = {c: any('shopping' in t.lower() for t in gt[c]) for c in CITIES}
+    t3_key = {(c, cond): t3_expected(c, cond) for c in CITIES for cond in ('S', 'M')}
 
     sessions = []
     for path in sorted(glob.glob(os.path.join(args.data, '*_session.json'))):
@@ -136,17 +169,22 @@ def main():
                 row.update({'t2_listed': len(listed), 't2_correct': correct,
                             't2_precision': (correct / len(listed)) if listed else None,
                             't2_recall': len(hits) / min(3, len(gt[r['city']])) if gt[r['city']] else None,
-                            't2_matched_topics': '; '.join(hits), 't2_raw': ' | '.join(listed)})
+                            't2_matched_topics': '; '.join(hits), 't2_raw': ' | '.join(listed),
+                            # coders: how many listed items describe a real disagreement about the same thing
+                            # (not just a difference in tone or in aspect; see tasks.md)
+                            't2_real_rater1': '', 't2_real_rater2': ''})
             if r['task'] == 'T3':
-                row.update({'t3_verdict': ans.get('verdict'), 't3_correct': int(ans.get('verdict') == 'mixed'),
-                            't3_reason': ans.get('reason')})
+                expected, _, _, t3score = t3_key[(r['city'], r['cond'])]
+                # near the threshold (0.3-0.4) 'mixed' is also accepted
+                row.update({'t3_verdict': ans.get('verdict'), 't3_expected': expected,
+                            't3_correct': int(ans.get('verdict') == expected or (ans.get('verdict') == 'mixed' and t3score >= 0.3)), 't3_reason': ans.get('reason')})
             if r['task'] == 'T4':
                 clicks = [l for l in s.get('log', []) if l.get('block') == r['block'] and l.get('task') == 'T4']
                 views = {classify_click(l.get('text')) for l in clicks}
                 row.update({'t4_stops': (ans.get('stops') or '').replace('\n', ' | '), 't4_why': ans.get('why'),
                             't4_conflict_influence': ans.get('conflict_influence'),
-                            't4_opened_knowledge': int(any(v and v.startswith('Knowledge') for v in views)),
-                            't4_opened_conflicts': int('Knowledge · Conflicts' in views),
+                            't4_opened_conflict_info': int(bool(views & CONFLICT_VIEWS)),
+                            't4_opened_debates': int('Debates' in views),
                             't4_complete_coder': ''})
             row['tlx_block'] = tlx_by_block.get(r['block'])
             task_rows.append(row)
@@ -161,14 +199,14 @@ def main():
             'visited_paris': demo.get('visited_paris'), 'visited_rome': demo.get('visited_rome'),
             'map_comfort': demo.get('map_comfort'), 'sus': sus_score(a.get('sus')),
             **(a.get('integration') or {}),
-            **{k: ('; '.join(v) if isinstance(v, list) else v) for k, v in (a.get('privacy') or {}).items()},
             **{f'final_{k}': v for k, v in (a.get('final') or {}).items()},
         })
         for view, v in (a.get('views') or {}).items():
             view_rows.append({'pid': pid, 'view': view, **v})
         for p in s.get('pairs') or []:
             ans = p.get('answers') or {}
-            pair_rows.append({'pid': pid, 'claim_type': p['claimType'], 'city': p['city'], 'topic': p['place'],
+            pair_rows.append({'pid': pid, 'claim_type': p['claimType'], 'statement_types': '/'.join(p.get('statementTypes') or []),
+                              'city': p['city'], 'topic': p['place'],
                               'a_source': p['a']['source'], 'b_source': p['b']['source'],
                               'a_claim': p['a']['claim'], 'b_claim': p['b']['claim'],
                               'disagree': ans.get('disagree'), 'impact': ans.get('impact'), 'kind_A': ans.get('kind')})
@@ -183,11 +221,13 @@ def main():
     # ── summary.md ──
     L = ['# TravelScout user study — summary', '',
          f'Participants analysed: **{len(sessions)}**' + (' (incl. pilots)' if args.include_pilot else ''), '',
-         '## Ground truth (cross-source contested topics)', '']
+         '## Ground truth', '',
+         'T2: topics and places the app shows as "opinions split" (all sources, >= 3 statements, same score as the app).', '']
     for c in CITIES:
         L.append(f'- **{c.title()}** ({len(gt[c])}): ' + ', '.join(t.split('·')[-1].strip() for t in gt[c]))
-        if not shopping_ok[c]:
-            L.append(f'  - WARNING: "Shopping" is not contested in {c}, so T3 scoring ("mixed" = correct) is invalid there.')
+    L += ['', 'T3 ("{city} is not safe for tourists"): correct answer per condition, from the statements shown.', '']
+    for (c, cond), (exp, pos, neg, sc) in sorted(t3_key.items()):
+        L.append(f'- {c.title()} · {cond}: **{exp}** ({pos} positive, {neg} negative Safety & Health statements, score {sc:.2f}' + ('; mixed also accepted' if exp != 'mixed' and sc >= 0.3 else '') + ')')
     if not sessions:
         L += ['', '_No session files found in `user_study/data/` yet._']
         with open(os.path.join(OUT, 'summary.md'), 'w', encoding='utf-8') as f:
@@ -218,7 +258,7 @@ def main():
     L += ['', '## RQ3 — single source (S) vs multi-source with conflicts (M)', '',
           f"- T2 recall — S: {desc(by('T2', 'S', 't2_recall'))} · M: {desc(by('T2', 'M', 't2_recall'))}",
           f"- T2 precision — S: {desc(by('T2', 'S', 't2_precision'))} · M: {desc(by('T2', 'M', 't2_precision'))}",
-          f"- T3 correct ('mixed') — S: {sum(t3s)}/{len(t3s)} · M: {sum(t3m)}/{len(t3m)}",
+          f"- T3 correct (see ground truth) — S: {sum(t3s)}/{len(t3s)} · M: {sum(t3m)}/{len(t3m)}",
           f"- T3 confidence — S: {desc(by('T3', 'S', 'confidence'))} · M: {desc(by('T3', 'M', 'confidence'))}"]
     try:
         from scipy import stats
@@ -247,9 +287,9 @@ def main():
         L.append('- _Install scipy for Wilcoxon / McNemar tests._')
 
     L += ['', '## RQ4 — statement types', '',
-          '| claim type | n | really disagree (yes/partly/no) | impact on plans (1–5) | participants classified A as |',
+          '| statement type | n | really disagree (yes/partly/no) | impact on plans (1–5) | participants classified A as |',
           '|---|---|---|---|---|']
-    for ct in ['evaluation', 'temporal', 'conditional']:
+    for ct in ['practical', 'evaluative', 'norm']:
         ps = [p for p in pair_rows if p['claim_type'] == ct]
         if ps:
             d = Counter(p['disagree'] for p in ps)
@@ -263,19 +303,15 @@ def main():
         return f'{sum(v)}/{len(v)}'
 
     L += ['', '## RQ5 — conflicts while planning (T4)', '',
-          f"- Opened Knowledge during T4 — S: {frac('T4', 'S', 't4_opened_knowledge')} · M: {frac('T4', 'M', 't4_opened_knowledge')}",
-          f"- Opened Conflicts during T4 — S: {frac('T4', 'S', 't4_opened_conflicts')} · M: {frac('T4', 'M', 't4_opened_conflicts')}",
+          f"- Used conflict information (topics, map panel, Debates, Knowledge) during T4 — S: {frac('T4', 'S', 't4_opened_conflict_info')} · M: {frac('T4', 'M', 't4_opened_conflict_info')}",
+          f"- Opened Debates during T4 — S: {frac('T4', 'S', 't4_opened_debates')} · M: {frac('T4', 'M', 't4_opened_debates')}",
           f"- Influence of disagreements (M): {dict(Counter(by('T4', 'M', 't4_conflict_influence')))}",
           f"- 'Disagreements helped me decide': {desc([p.get('int_helped') for p in part_rows])}",
           f"- 'Prefer conflicts inside the planner': {desc([p.get('int_inside') for p in part_rows])}",
           f"- 'Would use a conflicts-only tool': {desc([p.get('int_standalone') for p in part_rows])}",
-          '', '## RQ6 — privacy', '',
-          f"- Processing on own device matters: {desc([p.get('priv_device') for p in part_rows])}",
-          f"- OK with server-side analysis of public sources: {desc([p.get('priv_server_ok') for p in part_rows])}",
-          f"- OK sharing itinerary with a server: {desc([p.get('priv_share_itinerary') for p in part_rows])}",
           '', '## To code by hand', '',
-          '- `tasks.csv`: fill `t1_code_rater1/2` (0/1/2, see tasks.md) and `t4_complete_coder`; '
-          'check `t2_matched_topics` against `t2_raw`.']
+          '- `tasks.csv`: fill `t1_code_rater1/2` (0/1/2), `t2_real_rater1/2` (number of listed items that describe a real '
+          'disagreement about the same thing) and `t4_complete_coder`; check `t2_matched_topics` against `t2_raw`. See tasks.md.']
     with open(os.path.join(OUT, 'summary.md'), 'w', encoding='utf-8') as f:
         f.write('\n'.join(L) + '\n')
     print('\n'.join(L))

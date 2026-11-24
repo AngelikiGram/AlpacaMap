@@ -183,7 +183,7 @@ function RouteRadarChart({ data, size = 200, onRemoveA, onRemoveB }) {
             stroke="rgba(255,255,255,0.08)" strokeWidth="0.75"/>
         ))}
 
-        {/* Route B polygon — double-click to remove */}
+        {/* Route B polygon, double-click to remove */}
         <polygon points={toPath(ptsB)} fill="rgba(16,185,129,0.08)" stroke="#10b981" strokeWidth="1.8"
           style={{ cursor: onRemoveB ? 'pointer' : 'default' }}
           onDoubleClick={onRemoveB || undefined}
@@ -194,7 +194,7 @@ function RouteRadarChart({ data, size = 200, onRemoveA, onRemoveB }) {
             onDoubleClick={onRemoveB || undefined}/>
         ))}
 
-        {/* Route A polygon — double-click to remove */}
+        {/* Route A polygon, double-click to remove */}
         <polygon points={toPath(ptsA)} fill="rgba(59,130,246,0.08)" stroke="#3b82f6" strokeWidth="1.8"
           style={{ cursor: onRemoveA ? 'pointer' : 'default' }}
           onDoubleClick={onRemoveA || undefined}
@@ -227,7 +227,7 @@ function RouteRadarChart({ data, size = 200, onRemoveA, onRemoveB }) {
         })}
       </svg>
 
-      {/* Legend row — HTML for readability */}
+      {/* Legend row, HTML for readability */}
       <div style={{ display:'flex', gap:'18px', justifyContent:'center', marginTop:'2px' }}>
         {[['#3b82f6','Route A','A'], ['#8b5cf6','Morphed',null], ['#10b981','Route B','B']].map(([color, lbl, slot]) => {
           const onRemove = slot === 'A' ? onRemoveA : slot === 'B' ? onRemoveB : null;
@@ -1587,7 +1587,7 @@ export function RouteSpacePanel({
       events: routeSpaceRoute.stops.map((s, idx) => ({
         id: Date.now() + 100 + idx,
         time: `${9 + idx}:30`,
-        title: s.name + (s.notes ? ` — ${s.notes}` : ''),
+        title: s.name + (s.notes ? `, ${s.notes}` : ''),
         type: s.type || 'activity'
       }))
     };
@@ -1716,7 +1716,7 @@ export function RouteSpacePanel({
         <HelpCircle size={32} style={{ color: 'var(--accent-primary)', marginBottom: '1rem', opacity: 0.8 }} />
         <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No Destination Loaded</h4>
         <p style={{ fontSize: '0.8rem', lineHeight: 1.6, maxWidth: '280px', margin: '0 auto' }}>
-          Routes are built from the places of a city. Open <strong>Explore</strong>, pick a city in your trip and let it load its places — then come back here.
+          Routes are built from the places of a city. Open <strong>Explore</strong>, pick a city in your trip and let it load its places, then come back here.
         </p>
         {onOpenTab && <button className="btn-primary" style={{ marginTop: '1rem' }} onClick={() => onOpenTab('locations')}>Open Explore</button>}
       </div>
@@ -1743,11 +1743,11 @@ export function RouteSpacePanel({
       </div>
       {showHelp && (
         <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'10px', padding:'10px 12px', fontSize:'0.71rem', color:'var(--text-secondary)', lineHeight:1.5 }}>
-          Generate routes → dots appear in the map below, grouped by experience type. <strong style={{color:'var(--text-primary)'}}>Click two dots</strong> to set A and B. Drag the <strong style={{color:'#c084fc'}}>morph slider</strong> to blend between them. The colored rhythm strip shows the day's stop sequence — each color = a place type.
+          Generate routes → dots appear in the map below, grouped by experience type. <strong style={{color:'var(--text-primary)'}}>Click two dots</strong> to set A and B. Drag the <strong style={{color:'#c084fc'}}>morph slider</strong> to blend between them. The colored rhythm strip shows the day's stop sequence, each color = a place type.
         </div>
       )}
 
-      {/* Multiverse — three big sliders that reshape the route on the map live */}
+      {/* Multiverse, three big sliders that reshape the route on the map live */}
       {candidates.length > 0 && (() => {
         const best = sliderTopMatches[0];
         const cultureFood = Math.round((typeSliders.food + (100 - typeSliders.museums)) / 2);
@@ -1785,7 +1785,7 @@ export function RouteSpacePanel({
         );
       })()}
 
-      {/* Route Recipe — unified generation card */}
+      {/* Route Recipe, unified generation card */}
       <div style={{ background:'linear-gradient(160deg,rgba(139,92,246,0.08),rgba(59,130,246,0.05))', border:'1px solid rgba(139,92,246,0.3)', borderRadius:'14px', padding:'14px', display:'flex', flexDirection:'column', gap:'10px', marginBottom:'16px' }}>
 
         {/* Header row: title + stops range */}
@@ -1798,7 +1798,7 @@ export function RouteSpacePanel({
             <input type="number" min="2" max="10" value={minStops}
               onChange={e => setMinStops(Math.max(2, Math.min(Number(e.target.value), maxStops)))}
               style={{ width:'38px', textAlign:'center', fontSize:'0.72rem', padding:'3px 4px', background:'rgba(30,20,60,0.8)', border:'1px solid rgba(139,92,246,0.4)', borderRadius:'5px', color:'#e2e8f0', fontWeight:'600' }}/>
-            <span style={{ opacity:0.5 }}>–</span>
+            <span style={{ opacity:0.5 }}>-</span>
             <input type="number" min="2" max="10" value={maxStops}
               onChange={e => setMaxStops(Math.max(minStops, Math.min(10, Number(e.target.value))))}
               style={{ width:'38px', textAlign:'center', fontSize:'0.72rem', padding:'3px 4px', background:'rgba(30,20,60,0.8)', border:'1px solid rgba(139,92,246,0.4)', borderRadius:'5px', color:'#e2e8f0', fontWeight:'600' }}/>
@@ -1852,7 +1852,7 @@ export function RouteSpacePanel({
                             fontSize:'0.65rem', fontWeight: val === n ? '800' : '400',
                             transition:'all 0.12s', lineHeight:1,
                           }}>
-                            {n === 0 ? '–' : n}
+                            {n === 0 ? '-' : n}
                           </button>
                         ))}
                       </div>
@@ -2133,7 +2133,7 @@ export function RouteSpacePanel({
             </>)}
           </svg>
 
-          {/* Floating Tooltip — Routes mode */}
+          {/* Floating Tooltip, Routes mode */}
           {viewMode === 'routes' && hoveredRoute && (
             <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(8,12,26,0.95)', border: `1px solid ${CLUSTER_PALETTE[hoveredRoute.cluster % CLUSTER_PALETTE.length]}70`, borderRadius: '10px', padding: '8px 10px', width: '190px', pointerEvents: 'none', boxShadow: '0 6px 20px rgba(0,0,0,0.5)', zIndex: 10 }}>
               <div style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>
@@ -2150,13 +2150,13 @@ export function RouteSpacePanel({
               </div>
             </div>
           )}
-          {/* Places hint text — outside SVG */}
+          {/* Places hint text, outside SVG */}
           {viewMode === 'places' && (
             <div style={{ position:'absolute', bottom:'6px', left:0, right:0, pointerEvents:'none' }}>
               <div style={{ fontSize:'0.58rem', color:'rgba(255,255,255,0.28)', textAlign:'center' }}>Places shown in their real geographic positions · dot size = quality</div>
             </div>
           )}
-          {/* Floating Tooltip — Places mode */}
+          {/* Floating Tooltip, Places mode */}
           {viewMode === 'places' && hoveredPlace && (
             <div style={{ position:'absolute', top:'10px', right:'10px', background:'rgba(8,12,26,0.95)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'10px', padding:'8px 10px', width:'175px', pointerEvents:'none', boxShadow:'0 6px 20px rgba(0,0,0,0.5)', zIndex:10 }}>
               <div style={{ fontSize:'0.74rem', fontWeight:'700', color:'var(--text-primary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:'3px' }}>
@@ -2173,7 +2173,7 @@ export function RouteSpacePanel({
         </div>
       </div>
 
-      {/* Cluster legend chips — click to open route list popup */}
+      {/* Cluster legend chips, click to open route list popup */}
       <div>
         <div style={{ display:'flex', flexWrap:'wrap', gap:'5px', marginBottom:'6px' }}>
           {clusters.map(cls => (
@@ -2198,7 +2198,7 @@ export function RouteSpacePanel({
                 <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
                   <span style={{ width:8, height:8, borderRadius:'50%', background:cls.color, display:'inline-block' }}/>
                   <span style={{ fontSize:'0.74rem', fontWeight:'700', color:'var(--text-primary)' }}>{cls.label}</span>
-                  <span style={{ fontSize:'0.64rem', color:'var(--text-secondary)' }}>{members.length} routes — click any row to preview, then set as A or B</span>
+                  <span style={{ fontSize:'0.64rem', color:'var(--text-secondary)' }}>{members.length} routes, click any row to preview, then set as A or B</span>
                 </div>
                 <button className="btn-icon" style={{ padding:'2px' }} onClick={() => setClusterPopup(null)}><X size={11}/></button>
               </div>
@@ -2315,10 +2315,10 @@ export function RouteSpacePanel({
       {/* Active Route */}
       {routeSpaceRoute && (
         <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(139,92,246,0.2)', borderRadius:'14px', padding:'12px 14px' }}>
-          {/* Header — makes clear THIS is what "Add to Active Route ◈" modifies */}
+          {/* Header, makes clear THIS is what "Add to Active Route ◈" modifies */}
           <div style={{ display:'flex', alignItems:'center', gap:'5px', marginBottom:'4px' }}>
             <span style={{ fontSize:'0.6rem', fontWeight:'700', color:'#c084fc', textTransform:'uppercase', letterSpacing:'0.06em' }}>◈ Active Route</span>
-            <span style={{ fontSize:'0.6rem', color:'rgba(255,255,255,0.25)' }}>— what "Add to Active Route" edits</span>
+            <span style={{ fontSize:'0.6rem', color:'rgba(255,255,255,0.25)' }}>what "Add to Active Route" edits</span>
           </div>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
             <span style={{ fontSize:'0.75rem', fontWeight:'700', color:'var(--text-primary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1, minWidth:0 }}>{routeSpaceRoute.name}</span>
@@ -2444,7 +2444,7 @@ export function RouteSpacePanel({
                         })()}
                       </div>
                       
-                      {/* Stop Action Buttons — only for active mutation */}
+                      {/* Stop Action Buttons, only for active mutation */}
                       {genomeView === 'active' && (
                       <div style={{ display: 'flex', gap: '2px', flexShrink: 0, opacity: 0.5 }} className="stop-action-buttons">
                         <button
@@ -2537,7 +2537,7 @@ export function RouteSpacePanel({
           </div>
           )}
 
-          {/* Customize + Apply — always visible at bottom of active route card */}
+          {/* Customize + Apply, always visible at bottom of active route card */}
           {(() => {
             const currentNames = new Set(routeSpaceRoute.stops.map(s => s.name.toLowerCase()));
             const availablePlaces = placesPool.filter(p => !currentNames.has(p.name.toLowerCase()));
@@ -2580,7 +2580,7 @@ export function RouteSpacePanel({
                   </div>
                 </div>
                 <div style={{ fontSize:'0.6rem', color:'var(--text-secondary)', marginTop:'6px', fontStyle:'italic' }}>
-                  Tip: Click any place on the map and tap "Add to Active Mutation ◈" to insert it into the current route. This adds to the Active Mutation — not to Route A or B.
+                  Tip: Click any place on the map and tap "Add to Active Mutation ◈" to insert it into the current route. This adds to the Active Mutation, not to Route A or B.
                 </div>
               </div>
             );
@@ -2605,7 +2605,7 @@ export function RouteSpacePanel({
         </div>
       )}
 
-      {/* Route Navigator — standalone collapsible section */}
+      {/* Route Navigator, standalone collapsible section */}
       {routeSpaceRoute && (
       <div style={{ marginBottom:'12px', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'10px', overflow:'hidden' }}>
         <button onClick={() => setShowMutationStudio(s => !s)}
@@ -2666,7 +2666,7 @@ export function RouteSpacePanel({
                   {sliderTopMatches.length > 0 && (
                     <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:'8px' }}>
                       <div style={{ fontSize:'0.62rem', color:'var(--text-secondary)', marginBottom:'5px' }}>
-                        Top matches <span style={{ color:'#fbbf24' }}>◉</span> highlighted in constellation — switch to <strong>Routes</strong> tab to see them
+                        Top matches <span style={{ color:'#fbbf24' }}>◉</span> highlighted in constellation, switch to <strong>Routes</strong> tab to see them
                       </div>
                       <div style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
                         {sliderTopMatches.slice(0, 3).map(m => {
@@ -2749,7 +2749,7 @@ export function RouteSpacePanel({
                   <input type="number" min="2" max="10" value={minStops}
                     onChange={e => setMinStops(Math.max(2, Math.min(Number(e.target.value), maxStops)))}
                     style={{ width: '54px', textAlign: 'center', fontSize: '0.75rem', padding: '4px 6px', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: '700', color: '#0f172a', background: '#ffffff' }}/>
-                  <span style={{ opacity: 0.5 }}>–</span>
+                  <span style={{ opacity: 0.5 }}>-</span>
                   <input type="number" min="2" max="10" value={maxStops}
                     onChange={e => setMaxStops(Math.max(minStops, Math.min(10, Number(e.target.value))))}
                     style={{ width: '54px', textAlign: 'center', fontSize: '0.75rem', padding: '4px 6px', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: '700', color: '#0f172a', background: '#ffffff' }}/>

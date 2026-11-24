@@ -1,0 +1,1707 @@
+{
+ "generated_from": "public/preprocessed (paris, rome)",
+ "types": {
+  "practical": [
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "price",
+     "transport"
+    ],
+    "a": {
+     "claim": "Take Metro B line from Termini to EUR Palasport station, cross the road and take the frequent free bus (ride takes 5–15 minutes) to the mall.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "If you miss the train station to airport bus and can't wait for the next one, a taxi ride will cost you €30.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · General",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "descriptive"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "The safest option is to stick to minor residential roads where traffic can be surprisingly calm outside rush hours.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "London is notorious for traffic congestion; in 2009, the average rush hour speed was 10.",
+     "source": "wikipedia",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Money & Costs",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "price"
+    ],
+    "a": {
+     "claim": "You'll save the ticket price on the savings you get from discounted drink deals and what you would have spent on club entry.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "For travelcards, there is no price difference between a paper ticket and loading the travelcard onto an Oyster card, however the single-day travelcards cannot be loaded onto an Osyter card.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "You can make a change to another bus or a tram free of charge during one hour.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Single bus fares paid using Contactless or Oyster cards include a second bus journey within one hour at no extra charge.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "price",
+     "transport"
+    ],
+    "a": {
+     "claim": "To help you navigate, TfL publish several maps to cater for different needs: The standard Tube map marks all stations that are step-free from either street to platform (white wheelchair symbol) or street to train (blue wheelchair symbol).",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Be aware that Whistlestop convenience stores (located in or around train stations) are notoriously overpriced and should be avoided.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "Using the bus When you see your bus approaching, signal clearly to the driver that you intend to get on their bus: the way to do this is to stick your hand out, with an open palm.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Single bus fares paid using Contactless or Oyster cards include a second bus journey within one hour at no extra charge.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "Fares It is not possible to buy tickets on the bus so you must have a valid Travelcard, Oyster card or contactless credit or debit card before you get on.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Single bus fares paid using Contactless or Oyster cards include a second bus journey within one hour at no extra charge.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "price",
+     "transport"
+    ],
+    "a": {
+     "claim": "If you change buses then you will normally be charged a new bus fare up to the daily/weekly price cap.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "You must touch in using the same card on the second bus and the free fare will be applied automatically.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "Ticket machine scam: One of the most popular scams in London is the ticket machine scam: While buying a ticket at a train station someone will approach you and act as if they want to help you buy the right ticket.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Easy to do, although I did stuff up my train ticket but the Train Officer just buzzed me through.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "If you are in any doubt at all about the validity of an Off-Peak ticket, ask a guard at the station or a ticket office BEFORE getting on a train - as on-train conductors can be notoriously unforgiving.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Easy to do, although I did stuff up my train ticket but the Train Officer just buzzed me through.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "paris",
+    "place": "Paris · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "price",
+     "transport"
+    ],
+    "a": {
+     "claim": "There are a number of different kinds of high-speed and normal trains: TER: The regional trains (Train Express Régional); cheapest tickets, though prices are variable on the time of day of departure (and the day of departure as well).",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Be aware and take these trains as they cost the same fare as those train that stops on all stations, as these stations are the ones that are considered to be notorious.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "paris",
+    "place": "Paris · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "There are a number of different kinds of high-speed and normal trains: TER: The regional trains (Train Express Régional); cheapest tickets, though prices are variable on the time of day of departure (and the day of departure as well).",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "But when I check SNCF it has tickets for that train on sale - there are no Saver tickets at the moment, but Flex and Premium tickets are available.",
+     "source": "reddit",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "paris",
+    "place": "Paris · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "TER tickets bought at the train station are valid two months from the date indicated on the ticket, as long as you travel in the right fare period (\"période bleue\", the cheapest, \"période blanche\", for high-demand hours).",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "However, this wait can be significantly shortened by walking the first two levels and then buying an elevator ticket to the top.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "paris",
+    "place": "Paris · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "Generally, except for early and late hours, travellers should not worry about specific Métro train times; just get to your station and take the next train.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "There are frequent traffic jams on the motorways leading to the airport - the Air France bus normally may take 50 minutes to get to CDG, but it may take 1½ hours as well.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "paris",
+    "place": "Paris · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "The train conductors are widely aware of these crimes and will usually wait a few seconds to leave the station after the doors have closed, just in case thieves have quickly jumped off with belongings.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "If you like hiking you'll also love it here, the 5 towns are joined by train as well as hiking trails (closed in some parts) so spending the day hiking and then capping it off with a swim are always amazing.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "This bus may be useful if you arrive at a time when the Metro is closed.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Metro stops and bus terminals all have automated ticket kiosks, and major Metro stations have clerked ticket windows.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "When you board the bus, Metro or tram you have to validate the ticket ('convalidare') in the little yellow machine.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Metro stops and bus terminals all have automated ticket kiosks, and major Metro stations have clerked ticket windows.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "When you board the bus, Metro or tram you have to validate the ticket ('convalidare') in the little yellow machine.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Electronic cards can be obtained at the Metro ticket offices located in the \"Termini\", \"Lepanto\" and \"Spagna\" stops.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "Inspectors are present on the Metro as well, and you should keep your validated ticket throughout your journey as proof-of-payment.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Metro stops and bus terminals all have automated ticket kiosks, and major Metro stations have clerked ticket windows.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "Inspectors are present on the Metro as well, and you should keep your validated ticket throughout your journey as proof-of-payment.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Electronic cards can be obtained at the Metro ticket offices located in the \"Termini\", \"Lepanto\" and \"Spagna\" stops.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "All the bus lines have the prefix \"N\"; N1 and N2 routes are similar to metro line A and B respectively, N28 for line C.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "An inexpensive choice from Fiumicino is to take the bus (COTRAL) to the \"EUR Magliana\" stop, which belongs to line B, and then take the Metro.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "All the bus lines have the prefix \"N\"; N1 and N2 routes are similar to metro line A and B respectively, N28 for line C.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "You can book on-line, inside the airport or outside near the bus stops (look for the employees with fluorescent vests writing \"€4 city transfer\").",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "All the bus lines have the prefix \"N\"; N1 and N2 routes are similar to metro line A and B respectively, N28 for line C.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Bus line # '''40''' is an express route, whose stops are far apart.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "All the bus lines have the prefix \"N\"; N1 and N2 routes are similar to metro line A and B respectively, N28 for line C.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Both the \"Flaminio\" stop of Metro line A and the terminus of tram line # '''2''' are located nearby.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "All the bus lines have the prefix \"N\"; N1 and N2 routes are similar to metro line A and B respectively, N28 for line C.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Take the B line of the Metro to the \"EUR Fermi\" or \"EUR Palasport\" stops (direction: \"Laurentina\"); from the former Metro stop, you can take the # 070, # 700 or # 709 buses and get off at \"Colombo/Pacifico\".",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "All the bus lines have the prefix \"N\"; N1 and N2 routes are similar to metro line A and B respectively, N28 for line C.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Head down there around 23:00 (take Metro line B and get off at the ''Piramide'' stop) and listen for music.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "All the bus lines have the prefix \"N\"; N1 and N2 routes are similar to metro line A and B respectively, N28 for line C.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "The bus network has in excess of 350 bus lines and over eight thousand bus stops, whereas the more-limited tram system has 39 km (24 mi) of track and 192 stops.",
+     "source": "wikipedia",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "opening",
+     "transport"
+    ],
+    "a": {
+     "claim": "All lines open at 05:30 and stop running at 23:30, except Fridays and Saturdays, when the last trains leave from the stations at 01:30.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "The back straps fold into the bag to make it easy to stow in overhead bins on planes and trains and there were a ton of pockets for organization so you don't have to open the entire bag each time you need something.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "Take Metro B line from Termini to EUR Palasport station, cross the road and take the frequent free bus (ride takes 5–15 minutes) to the mall.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "An inexpensive choice from Fiumicino is to take the bus (COTRAL) to the \"EUR Magliana\" stop, which belongs to line B, and then take the Metro.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "practical",
+    "types_ab": [
+     "practical",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "Take Metro B line from Termini to EUR Palasport station, cross the road and take the frequent free bus (ride takes 5–15 minutes) to the mall.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "You can book on-line, inside the airport or outside near the bus stops (look for the employees with fluorescent vests writing \"€4 city transfer\").",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   }
+  ],
+  "evaluative": [
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "evaluative"
+    ],
+    "aspects": [
+     "crowds",
+     "quality",
+     "transport"
+    ],
+    "a": {
+     "claim": "Get around The main travel options in summary are: By bus: Running by iconic red double-decker buses, this is the cheapest and usually the best way to get around London as a tourist: on most of the Underground, you won't see anything!",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "The worst tourist trap food is, in the opinion of many Londoners, served at the various steak houses (Angus Steak House, Aberdeen Steak House etc - they are all dotted around the West End and near to the main train stations).",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "paris",
+    "place": "Paris · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "safety",
+     "transport"
+    ],
+    "a": {
+     "claim": "The train conductors are widely aware of these crimes and will usually wait a few seconds to leave the station after the doors have closed, just in case thieves have quickly jumped off with belongings.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "The location is great, near the main train station, it did feel a bit sketchy at night since the street has other hostels on it so there are some rowdy people out at night.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Money & Costs",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "food",
+     "price"
+    ],
+    "a": {
+     "claim": "Pricing You can get cheap food in Rome, the problem is that if you don't know the city well or are forced to eat out in the centre, the prices go up.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Pretty cheap and good food (gotta try the paella).",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Money & Costs",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "food",
+     "price"
+    ],
+    "a": {
+     "claim": "Pricing You can get cheap food in Rome, the problem is that if you don't know the city well or are forced to eat out in the centre, the prices go up.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Food: Food is of great quality everywhere - both fancy sit-down restraunts and lots of sandwiches and hot snacks available everywhere for quite cheap.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Money & Costs",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "food",
+     "price"
+    ],
+    "a": {
+     "claim": "Pricing You can get cheap food in Rome, the problem is that if you don't know the city well or are forced to eat out in the centre, the prices go up.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Beautiful views, warm water, pretty cheap food and drink (though coming from NYC, I think I'm just anchored high), and great people.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "The Vatican is the main sight from the Pincio (metro Line A, Piazza del Popolo, and then a good climb).",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "An inexpensive choice from Fiumicino is to take the bus (COTRAL) to the \"EUR Magliana\" stop, which belongs to line B, and then take the Metro.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "The Vatican is the main sight from the Pincio (metro Line A, Piazza del Popolo, and then a good climb).",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Both the \"Flaminio\" stop of Metro line A and the terminus of tram line # '''2''' are located nearby.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "The Vatican is the main sight from the Pincio (metro Line A, Piazza del Popolo, and then a good climb).",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Take the B line of the Metro to the \"EUR Fermi\" or \"EUR Palasport\" stops (direction: \"Laurentina\"); from the former Metro stop, you can take the # 070, # 700 or # 709 buses and get off at \"Colombo/Pacifico\".",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "The Vatican is the main sight from the Pincio (metro Line A, Piazza del Popolo, and then a good climb).",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Head down there around 23:00 (take Metro line B and get off at the ''Piramide'' stop) and listen for music.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "If you miss the train station to airport bus and can't wait for the next one, a taxi ride will cost you €30.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "5h accounting for airport/train time)| |Day 32-37: Paris 5 nights|I'm expecting Paris to be possibly the most crowded city and I'm not sure if i'll enjoy it too much.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "You can book on-line, inside the airport or outside near the bus stops (look for the employees with fluorescent vests writing \"€4 city transfer\").",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "5h accounting for airport/train time)| |Day 32-37: Paris 5 nights|I'm expecting Paris to be possibly the most crowded city and I'm not sure if i'll enjoy it too much.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "practical"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "Taking pictures from the upper-deck while in-motion is tricky but doable (but not recommended by the bus lines) by those with good balance who can also recognise approaching limits on camera and lighting angles.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "The bus network has in excess of 350 bus lines and over eight thousand bus stops, whereas the more-limited tram system has 39 km (24 mi) of track and 192 stops.",
+     "source": "wikipedia",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "crowds",
+     "transport"
+    ],
+    "a": {
+     "claim": "Termini (the main railway station), bus line # 64, the central stops of the Metro and Trevi fountain are well-known for pickpockets, so take extra care in these areas.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Unfortunately, this is a real thing in crowded areas and at the Metro.",
+     "source": "reddit",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · General",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "evaluative"
+    ],
+    "aspects": [
+     "quality"
+    ],
+    "a": {
+     "claim": "The plague was followed by the Great Fire of London in 1666 after which the city was largely rebuilt.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "London suffered the Great Plague of 1665–1666, killing some 100,000 people, a fifth of the population.",
+     "source": "wikipedia",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · General",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "evaluative"
+    ],
+    "aspects": [
+     "quality"
+    ],
+    "a": {
+     "claim": "London suffered the Great Plague of 1665–1666, killing some 100,000 people, a fifth of the population.",
+     "source": "wikipedia",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Just got back from Hawaii and went to London solo where I met so many great people.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Money & Costs",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "practical"
+    ],
+    "aspects": [
+     "price"
+    ],
+    "a": {
+     "claim": "While boat travel may be slower and a little more expensive than Tube travel, it offers an extremely pleasant way to cross the city with unrivalled views of the London skyline.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "When you make National Rail journeys in London you can do so in the same way as the tube, however some journeys are charged at a slightly more expensive (or sometimes, but not often) cheaper rate.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Money & Costs",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "evaluative"
+    ],
+    "aspects": [
+     "price"
+    ],
+    "a": {
+     "claim": "While boat travel may be slower and a little more expensive than Tube travel, it offers an extremely pleasant way to cross the city with unrivalled views of the London skyline.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Be wary of big-name chain hotels with \"London\" in their title that look suspiciously cheap - you may find that they are actually in the outer suburbs or even on the outskirts of the city with a commute of nearly an hour into Zone 1.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Money & Costs",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "evaluative"
+    ],
+    "aspects": [
+     "price"
+    ],
+    "a": {
+     "claim": "A good place to get cheap ale beer is at any one of the Sam Smith pubs found across Central London, including Soho and the City.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Be wary of big-name chain hotels with \"London\" in their title that look suspiciously cheap - you may find that they are actually in the outer suburbs or even on the outskirts of the city with a commute of nearly an hour into Zone 1.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Money & Costs",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "price"
+    ],
+    "a": {
+     "claim": "The City and Canary Wharf can also be very expensive during the week, as they rely heavily on the captive business market, but prices often drop dramatically over the weekend when the business travel dries up.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "While boat travel may be slower and a little more expensive than tube travel, it offers an extremely pleasant way to cross the city with unrivaled views of the London skyline - Big Ben, St Paul's Cathedral, the Tower of London, etc.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Money & Costs",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "practical"
+    ],
+    "aspects": [
+     "price"
+    ],
+    "a": {
+     "claim": "Be wary of big-name chain hotels with \"London\" in their title that look suspiciously cheap - you may find that they are actually in the outer suburbs or even on the outskirts of the city with a commute of nearly an hour into Zone 1.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Okay, you can get better food for cheap elsewhere, but this is even cheaper and fills you up!",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "practical"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "Get around The main travel options in summary are: By bus: Running by iconic red double-decker buses, this is the cheapest and usually the best way to get around London as a tourist: on most of the Underground, you won't see anything!",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "All bus stops have their location and the direction of travel on them.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "practical"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "Despite residents' perpetual (and sometimes justified) grumbling about unreliability, public transport is often the best option for getting anywhere for visitors and residents alike.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "Despite the \"congestion charge\", driving a car anywhere near the centre of London remains a nightmare with crowded roads, impatient drivers and expensive parking charges (that's if you can find a space in the first place, that is!",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "crowds"
+    ],
+    "a": {
+     "claim": "One notable exception is the west part of Elizabeth Line: Despite being shown on the Tube map, stations between Iver and Reading don't accept Oyster – as they have exceeded Greater London border and aren't included in the Oyster Fare Zones.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "The worst tourist trap food is, in the opinion of many Londoners, served at the various steak houses (Angus Steak House, Aberdeen Steak House etc - they are all dotted around the West End and near to the main train stations).",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "When getting on any kind of train, you must touch your Oyster card on the yellow circular reader at the start and end of your journey.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "The worst tourist trap food is, in the opinion of many Londoners, served at the various steak houses (Angus Steak House, Aberdeen Steak House etc - they are all dotted around the West End and near to the main train stations).",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "To help you navigate, TfL publish several maps to cater for different needs: The standard Tube map marks all stations that are step-free from either street to platform (white wheelchair symbol) or street to train (blue wheelchair symbol).",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "The worst tourist trap food is, in the opinion of many Londoners, served at the various steak houses (Angus Steak House, Aberdeen Steak House etc - they are all dotted around the West End and near to the main train stations).",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "Buses are generally quicker than taking the Tube for shorter (less than a couple of stops on the Tube) trips, and out of central London you're likely to be closer to a bus stop than a Tube station.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "For sightseeing, buses are a much more pleasant way to travel than the Tube, and cheaper too for a single journey.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "Buses are generally quicker than taking the Tube for shorter (less than a couple of stops on the Tube) trips, and out of central London you're likely to be closer to a bus stop than a Tube station.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "This includes advice about staying safe on the tube, on buses, on trains and in cabs, as well as walking in the city and when using bicycles.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "Buses also have a flat rate fare which stays the same no matter how far you travel.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "For sightseeing, buses are a much more pleasant way to travel than the Tube, and cheaper too for a single journey.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "practical",
+     "evaluative"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "At many stations, trains leaving from the same platform will go to different destinations, so listen carefully for announcements and always check the destination on the front of the train.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "The worst tourist trap food is, in the opinion of many Londoners, served at the various steak houses (Angus Steak House, Aberdeen Steak House etc - they are all dotted around the West End and near to the main train stations).",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "evaluative",
+    "types_ab": [
+     "evaluative",
+     "practical"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "Most railway stations will also be able to provide a list of good local cab firms (many will display this outside the station, even after the last train of the night has gone.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "If you are in any doubt at all about the validity of an Off-Peak ticket, ask a guard at the station or a ticket office BEFORE getting on a train - as on-train conductors can be notoriously unforgiving.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   }
+  ],
+  "norm": [
+   {
+    "city": "london",
+    "place": "London · General",
+    "type": "norm",
+    "types_ab": [
+     "practical",
+     "norm"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "Refrain from walking slowly in tight spaces to avoid annoying any fast walking people that may be trying to pass.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "When I say good morning to people it’s not in a busy kitchen area, I’m talking about specifically greeting someone as you’re walking towards them and then just blanking you.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Money & Costs",
+    "type": "norm",
+    "types_ab": [
+     "norm",
+     "practical"
+    ],
+    "aspects": [
+     "price"
+    ],
+    "a": {
+     "claim": "A top tip, however, is to always check the likes of Expedia and LateRooms as well as the hotel's own website since there are often deals to be had which can reduce the costs significantly.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "When you make National Rail journeys in London you can do so in the same way as the tube, however some journeys are charged at a slightly more expensive (or sometimes, but not often) cheaper rate.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "norm",
+    "types_ab": [
+     "norm",
+     "evaluative"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "Pushing and rushing are seen as extremely rude - there's not much need to run for a Tube train unless it's the very last one of the day!",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "For sightseeing, buses are a much more pleasant way to travel than the Tube, and cheaper too for a single journey.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "london",
+    "place": "London · Transport",
+    "type": "norm",
+    "types_ab": [
+     "practical",
+     "norm"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "You should avoid minicabs touting for business off the street and either take a black cab, book a licensed minicab by telephone, or take a night bus.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Stay polite and on the bottom deck of the bus to best avoid them although there will be just as many if not more friendly drunks who would be up for a chat.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "paris",
+    "place": "Paris · Transport",
+    "type": "norm",
+    "types_ab": [
+     "practical",
+     "norm"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "RER trains run at intervals varying from about 3 minutes (RER A) to 6 minutes (RER D), and stop at every station within Paris.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Here are top five Paris travel tips to enhance your experience: Embrace Public Transportation: Paris boasts an extensive and efficient public transportation system, including the Métro, buses, and RER trains.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "paris",
+    "place": "Paris · Transport",
+    "type": "norm",
+    "types_ab": [
+     "practical",
+     "norm"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "It uses the same single-ride ''Ticket t+'' and ''Navigo'' fare system as the Métro and electronic displays inside each bus tell riders its current position and what stops remain, eliminating a lot of confusion.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Here are top five Paris travel tips to enhance your experience: Embrace Public Transportation: Paris boasts an extensive and efficient public transportation system, including the Métro, buses, and RER trains.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · General",
+    "type": "norm",
+    "types_ab": [
+     "norm",
+     "evaluative"
+    ],
+    "aspects": [
+     "crowds"
+    ],
+    "a": {
+     "claim": "Peter's in particular is known for rejecting tourists for uncovered knees, shoulders, midriffs, etc.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Additionally, it can assist in gathering local advice on the best spots to visit or hidden gems that are less known to typical tourists.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Money & Costs",
+    "type": "norm",
+    "types_ab": [
+     "practical",
+     "norm"
+    ],
+    "aspects": [
+     "price"
+    ],
+    "a": {
+     "claim": "If you want to buy souvenirs or gifts, a museum would be the worst choice since there are many stalls along the streets of tourist areas that offer reasonable prices.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Especially since I'll be traveling solo I want to be physically and mentally prepared for any case, so both budget and money tips, as well as general stuff (what to look out for and such), are very welcome.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Money & Costs",
+    "type": "norm",
+    "types_ab": [
+     "norm",
+     "norm"
+    ],
+    "aspects": [
+     "price"
+    ],
+    "a": {
+     "claim": "Waiters have been known to take advantage of patrons by bringing more expensive items than what was ordered or asking for a tip although it's not mandatory and should be included in the price by law.",
+     "source": "wikivoyage",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "And no, you can't haggle in there (items have a price tag).",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Money & Costs",
+    "type": "norm",
+    "types_ab": [
+     "practical",
+     "norm"
+    ],
+    "aspects": [
+     "price"
+    ],
+    "a": {
+     "claim": "If you want to buy souvenirs or gifts, a museum would be the worst choice since there are many stalls along the streets of touristic areas that offer reasonable prices.",
+     "source": "wikitravel",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Especially since I'll be traveling solo I want to be physically and mentally prepared for any case, so both budget and money tips, as well as general stuff (what to look out for and such), are very welcome.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "norm",
+    "types_ab": [
+     "norm",
+     "practical"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "It is considered an express route, so its stops are spaced about 800 m (1/2 mile) apart; but it is also very frequent, very convenient for most places that the Metro does not go to, and very fast, especially compared to other routes.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Termini (the main railway station), bus line # 64, the central stops of the Metro and Trevi fountain are well-known for pickpockets, so take extra care in these areas.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "norm",
+    "types_ab": [
+     "norm",
+     "practical"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "It is considered an express route, so its stops are spaced about 800 m (1/2 mile) apart; but it is also very frequent, very convenient for most places that the Metro does not go to, and very fast, especially compared to other routes.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Four passengers via the fast train from FCO to Termini (the central Metro and train station in Rome) cost 63 EUR total, so taxis are cost effective to FCO for parties of four+ but will take longer.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "norm",
+    "types_ab": [
+     "norm",
+     "evaluative"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "It is considered an express route, so its stops are spaced about 800 m (1/2 mile) apart; but it is also very frequent, very convenient for most places that the Metro does not go to, and very fast, especially compared to other routes.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Also wondering if I should add any day trips to particularly beautiful / interesting / convenient by train places.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "norm",
+    "types_ab": [
+     "norm",
+     "practical"
+    ],
+    "aspects": [
+     "transport"
+    ],
+    "a": {
+     "claim": "It is considered an express route, so its stops are spaced about 800 m (1/2 mile) apart; but it is also very frequent, very convenient for most places that the Metro does not go to, and very fast, especially compared to other routes.",
+     "source": "wikivoyage",
+     "sentiment": "negative"
+    },
+    "b": {
+     "claim": "Transport: Rome has a good network of metro stops and buses.",
+     "source": "reddit",
+     "sentiment": "positive"
+    }
+   },
+   {
+    "city": "rome",
+    "place": "Rome · Transport",
+    "type": "norm",
+    "types_ab": [
+     "practical",
+     "norm"
+    ],
+    "aspects": [
+     "crowds"
+    ],
+    "a": {
+     "claim": "info] It is recommended to buy your tickets in advance, either online or at a quiet ticket booth, to avoid having to wait in line for a very long time at popular attractions.",
+     "source": "wikitravel",
+     "sentiment": "positive"
+    },
+    "b": {
+     "claim": "he was not only apathetic but almost rude and dismissing, strongly advising against filing a report at the station as it’s a long wait.",
+     "source": "reddit",
+     "sentiment": "negative"
+    }
+   }
+  ],
+  "descriptive": []
+ }
+}

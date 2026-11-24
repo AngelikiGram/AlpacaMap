@@ -135,16 +135,17 @@ export default function VerifiedConflicts({ nodes, verified, onSave }) {
         ("amazing museum" vs "awful queue"). This check compares statements from different sources pair by pair
         with a language model that runs in your browser, and explains disagreements that only depend on
         conditions such as season, time of day or who is travelling.
+        <b> The check is automatic and makes mistakes: read both statements before you rely on a result.</b>
       </div>
 
       {verified && !running && (
         <div style={{ fontSize: '0.64rem', color: 'var(--text-secondary)' }}>
           Checked {verified.pairsChecked} pairs on {new Date(verified.checkedAt).toLocaleDateString()}:{' '}
-          <b style={{ color: '#f87171' }}>{summary.contradictionPlaces}</b> place{summary.contradictionPlaces === 1 ? '' : 's'} with real contradictions,{' '}
+          <b style={{ color: '#f87171' }}>{summary.contradictionPlaces}</b> place{summary.contradictionPlaces === 1 ? '' : 's'} with possible contradictions,{' '}
           <b style={{ color: '#fbbf24' }}>{summary.dependsPlaces}</b> that depend on conditions
           {verified.counts?.agree ? <>, {verified.counts.agree} pairs agree</> : null}.
-          {stale && <span style={{ color: '#fbbf24' }}> The statements changed since — run the check again.</span>}
-          {!verified.method && <span style={{ color: '#fbbf24' }}> These results come from an earlier, less strict version of the check — run it again.</span>}
+          {stale && <span style={{ color: '#fbbf24' }}> The statements changed since, run the check again.</span>}
+          {!verified.method && <span style={{ color: '#fbbf24' }}> These results come from an earlier, less strict version of the check, run it again.</span>}
         </div>
       )}
 
@@ -155,16 +156,16 @@ export default function VerifiedConflicts({ nodes, verified, onSave }) {
       ) : (
         <button type="button" onClick={run} disabled={!nodes.length}
           style={{ padding: '7px', borderRadius: 8, border: '1px solid rgba(16,185,129,0.35)', background: 'rgba(16,185,129,0.12)', color: '#34d399', fontWeight: 700, fontSize: '0.72rem', cursor: nodes.length ? 'pointer' : 'not-allowed' }}>
-          {verified ? 'Run the check again' : 'Check for real contradictions'}
+          {verified ? 'Run the check again' : 'Check for possible contradictions'}
         </button>
       )}
       {error && <div style={{ fontSize: '0.64rem', color: '#f87171' }}><AlertTriangle size={11} style={{ verticalAlign: '-2px' }} /> {error}</div>}
 
       {verified && !running && (
         <>
-          <PlaceGroup title="Real contradictions" color="#f87171" places={summary.places.filter((p) => p.contradictions.length)} kind="contradictions" byId={byId} profile={profile} />
-          <PlaceGroup title="Both can be true — depends on conditions" color="#fbbf24" places={summary.places.filter((p) => p.depends.length)} kind="depends" byId={byId} profile={profile} />
-          {summary.places.length === 0 && <div style={{ fontSize: '0.68rem', color: '#34d399' }}>No real contradictions found between the sources.</div>}
+          <PlaceGroup title="Possible contradictions (automatic check)" color="#f87171" places={summary.places.filter((p) => p.contradictions.length)} kind="contradictions" byId={byId} profile={profile} />
+          <PlaceGroup title="Both can be true, depends on conditions" color="#fbbf24" places={summary.places.filter((p) => p.depends.length)} kind="depends" byId={byId} profile={profile} />
+          {summary.places.length === 0 && <div style={{ fontSize: '0.68rem', color: '#34d399' }}>The automatic check found no contradictions between the sources.</div>}
         </>
       )}
     </div>

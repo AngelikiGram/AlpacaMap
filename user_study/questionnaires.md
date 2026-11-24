@@ -10,7 +10,7 @@ applications and the paper's appendix.
 4. Have you visited Paris? / Rome? (yes/no each)
 5. How comfortable are you with map-based web apps? 1 (not at all) – 7 (very)
 
-## SEQ — Single Ease Question (after each task)
+## SEQ: Single Ease Question (after each task)
 "Overall, this task was…" 1 = very difficult … 7 = very easy
 
 ## Confidence (after T1–T3)
@@ -20,15 +20,18 @@ applications and the paper's appendix.
 0–100 slider each: Mental demand · Physical demand · Temporal demand · Performance (0 = perfect, 100 = failure) · Effort · Frustration.
 
 ## Statement pairs (RQ4, after block 2)
-The runner shows **6 pairs** of real statements from the app's data: same topic, opposite sentiment,
-different sources — 2 pairs each from the claim types *evaluation* (opinions), *temporal*
-(time/season dependent) and *conditional* (depends on situation). Pairs are drawn at random per
-participant (seeded by participant number) from both cities. For each pair:
+The runner shows **6 pairs** of real statements, 2 for each statement type of the paper (Section 3):
+*practical* information, *evaluative* statements (opinions, ratings) and social *norms*. The pairs come
+from `runner/pairs.json`, built by `analysis/make_pairs.py` with the paper's candidate-pair rules
+(same place or topic, different sources, shared aspect and content, not copied, opposite sentiment). A
+pair has the type of its more opinionated statement. Pairs are drawn per participant (seeded by
+participant number) from all five cities. Read `pairs.json` before the study and delete pairs you
+would not show. For each pair:
 1. Do these two statements really disagree? Yes / Partly / No
-2. Would this disagreement change your travel plans? 1 (not at all) – 5 (a lot)
-3. What kind of statement is the first one? Personal opinion / Fact / Practical or cultural tip / Not sure
-
-## SUS — System Usability Scale (end)
+2. Would this disagreement change your travel plans? 1 (not at all) to 5 (a lot)
+3. What kind of statement is A? An opinion or rating / Practical information (hours, prices, routes, rules) /
+   A custom or expected behaviour / A historical or descriptive fact / Not sure
+## SUS: System Usability Scale (end)
 1 = strongly disagree … 5 = strongly agree
 1. I think that I would like to use this system frequently.
 2. I found the system unnecessarily complex.
@@ -42,10 +45,10 @@ participant (seeded by participant number) from both cities. For each pair:
 10. I needed to learn a lot of things before I could get going with this system.
 
 ## Views (RQ2)
-For each of: Explore, Planner, TripSpace, Insights, Knowledge · Ingest, Knowledge · Claims,
-Knowledge · Visual, Knowledge · Conflicts, Overview, Itinerary, Budget, Packing, Notes, Docs, Export:
+For each of: Topic buttons (What do sources say about…), Map panel (Do sources agree?), Time lens,
+Debates, Place window (click on a pin), Knowledge, Explore, Itinerary:
 - Did you use it? yes/no
-- If yes — I understood what it shows (1–5) · It was useful for the tasks (1–5)
+- If yes: I understood what it shows (1–5) · It was useful for the tasks (1–5)
 - Would you remove it? yes/no
 
 Open: "Which views or features would you merge, simplify or remove, and why?"
@@ -54,12 +57,6 @@ Open: "Which views or features would you merge, simplify or remove, and why?"
 1. Seeing where sources disagree helped me decide what to put in my plan. (1–5)
 2. I would prefer conflict information **inside** the planner (e.g. a warning on a stop) rather than in a separate view. (1–5)
 3. I would use a tool that only shows source conflicts, without any planning features. (1–5)
-
-## Privacy (RQ6)
-1. It matters to me that my travel plans are processed on my own device. (1–5)
-2. I would be comfortable if the analysis of public sources ran on a server. (1–5)
-3. I would be comfortable sharing my itinerary with a server to get better suggestions. (1–5)
-4. Which information would you **not** want to share with an online service? (multi) Destinations · Dates · Budget · Travel companions · Documents (tickets, bookings) · None
 
 ## Final
 - What did you like most? (open)

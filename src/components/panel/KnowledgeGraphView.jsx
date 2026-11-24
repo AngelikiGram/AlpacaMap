@@ -74,7 +74,7 @@ function summarizeClaim(str) {
   return clean.slice(0, maxLen - 1) + '…';
 }
 
-// Build graph — savedPos pins existing nodes so expanding one place doesn't shuffle everything else
+// Build graph, savedPos pins existing nodes so expanding one place doesn't shuffle everything else
 function buildGraphData(claims, city, expandedPlaces, showAllClaims, savedPos = {}) {
   const nodes = [];
   const links = [];
@@ -179,7 +179,7 @@ function buildGraphData(claims, city, expandedPlaces, showAllClaims, savedPos = 
   return { nodes, links };
 }
 
-// Module-level component — stable identity across renders (no unmount/remount on parent re-render)
+// Module-level component, stable identity across renders (no unmount/remount on parent re-render)
 function ClaimCard({ claim, onClose, onNavigate }) {
   if (!claim) return null;
   const s = claim.evaluation?.sentiment || 'neutral';
@@ -235,7 +235,7 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
   graphSearchRef.current = graphSearch;
   expandedPlacesRef.current = expandedPlaces;
 
-  // Saved node positions — snapshotted before any graphData change so existing nodes stay put
+  // Saved node positions, snapshotted before any graphData change so existing nodes stay put
   const posRef = useRef({});
   // Always points to the live graphData so D3-modified x/y are readable without the graph ref
   const graphDataRef = useRef({ nodes: [], links: [] });
@@ -326,7 +326,7 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
 
   const handleNodeClick = useCallback((node) => {
     if (node.type === 'place') {
-      // Snapshot positions BEFORE graphData changes — pins existing nodes in place
+      // Snapshot positions BEFORE graphData changes, pins existing nodes in place
       snapshotPositions();
       const isAlreadySelected = selectedPlace?.id === node.id;
       setExpandedPlaces(prev => {
@@ -389,7 +389,7 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
     return node.label;
   }, []);
 
-  // Canvas renderer — uses refs so it never causes graph re-mount
+  // Canvas renderer, uses refs so it never causes graph re-mount
   const nodeCanvasObject = useCallback((node, ctx, globalScale) => {
     if (node.x == null || node.y == null || isNaN(node.x) || isNaN(node.y)) return;
     const sq = graphSearchRef.current;
@@ -496,7 +496,7 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
     }
 
     ctx.globalAlpha = 1;
-  }, []); // stable — reads graphSearchRef / node.isExpanded on every frame
+  }, []); // stable, reads graphSearchRef / node.isExpanded on every frame
 
   const placeCount = useMemo(() => new Set(claims.map(c => c.place).filter(Boolean)).size, [claims]);
   const expandedCount = expandedPlaces.size;
@@ -639,7 +639,7 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderBottom: '1px solid #e4e4e7', background: '#ffffff', flexShrink: 0 }}>
             <span style={{ fontSize: '0.78rem', color: '#475569', fontFamily: 'Inter,sans-serif' }}>
-              Force Graph · <strong style={{ color: '#0ea5e9' }}>{placeCount}</strong> places · <strong style={{ color: '#6366f1' }}>{claims.length}</strong> claims — {city}
+              Force Graph · <strong style={{ color: '#0ea5e9' }}>{placeCount}</strong> places · <strong style={{ color: '#6366f1' }}>{claims.length}</strong> claims, {city}
             </span>
             <input value={expandedSearch} onChange={e => setExpandedSearch(e.target.value)}
               placeholder="🔍 Find node…"

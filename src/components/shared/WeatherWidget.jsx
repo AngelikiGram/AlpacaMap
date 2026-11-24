@@ -91,7 +91,7 @@ export const WeatherWidget=({coords, startDate, endDate})=>{
       fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&start_date=${startDate}&end_date=${endDate}&timezone=auto`)
         .then(r=>r.json()).then(d=>{if(d.daily)setForecast(parseDays(d));setLoading(false);}).catch(()=>setLoading(false));
     } else if(tripIsFuture&&hasTripDates){
-      // Trip is beyond forecast window — fetch same calendar dates from prior year as climate proxy
+      // Trip is beyond forecast window, fetch same calendar dates from prior year as climate proxy
       setLabel('Typical Weather (last year)');
       const prevYear=(tripStart.getFullYear()-1).toString();
       const prevStart=startDate.replace(/^\d{4}/,prevYear);

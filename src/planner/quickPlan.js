@@ -215,7 +215,7 @@ export function buildQuickPlan(parsed, { pois = [], center, evidenceIndex = null
   const main = scored.filter((p) => !isMeal(p) && !isEvening(p)).sort((a, b) => b.s - a.s);
   const meals = scored.filter((p) => p.cat === 'food' || (p.cat === 'coffee' && likes.has('coffee'))).sort((a, b) => b.s - a.s);
   const evening = scored.filter((p) => isEvening(p) || (p.cat === 'food' && likes.has('food'))).sort((a, b) => b.s - a.s);
-  if (main.length < perDay) notes.push('Not many places found for this city — add more from the Explore tab.');
+  if (main.length < perDay) notes.push('Not many places found for this city. Add more from the Explore tab.');
 
   const used = new Set();
   const start = startDate || parsed.startDate;
@@ -279,10 +279,10 @@ export function buildQuickPlan(parsed, { pois = [], center, evidenceIndex = null
 
   if (parsed.budget && days) {
     const perDayBudget = parsed.budget / days;
-    notes.push(perDayBudget < 90 ? `≈${Math.round(perDayBudget)} per day is tight — plan picnics and free museums.` : `≈${Math.round(perDayBudget)} per day for food, tickets and transport.`);
+    notes.push(perDayBudget < 90 ? `≈${Math.round(perDayBudget)} per day is tight: plan picnics and free museums.` : `≈${Math.round(perDayBudget)} per day for food, tickets and transport.`);
   }
   const flagged = out.flatMap((d) => d.stops).filter((s) => s.flags.length).length;
-  if (flagged) notes.push(`${flagged} stop${flagged > 1 ? 's have' : ' has'} a warning from travel sources — check the ⚠ marks.`);
+  if (flagged) notes.push(`${flagged} stop${flagged > 1 ? 's have' : ' has'} a warning from travel sources. Check the ⚠ marks.`);
   return { days: out, notes };
 }
 

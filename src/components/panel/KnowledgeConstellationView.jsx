@@ -82,7 +82,7 @@ function forceLayout(places, w, h, { iterations = 22, maxNodeR = 22, gap = 40, c
     keys.forEach(k => {
       const p = positions[k];
       if (centerPull) {
-        // gentle pull — keep nodes from drifting in the regular view
+        // gentle pull, keep nodes from drifting in the regular view
         p.x = cx + (p.x - cx) * 0.996;
         p.y = cy + (p.y - cy) * 0.996;
       }
@@ -549,7 +549,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
       }
     }
     if (!found) {
-      // Geocode via Nominatim — place not in saved trip data
+      // Geocode via Nominatim, place not in saved trip data
       try {
         const cityBase = (city || '').split(',')[0].trim();
         const q = cityBase ? `${p.name}, ${cityBase}` : p.name;
@@ -590,7 +590,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
 
   const [expMinClaims, setExpMinClaims] = useState(1);
 
-  // Expanded view — filter by minimum claims, cap at top 200, increase spacing
+  // Expanded view, filter by minimum claims, cap at top 200, increase spacing
   const expandedPlaces = useMemo(() => {
     if (!expanded) return [];
     const filtered = allPlaces.filter(p => p.nodes.length >= expMinClaims);
@@ -708,7 +708,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
             ))}
           </div>
 
-          {/* Pagination — only shown when not searching */}
+          {/* Pagination, only shown when not searching */}
           {!searchLower && totalPages > 1 && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '5px 0 2px' }}>
               <button className="cst-pag-btn" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>← Prev</button>
@@ -779,7 +779,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
             <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', fontFamily: 'Inter,sans-serif' }}>
               ⬤ <strong style={{ color: '#c4b5fd' }}>{expandedPlaces.length}</strong>
               <span style={{ color: 'rgba(255,255,255,0.25)', marginLeft: '3px' }}>of {allPlaces.length} places shown</span>
-              <span style={{ color: 'rgba(255,255,255,0.18)', marginLeft: '6px' }}>— {(city || '').split(',')[0]}</span>
+              <span style={{ color: 'rgba(255,255,255,0.18)', marginLeft: '6px' }}>{(city || '').split(',')[0]}</span>
             </span>
             <input className="exp-input" placeholder="Search nodes…" value={expandedSearch} onChange={e => setExpandedSearch(e.target.value)}/>
             {expandedSearch && (
@@ -794,7 +794,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
             </button>
           </div>
 
-          {/* SVG fills remaining space — wheel to zoom, drag to pan */}
+          {/* SVG fills remaining space, wheel to zoom, drag to pan */}
           <div
             ref={expSvgRef}
             style={{ flex: 1, overflow: 'hidden', padding: '6px 10px 6px', cursor: expPanRef.current ? 'grabbing' : 'grab', position: 'relative' }}
@@ -850,7 +850,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
             </span>
           </div>
 
-          {/* Bottom-left info panel — shown when a node is clicked */}
+          {/* Bottom-left info panel, shown when a node is clicked */}
           {expandedSelected && (() => {
             const col = placeColors[expandedSelected.name.toLowerCase()] || '#8b5cf6';
             const claims = [...expandedSelected.nodes]

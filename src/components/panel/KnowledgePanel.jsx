@@ -15,7 +15,7 @@ import { summarizeVerified } from '../../knowledge/contradictions';
 import { credibility as credibilityOf } from '../../knowledge/credibility';
 
 // ── Credibility model ──────────────────────────────────────────────────────────
-// Returns { score, low, high } — the CI widens when fewer corroborating sources exist
+// Returns { score, low, high }, the CI widens when fewer corroborating sources exist
 // Credibility now lives in src/knowledge/credibility.js (publication date, independent sources)
 function computeCredibility(node, samePlaceNodes) {
   return credibilityOf(node, samePlaceNodes);
@@ -140,7 +140,7 @@ function SourceBadge({ sourceType }) {
   );
 }
 
-// ── Module-level constants — loaded from src/data/nlp_data.json ───────────────
+// ── Module-level constants, loaded from src/data/nlp_data.json ───────────────
 // To update these word lists run:  python scripts/train_nlp.py
 const ENTITY_COMMON_WORDS = new Set(nlpData.entityCommonWords);
 const HEURISTIC_COMMON = new Set(nlpData.heuristicCommon);
@@ -149,7 +149,7 @@ const HEURISTIC_COMMON = new Set(nlpData.heuristicCommon);
 // These are injected into both ENTITY_COMMON_WORDS and HEURISTIC_COMMON at
 // runtime so neither the NLP entity regex nor isLocationNode passes them through.
 const EXTRA_NON_PLACE_WORDS = [
-  // Conjunctions / connectives — never place names
+  // Conjunctions / connectives, never place names
   'although', 'however', 'therefore', 'moreover', 'nevertheless', 'nonetheless', 'besides',
   'furthermore', 'consequently', 'accordingly', 'meanwhile', 'otherwise', 'instead',
   'indeed', 'actually', 'basically', 'essentially', 'generally', 'typically', 'usually',
@@ -188,7 +188,7 @@ EXTRA_NON_PLACE_WORDS.forEach(w => {
   HEURISTIC_COMMON.add(w);
 });
 
-// Naive Bayes class names — nodes whose `place` matches these are Topics, not Locations
+// Naive Bayes class names, nodes whose `place` matches these are Topics, not Locations
 const NLP_CATEGORY_NAMES = new Set(
   nlpData.trainingData.map(d => d.class.toLowerCase())
 );
@@ -255,7 +255,7 @@ class NaiveBayesClassifier {
 }
 
 const mlClassifier = new NaiveBayesClassifier();
-// Training data loaded from src/data/nlp_data.json — update with: python scripts/train_nlp.py
+// Training data loaded from src/data/nlp_data.json, update with: python scripts/train_nlp.py
 nlpData.trainingData.forEach(item => mlClassifier.train(item.text, item.class));
 
 // Assigns a semantic category title from claim content using Naive Bayes classifier
@@ -274,7 +274,7 @@ function isLocationNode(node) {
   if (NLP_CATEGORY_NAMES.has(pLower)) return false; // bare category name (Climate, Shopping…)
   if (HEURISTIC_COMMON.has(pLower)) return false;   // generic word (High, District…)
   if (ENTITY_COMMON_WORDS.has(pLower)) return false;
-  // Check first word — catches "Snow in London", "British Empire" etc. from old cached nodes
+  // Check first word, catches "Snow in London", "British Empire" etc. from old cached nodes
   const firstWord = pLower.split(/\s+/)[0];
   if (HEURISTIC_COMMON.has(firstWord) || ENTITY_COMMON_WORDS.has(firstWord)) return false;
   return true;
@@ -288,13 +288,13 @@ function cleanContentText(text) {
     .replace(/<listing\b[^>]*>[\s\S]*?<\/listing>/gi, ' ')
     .replace(/<listing\b[^>]*\/>/gi, ' ')
     .replace(/<listing\b[^>]*>/gi, ' ')
-    // Wiki image / file embeds — remove entirely
+    // Wiki image / file embeds, remove entirely
     .replace(/\[\[(?:Image|File|Media):[^\]]*?\]\]/gi, '')
     // Wiki links with display text [[target|label]] → label
     .replace(/\[\[[^\]|]*\|([^\]]*)\]\]/g, '$1')
     // Simple wiki links [[text]] → text
     .replace(/\[\[([^\]]*)\]\]/g, '$1')
-    // Wiki templates {{...}} — remove
+    // Wiki templates {{...}}, remove
     .replace(/\{\{[\s\S]*?\}\}/g, '')
     // Leftover wiki markup fragments like "|20px]]" or "alt=... ]]"
     .replace(/\|[^[\]]*\]\]/g, '')
@@ -380,7 +380,7 @@ async function discoverCitySubreddits(cityName) {
   }
 }
 
-// ── PullPush.io — open Reddit archive, no auth required ────────────────────────
+// ── PullPush.io, open Reddit archive, no auth required ────────────────────────
 // Tries direct CORS request first (PullPush allows cross-origin), then Vite proxy fallback
 async function fetchRedditViaPullPush(cityName) {
   const results = [];
@@ -403,7 +403,7 @@ async function fetchRedditViaPullPush(cityName) {
           if (res.status === 429) { await new Promise(r => setTimeout(r, 1500 * (attempt + 1))); continue; }
           if (!res.ok) { console.log(`[PullPush] ${res.status} for sub=${sub} q="${q}"`); return; }
           const text = await res.text();
-          if (text.trimStart().startsWith('<')) { console.log(`[PullPush] HTML response — blocked`); return; }
+          if (text.trimStart().startsWith('<')) { console.log(`[PullPush] HTML response, blocked`); return; }
           const data = JSON.parse(text);
           const posts = (data.data || []).filter(p =>
             p.selftext && p.selftext !== '[deleted]' && p.selftext !== '[removed]' && p.selftext.trim().length > 50
@@ -413,7 +413,7 @@ async function fetchRedditViaPullPush(cityName) {
           return;
         } catch (e) { console.log(`[PullPush] Error r/${sub} "${q}": ${e.message}`); return; }
       }
-      console.log(`[PullPush] still rate-limited for r/${sub} "${q}" — skipped`);
+      console.log(`[PullPush] still rate-limited for r/${sub} "${q}", skipped`);
     };
     if (HAS_DEV_PROXY) await Promise.allSettled(jobs.map(runJob));
     else for (const job of jobs) await runJob(job);
@@ -425,7 +425,7 @@ async function fetchRedditViaPullPush(cityName) {
     discoverCitySubreddits(cityName),
   ]);
 
-  // Phase 2: city-specific subreddit (r/london) with wider queries — sequential to avoid rate limits
+  // Phase 2: city-specific subreddit (r/london) with wider queries, sequential to avoid rate limits
   if (citySlug) {
     await fetchSubs([citySlug], CITY_QUERIES, PULLPUSH_BASE, 100);
   }
@@ -447,7 +447,7 @@ async function fetchRedditViaPullPush(cityName) {
   return results;
 }
 
-// ── Sentiment Dictionary — loaded from src/data/nlp_data.json ─────────────────
+// ── Sentiment Dictionary, loaded from src/data/nlp_data.json ─────────────────
 const SENTIMENT_DICTIONARY = nlpData.sentimentDictionary;
 
 function analyzeSentimentNLP(text) {
@@ -543,7 +543,7 @@ function extractKnowledgeNLP(text, city, placeNames = [], sourceType, sourceLabe
         const cleanName = cleanNameForMatching(originalName);
         if (cleanName.length > 2) {
           // Single-word clean names (e.g. "exchange" from "The Exchange") are too generic
-          // — require the full name including article so "exchange students" doesn't match.
+          //, require the full name including article so "exchange students" doesn't match.
           const matchName = cleanName.split(/\s+/).length === 1
             ? originalName.toLowerCase().trim()
             : cleanName;
@@ -556,7 +556,7 @@ function extractKnowledgeNLP(text, city, placeNames = [], sourceType, sourceLabe
         }
       }
 
-      // Step 2: Multi-word entity fallback — or single-word if it's a known POI
+      // Step 2: Multi-word entity fallback, or single-word if it's a known POI
       if (!foundPlace) {
         let match;
         entityRegex.lastIndex = 0;
@@ -577,7 +577,7 @@ function extractKnowledgeNLP(text, city, placeNames = [], sourceType, sourceLabe
         }
       }
 
-      // Step 3: Semantic category fallback — all travel source text is about the city,
+      // Step 3: Semantic category fallback, all travel source text is about the city,
       // so unmatched claims get a meaningful category title based on content keywords
       if (!foundPlace) {
         const cityBase = city.split(',')[0].trim();
@@ -726,13 +726,13 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
 
   const allPosts = [];
 
-  // Hosted site: Reddit's API and DuckDuckGo block browser requests — use the PullPush archive only.
+  // Hosted site: Reddit's API and DuckDuckGo block browser requests, use the PullPush archive only.
   if (!HAS_DEV_PROXY) {
     const posts = await fetchRedditViaPullPush(noCountry).catch(() => []);
     allPosts.push(...posts);
   }
 
-  // ── api.reddit.com via Vite proxy (PRIMARY — confirmed working) ────────────
+  // ── api.reddit.com via Vite proxy (PRIMARY, confirmed working) ────────────
   // api.reddit.com returns JSON directly without CORS blocks.
   console.log('[Reddit] Fetching via api.reddit.com proxy...');
   const TRAVEL_SUBS = [...new Set([citySlug, 'travel', 'solotravel', 'backpacking', 'shoestring'].filter(Boolean))];
@@ -790,7 +790,7 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
     }))
   ]);
 
-  // ── PullPush.io (fallback — often down) ───────────────────────────────────
+  // ── PullPush.io (fallback, often down) ───────────────────────────────────
   if (allPosts.length === 0 && HAS_DEV_PROXY) {
     console.log('[Reddit] api.reddit.com returned 0, trying PullPush fallback...');
     await fetchRedditViaPullPush(noCountry).then(posts => {
@@ -809,7 +809,7 @@ async function fetchReddit(city, placeNames = [], parentCity = null) {
 
   // ── DuckDuckGo HTML as last resort ───────────────────────────────────────
   if (unique.length === 0) {
-    console.log('[Reddit] All APIs failed — trying DuckDuckGo HTML fallback...');
+    console.log('[Reddit] All APIs failed, trying DuckDuckGo HTML fallback...');
     const ddgSnippets = await fetchRedditFromDuckDuckGo(noCountry);
     if (ddgSnippets.length > 0) {
       const combined = ddgSnippets.map((s, idx) =>
@@ -942,7 +942,7 @@ function PlaceCard({ place, expanded, onToggle, onClaimClick }) {
         <span style={{ fontSize: '0.58rem', color: accentColor, fontWeight: '700' }}>{place.nodes.length} claim{place.nodes.length !== 1 ? 's' : ''}</span>
         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
           {place.novelty > 0.5 && (
-            <span title={`Insider score: ${(place.novelty * 100).toFixed(0)}% — nuanced, multi-source, contested`}
+            <span title={`Insider score: ${(place.novelty * 100).toFixed(0)}%, nuanced, multi-source, contested`}
               style={{ fontSize: '0.5rem', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '2px', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '6px', padding: '0 4px' }}>
               <Sparkles size={7} color="#f59e0b" /> Insider
             </span>
@@ -1123,7 +1123,7 @@ function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, all
         </div>
       )}
 
-      {/* Category insights — collapsible */}
+      {/* Category insights, collapsible */}
       {filteredCategory.length > 0 && (
         <div>
           <button onClick={() => setShowCategories(v => !v)}
@@ -1200,7 +1200,7 @@ async function wikidataCoords(qid) {
   return null;
 }
 
-// Main Wikidata resolution pass — enriches nodes in-place and returns updated array.
+// Main Wikidata resolution pass, enriches nodes in-place and returns updated array.
 // Each node gets: wikidata_id, canonical_name (corrected), wikidata_description, coords (if missing)
 const WIKIDATA_CACHE = new Map();
 async function resolveWithWikidata(nodes, city = '', onProgress = null) {
@@ -1208,7 +1208,7 @@ async function resolveWithWikidata(nodes, city = '', onProgress = null) {
   const cityBase = city.split(',')[0].trim();
 
   // Lookup table: raw place name → Wikidata entity.
-  // Topic labels like "Paris · Shopping" are categories, not places — skip them.
+  // Topic labels like "Paris · Shopping" are categories, not places, skip them.
   // Lookups run 6 at a time and are cached for the session (this used to take ~80 s per city).
   const entityMap = {};
   const lookups = uniquePlaces.filter(name => !name.includes(' · '));
@@ -1306,7 +1306,7 @@ Respond ONLY with a JSON object: {"raw name": "Clean Name or Category"}`;
     if (mapping[p]) return;
     const pLower = p.toLowerCase().trim();
     const words = pLower.split(/\s+/).filter(w => w.length > 2);
-    // A single short/common word is clearly a bad extraction — categorize by claim content
+    // A single short/common word is clearly a bad extraction, categorize by claim content
     const isBadName = words.length <= 1 && (
       ENTITY_COMMON_WORDS.has(pLower) ||
       HEURISTIC_COMMON.has(pLower) ||
@@ -1355,7 +1355,7 @@ async function reclassifyTopicNodesWithLLM(nodes, cityBase, ollamaEndpoint, olla
     if (!(k in uniqueMap)) uniqueMap[k] = i;
   });
 
-  // Cap: only reclassify top 300 unique claims — rest keep their NLP label
+  // Cap: only reclassify top 300 unique claims, rest keep their NLP label
   const MAX_CLASSIFY = 300;
   const uniqueItems = Object.entries(uniqueMap).slice(0, MAX_CLASSIFY);
   const keyToClass = {};
@@ -1416,7 +1416,7 @@ Reply ONLY with a JSON array of category strings, one per item. Example: ["Cultu
   });
 }
 
-// ── Overpass API — fetch all notable POIs in an area ─────────────────────────
+// ── Overpass API, fetch all notable POIs in an area ─────────────────────────
 // Uses the Wikidata tag as a notability filter: only returns POIs that have a
 // linked Wikidata entry (museums, landmarks, famous restaurants, parks, etc.).
 // Falls back to geocoding the city name if no coordinates are provided.
@@ -1463,7 +1463,7 @@ async function fetchAreaPOIsOverpass(city, lat, lon) {
   // Query Overpass for Wikidata-tagged POIs only (ensures notability)
   // tourism + historic: all named POIs, no notability filter
   // amenity: type-filtered to travel-relevant venues (theatres, museums, universities, etc.)
-  //   — not every restaurant/café or we'd get tens of thousands for large cities
+  //, not every restaurant/café or we'd get tens of thousands for large cities
   // leisure: parks, gardens, stadiums, nature reserves
   const AMENITY_TYPES = 'museum|theatre|arts_centre|library|university|college|place_of_worship|cinema|nightclub|casino|marketplace|community_centre|social_centre|events_venue|conference_centre|restaurant|cafe|fast_food|pub|bar';
   const LEISURE_TYPES = 'park|garden|nature_reserve|stadium|sports_centre|marina|golf_course|water_park|theme_park|beach_resort';
@@ -1605,12 +1605,12 @@ async function runDeepResearchPass(nodes, city, localPlaceNames, lat, lon, ollam
   const allTargets = [...poiTargets, ...categoryTargets];
   const allNewNodes = [];
   let done = 0;
-  // Separate limiter for Ollama chunk calls only — NOT used to gate outer target concurrency.
+  // Separate limiter for Ollama chunk calls only, NOT used to gate outer target concurrency.
   // If the same limiter gated both, outer tasks would hold all slots while waiting for inner
   // chunk calls that can never start → deadlock.
   const deepChunkLimit = pLimit(4);
 
-  // HTTP fetches (Wikipedia, Reddit) run fully in parallel — they're fast and don't touch Ollama.
+  // HTTP fetches (Wikipedia, Reddit) run fully in parallel, they're fast and don't touch Ollama.
   // Only the Ollama extraction step is serialised through deepChunkLimit.
   await Promise.allSettled(
     allTargets.map(async (target) => {
@@ -1627,7 +1627,7 @@ async function runDeepResearchPass(nodes, city, localPlaceNames, lat, lon, ollam
         allNewNodes.push(...extracted);
       }
 
-      // Reddit search for POIs (LLM only — NLP on individual POI posts is too noisy)
+      // Reddit search for POIs (LLM only, NLP on individual POI posts is too noisy)
       if (target.redditQuery && ollamaAvailable) {
         const posts = await searchRedditForTopic(target.redditQuery);
         if (posts.length > 0) {
@@ -1721,7 +1721,7 @@ function preFilterText(text, placeNames, city) {
 }
 
 // ── LLM-first knowledge extraction (uses Ollama) ──────────────────────────────
-// Processes text in parallel chunk batches — eliminates truncated NLP tokens.
+// Processes text in parallel chunk batches, eliminates truncated NLP tokens.
 // onSegDone(doneCount) is called after each segment completes so callers can show progress.
 async function extractKnowledgeWithLLM(text, city, placeNames, ollamaEndpoint, ollamaModel, sourceType, sourceLabel, date, url, limit, onSegDone = null) {
   const cityBase = city.split(',')[0].trim();
@@ -1735,7 +1735,7 @@ async function extractKnowledgeWithLLM(text, city, placeNames, ollamaEndpoint, o
   ].join(', ');
 
   const CHUNK_SIZE = 5000;  // larger chunks = fewer LLM calls
-  const MAX_SEGS = 10;      // cap per source — prevents runaway on large articles
+  const MAX_SEGS = 10;      // cap per source, prevents runaway on large articles
   const CONCURRENCY = 4;    // parallel Ollama requests
 
   // Split text on SOURCE headers so each chunk retains source metadata
@@ -1802,7 +1802,7 @@ async function extractKnowledgeWithLLM(text, city, placeNames, ollamaEndpoint, o
   }
   if (pending) mergedJobs.push(pending);
 
-  // Cap to MAX_SEGS — extra segments yield diminishing returns and can hang the UI
+  // Cap to MAX_SEGS, extra segments yield diminishing returns and can hang the UI
   const cappedJobs = mergedJobs.slice(0, MAX_SEGS);
   console.log(`[LLM] ${sourceLabel}: ${segmentJobs.length} raw → ${mergedJobs.length} merged → ${cappedJobs.length} capped segments`);
 
@@ -1843,7 +1843,7 @@ Respond ONLY with a valid JSON array: [{"place":"...","claim":"...","sentiment":
         const claim = (item.claim || '').trim();
         if (!place || !claim || claim.length < 20 || claim.length > 280) return;
 
-        // Clean and validate place name — reclassify clear non-place extractions
+        // Clean and validate place name, reclassify clear non-place extractions
         const placeLower = place.toLowerCase();
         const placeWords = placeLower.split(/\s+/);
         const firstWord = placeWords[0];
@@ -1963,7 +1963,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
   const [showFetchPanel, setShowFetchPanel] = useState(true);
   const [showManualPaste, setShowManualPaste] = useState(false);
 
-  // Conflict resolutions — stored per trip so user's adjudications persist
+  // Conflict resolutions, stored per trip so user's adjudications persist
   const [resolutions, setResolutions] = useState(() => {
     try { return JSON.parse(localStorage.getItem('kg_conflict_resolutions') || '{}'); } catch { return {}; }
   });
@@ -2030,7 +2030,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
     setWikidataMsg(`Linking ${unique} places to Wikidata…`);
     try {
       const enriched = await resolveWithWikidata(rawNodes, city, (done, total, name) => {
-        setWikidataMsg(`Wikidata: ${done}/${total} — ${name}`);
+        setWikidataMsg(`Wikidata: ${done}/${total}, ${name}`);
       });
       const linked = enriched.filter(n => n.wikidata_id).length;
       setTripData(prev => ({
@@ -2073,7 +2073,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
     });
   }, [triggerPlaceInfo, tripData, placeLookup]);
 
-  // Compute credibility for all nodes — O(n) via pre-grouped place map
+  // Compute credibility for all nodes, O(n) via pre-grouped place map
   const nodes = useMemo(() => {
     const byPlace = new Map();
     rawNodes.forEach(n => {
@@ -2097,7 +2097,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
   const edges = kg.edges || [];
   const contradictions = useMemo(() => detectContradictions(credibleNodes), [credibleNodes]);
 
-  // Pre-cache isLocationNode results — avoids re-running regex/Set checks per filter change
+  // Pre-cache isLocationNode results, avoids re-running regex/Set checks per filter change
   const locationNodeIds = useMemo(() => {
     const s = new Set();
     credibleNodes.forEach(n => { if (isLocationNode(n)) s.add(n.id); });
@@ -2334,7 +2334,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
     const reachable = await Promise.all(requestedSources.map(k => isReachable(k)));
     const checkedSources = requestedSources.filter((_, i) => reachable[i]);
     const down = requestedSources.filter((_, i) => !reachable[i]);
-    if (down.length) setFetchedPreviews(p => p.map(x => down.includes(x.sourceType) ? { ...x, status: 'none', title: 'Service unavailable right now — try again later' } : x));
+    if (down.length) setFetchedPreviews(p => p.map(x => down.includes(x.sourceType) ? { ...x, status: 'none', title: 'Service unavailable right now, try again later' } : x));
 
     let parentCityName = null;
     try {
@@ -2409,7 +2409,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
     try {
       const allNewNodes = [];
 
-      // ── Pass 1: NLP extraction — always runs first, instant ───────────────
+      // ── Pass 1: NLP extraction, always runs first, instant ───────────────
       // With the full Overpass POI list now in localPlaceNames, NLP does exact
       // string matching against every known place in the region rather than
       // relying on capitalisation patterns alone.
@@ -2435,9 +2435,9 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
         }));
       }
 
-      // ── Pass 2: LLM enrichment — optional, runs on top of NLP ────────────
+      // ── Pass 2: LLM enrichment, optional, runs on top of NLP ────────────
       // Ollama re-extracts from each source and merges in additional nodes that
-      // rule-based NLP missed. Does NOT replace NLP results — adds to them.
+      // rule-based NLP missed. Does NOT replace NLP results, adds to them.
       const ollamaAvailable = await checkOllamaAvailable(ollamaEndpoint);
       if (ollamaAvailable) {
         const limit = pLimit(5);
@@ -2446,9 +2446,9 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
         let llmSegsDone = 0;
         const onSegDone = () => {
           llmSegsDone++;
-          setFetchStatus(`🤖 AI Enrich (${ollamaModel}) — ${llmSegsDone} segment${llmSegsDone > 1 ? 's' : ''} done…`);
+          setFetchStatus(`🤖 AI Enrich (${ollamaModel}), ${llmSegsDone} segment${llmSegsDone > 1 ? 's' : ''} done…`);
         };
-        setFetchStatus(`🤖 AI Enrich (${ollamaModel}) — starting…`);
+        setFetchStatus(`🤖 AI Enrich (${ollamaModel}), starting…`);
 
         // 90-second hard timeout on the whole LLM enrichment phase.
         // If Ollama is slow/hanging, we proceed with what we have rather than blocking forever.
@@ -2479,8 +2479,8 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           phaseTimeout,
         ]).then(result => {
           if (result === '__timeout__') {
-            console.warn('[LLM] Enrichment phase timed out after 90s — proceeding with NLP results');
-            setFetchStatus('⚠️ AI Enrich timed out — continuing with NLP results');
+            console.warn('[LLM] Enrichment phase timed out after 90s, proceeding with NLP results');
+            setFetchStatus('⚠️ AI Enrich timed out, continuing with NLP results');
           }
         });
 
@@ -2502,7 +2502,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           allNewNodes.push(...reclassified);
         }
       } else {
-        // No Ollama — still run Wikidata linking (deterministic, no local model needed)
+        // No Ollama, still run Wikidata linking (deterministic, no local model needed)
         if (allNewNodes.length > 0) {
           setFetchStatus('🔗 Linking places to Wikidata knowledge graph…');
           const wikidataLinked = await resolveWithWikidata(allNewNodes, city,
@@ -2512,7 +2512,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
         }
       }
 
-      // ── Pass 3: Deep research — targeted per-POI searches (Ollama only) ────
+      // ── Pass 3: Deep research, targeted per-POI searches (Ollama only) ────
       if (allNewNodes.length > 0 && ollamaAvailable) {
         const deepNodes = await runDeepResearchPass(allNewNodes, city, localPlaceNames, lat, lon, ollamaEndpoint, ollamaModel, setFetchStatus, true);
         if (deepNodes.length > 0) {
@@ -2678,7 +2678,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                   <Brain size={16} style={{ color: '#10b981' }} />
                   <div>
                     <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-primary)' }}>Offline Preprocessed KG Available</span>
-                    <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)' }}>Load ready-made knowledge for {cleanTarget} bundled with the app — no internet needed</div>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)' }}>Load ready-made knowledge for {cleanTarget} bundled with the app, no internet needed</div>
                   </div>
                 </div>
                 <button
@@ -2852,7 +2852,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                   </div>
                 )}
 
-                {/* Source checkboxes — compact pill row */}
+                {/* Source checkboxes, compact pill row */}
                 <div>
                   <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sources to fetch</div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -2895,7 +2895,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                       <><Wifi size={13} /> Fetch & Extract Knowledge</>}
                 </button>
 
-                {/* Animated extraction progress — shown while running */}
+                {/* Animated extraction progress, shown while running */}
                 {(fetching || extracting) && (
                   <ExtractionProgress
                     fetching={fetching}
@@ -2906,7 +2906,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                   />
                 )}
 
-                {/* Fetched source summary — shown after completion */}
+                {/* Fetched source summary, shown after completion */}
                 {!fetching && !extracting && fetchedPreviews.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Fetched sources</div>
@@ -2924,7 +2924,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                           <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
                             {src.status === 'extracted' && <><span style={{ fontSize: '0.65rem', color: '#10b981' }}>✓</span>{src.nodeCount > 0 && <span style={{ fontSize: '0.6rem', color: '#34d399', background: 'rgba(16,185,129,0.12)', padding: '0 5px', borderRadius: '6px', fontWeight: '700' }}>+{src.nodeCount} nodes</span>}</>}
                             {src.status === 'extract_error' && <span style={{ fontSize: '0.6rem', color: '#f87171' }}>✗ {src.extractError}</span>}
-                            {(src.status === 'ok' || src.status === 'none' || src.status === 'error') && <span style={{ fontSize: '0.65rem', color: statusColor, fontWeight: '700' }}>{src.status === 'ok' ? '✓' : src.status === 'none' ? '—' : '✗'}</span>}
+                            {(src.status === 'ok' || src.status === 'none' || src.status === 'error') && <span style={{ fontSize: '0.65rem', color: statusColor, fontWeight: '700' }}>{src.status === 'ok' ? '✓' : src.status === 'none' ? '-' : '✗'}</span>}
                           </div>
                           {src.url && isOk && (
                             <a href={src.url} target="_blank" rel="noreferrer" style={{ color: 'var(--text-secondary)', opacity: 0.5, flexShrink: 0 }}>
@@ -2947,7 +2947,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
             )}
           </div>
 
-          {/* Manual paste — collapsed by default */}
+          {/* Manual paste, collapsed by default */}
           <button
             onClick={() => setShowManualPaste(p => !p)}
             style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '7px 12px', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '0.7rem', width: '100%' }}>
@@ -3343,7 +3343,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                     fontWeight: '600', transition: 'all 0.15s',
                     opacity: rawNodes.length === 0 ? 0.4 : 1,
                   }}
-                  title="Resolve place names against Wikidata knowledge graph — enriches nodes with canonical entity IDs and coordinates"
+                  title="Resolve place names against Wikidata knowledge graph, enriches nodes with canonical entity IDs and coordinates"
                 >
                   {wikidataRunning
                     ? <Loader2 size={11} style={{ animation: 'spin 1s linear infinite' }} />
@@ -3391,7 +3391,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           ) : (
             <>
               <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                {contradictions.length} place{contradictions.length > 1 ? 's have' : ' has'} both positive and negative statements. This is a difference in tone, not necessarily a contradiction — use the check above for that. You can adjudicate here; decisions persist for this session.
+                {contradictions.length} place{contradictions.length > 1 ? 's have' : ' has'} both positive and negative statements. This is a difference in tone, not necessarily a contradiction, use the check above for that. You can adjudicate here; decisions persist for this session.
               </div>
               {Object.values(resolutions).length > 0 && (
                 <div style={{ fontSize: '0.6rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '5px' }}>

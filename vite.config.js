@@ -1,5 +1,44 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import fs from 'node:fs'
+
+// Security headers for the published site. GitHub Pages cannot send HTTP headers, so the
+// Content Security Policy is added as a <meta> tag, in production builds only (the dev server
+// needs inline scripts for hot reload).
+//  • scripts: only this site, plus the ONNX runtime that transformers.js loads for the in-browser NLI model
+//  • connections: HTTPS APIs (maps, OSM, Wikimedia, weather, model downloads) and a local Ollama server
+//  • no plugins, no <base> rewriting, forms only to this site
+function ortVersion() {
+  for (const p of ['node_modules/@huggingface/transformers/node_modules/onnxruntime-web/package.json', 'node_modules/onnxruntime-web/package.json']) {
+    try { return JSON.parse(fs.readFileSync(p, 'utf8')).version } catch { /* try next */ }
+  }
+  return null
+}
+function securityHeaders() {
+  const ort = ortVersion()
+  const csp = [
+    "default-src 'self'",
+    `script-src 'self' 'wasm-unsafe-eval'${ort ? ` https://cdn.jsdelivr.net/npm/onnxruntime-web@${ort}/dist/` : ' https://cdn.jsdelivr.net/npm/'}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:*",
+    "worker-src 'self' blob:",
+    "media-src 'self' data: blob:",
+    "frame-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; ')
+  return {
+    name: 'security-headers',
+    apply: 'build',
+    transformIndexHtml: () => [
+      { tag: 'meta', attrs: { 'http-equiv': 'Content-Security-Policy', content: csp }, injectTo: 'head-prepend' },
+      { tag: 'meta', attrs: { name: 'referrer', content: 'strict-origin-when-cross-origin' }, injectTo: 'head' },
+    ],
+  }
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -7,7 +46,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: './',
-    plugins: [react()],
+    plugins: [react(), securityHeaders()],
     server: {
       proxy: {
         '/ollama-proxy': {

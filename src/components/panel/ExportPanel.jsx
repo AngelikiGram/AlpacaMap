@@ -67,7 +67,7 @@ ${folders}
           <MapPin size={13} style={{ color:'#10b981' }}/> Export to Google My Maps
         </div>
         <p style={{ fontSize:'0.72rem', color:'var(--text-secondary)', lineHeight:1.6, marginBottom:'10px' }}>
-          Download a KML file with all your saved places — each tagged with an emoji by type and any notes you've added. Import it into Google My Maps to create a custom layer for your trip.
+          Download a KML file with all your saved places, each tagged with an emoji by type and any notes you've added. Import it into Google My Maps to create a custom layer for your trip.
         </p>
 
         {/* Per-destination preview */}

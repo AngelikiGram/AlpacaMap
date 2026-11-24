@@ -10,7 +10,7 @@ import { Navigation, MapPin, Calendar as CalendarIcon, Search, Compass, ChevronR
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend } from 'recharts';
 
 import { CITY_PALETTE, getCityColor, MAP_LAYERS, SENTINEL_NONE, getTypeDetails, createDayStopIcon, createGlyphIcon, createCityIcon, classifyWeather, detectOSMCategory, processOverpassResults, scorePlaceQuality, nameSim, semanticDedup, getZoomParams, filterMarkersAdaptive, loadTrips, loadPrefs, saveTrips, savePrefs, detectLocationType, createSearchResultIcon, getAllMapPoints, buildArc, getDistanceKm, INITIAL_TRIP, TRIPS_KEY, PREFS_KEY, TABS, wmoIcon, formatDur, searchOverpass } from "../../utils.jsx";
-import { searchNominatim, fetchPlaceImage } from "../../api.js";
+import { searchNominatim, fetchPlaceImage, fetchImageCredit, isWikimediaImage } from "../../api.js";
 import { OVERPASS_URL, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS, CATEGORY_ZOOM_PRIORITY, SEARCH_KEYWORDS, INTEREST_CATEGORIES, LOCATION_TYPE_PRESETS, EVENT_TYPES, TRANSPORT_ICON, EVT_EMOJI, DOC_SECTIONS, BUDGET_CATEGORIES, PACKING_TEMPLATES, ENTITY_PROFILES } from "../../config.jsx";
 
 import { PortalDropdown } from "./PortalDropdown.jsx";
@@ -68,9 +68,14 @@ import { PrintView } from "./PrintView.jsx";
 
 
 export const LiveImage = ({ rec, color, icon, activeCityName }) => {
-  const initial = (rec.liveImage && rec.liveImage !== SENTINEL_NONE) ? rec.liveImage : (rec.osmTags?.image || null);
+  // Only Wikimedia photos (known author and licence); older saved trips may hold other image URLs
+  const cached = [rec.liveImage, rec.osmTags?.image].find(isWikimediaImage) || null;
+  if (rec.liveImage && rec.liveImage !== SENTINEL_NONE && !isWikimediaImage(rec.liveImage)) rec.liveImage = null;
+  const initial = cached;
   const [imgUrl, setImgUrl] = useState(initial);
   const [imgBroken, setImgBroken] = useState(false);
+  const [credit, setCredit] = useState('');
+  const loadCredit = () => { if (!credit && imgUrl) fetchImageCredit(imgUrl).then(c => c && setCredit(`Photo: ${c.author}, ${c.license}, Wikimedia Commons`)); };
   const fetchedRef = useRef(!!initial || rec.liveImage === SENTINEL_NONE);
 
   useEffect(() => {
@@ -84,7 +89,7 @@ export const LiveImage = ({ rec, color, icon, activeCityName }) => {
   }, []);
 
   const handleError = () => {
-    // Cached URL is broken — clear it and retry fetch
+    // Cached URL is broken, clear it and retry fetch
     rec.liveImage = null;
     setImgUrl(null);
     setImgBroken(false);
@@ -101,7 +106,7 @@ export const LiveImage = ({ rec, color, icon, activeCityName }) => {
         width: '46px', height: '46px', borderRadius: '8px', flexShrink: 0,
         border: `1px solid ${color}40`, boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
         overflow: 'hidden',
-      }}>
+      }} title={credit || 'Photo: Wikimedia Commons'} onMouseEnter={loadCredit}>
         <img
           src={imgUrl}
           alt=""

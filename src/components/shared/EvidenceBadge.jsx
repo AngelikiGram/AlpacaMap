@@ -16,7 +16,7 @@ export default function EvidenceBadge({ evidence, hideSolid = true }) {
     <span style={{ position: 'relative', display: 'inline-flex' }}>
       <button type="button"
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
-        title={`${lv.label} — ${evidence.statements} statements from ${evidence.sources.length} source${evidence.sources.length === 1 ? '' : 's'}`}
+        title={`${lv.label}, ${evidence.statements} statements from ${evidence.sources.length} source${evidence.sources.length === 1 ? '' : 's'}`}
         aria-expanded={open}
         style={{ fontSize: '0.6rem', fontWeight: 700, color: lv.color, border: `1px solid ${lv.color}55`, background: `${lv.color}14`, borderRadius: 8, padding: '1px 6px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
         {lv.label}
@@ -31,11 +31,11 @@ export default function EvidenceBadge({ evidence, hideSolid = true }) {
           {ex ? (
             <>
               {ex.condition && <span style={{ display: 'block', color: '#fbbf24', marginBottom: 4 }}>{ex.condition}</span>}
-              <span style={{ display: 'block', marginBottom: 4 }}>“{ex.a}” <i style={{ color: 'var(--text-secondary)' }}>— {SRC[ex.aSource] || ex.aSource}</i></span>
-              <span style={{ display: 'block' }}>“{ex.b}” <i style={{ color: 'var(--text-secondary)' }}>— {SRC[ex.bSource] || ex.bSource}</i></span>
+              <span style={{ display: 'block', marginBottom: 4 }}>“{ex.a}” <i style={{ color: 'var(--text-secondary)' }}>{SRC[ex.aSource] || ex.aSource}</i></span>
+              <span style={{ display: 'block' }}>“{ex.b}” <i style={{ color: 'var(--text-secondary)' }}>{SRC[ex.bSource] || ex.bSource}</i></span>
             </>
           ) : evidence.level === 'thin' ? (
-            <span>Only a few statements or a single source mention this place — treat the information with care.</span>
+            <span>Only a few statements or a single source mention this place, treat the information with care.</span>
           ) : (
             <span>Sources have mixed opinions ({evidence.pos} positive, {evidence.neg} negative). Run Knowledge → Conflicts to check whether they really contradict.</span>
           )}

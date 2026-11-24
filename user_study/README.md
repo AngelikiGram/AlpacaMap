@@ -12,6 +12,8 @@ Everything needed to run the end-user evaluation requested in the Transactions i
 | `questionnaires.md` | Demographics, SEQ, confidence, NASA-TLX, statement pairs, SUS, view ratings, integration, privacy |
 | `interview_guide.md` | Semi-structured interview questions |
 | `runner/` | The study web page: runs the whole session, preloads the app per condition, logs clicks inside the app, exports one JSON per participant |
+| `runner/pairs.json` | The statement pairs for RQ4, built by `analysis/make_pairs.py` (paper's candidate-pair rules and statement types). Read it before the study and delete pairs you would not show. |
+| `analysis/make_pairs.py` | Rebuilds `runner/pairs.json` from `public/preprocessed/` (run after the data changes) |
 | `analysis/analyze.py` | Scores and summarises all sessions → CSV tables + `summary.md` |
 | `data/` | Put exported sessions here (git-ignored) |
 

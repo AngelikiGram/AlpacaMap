@@ -1,7 +1,7 @@
-// TravelScout user study — all wording, tasks and questionnaires.
+// TravelScout user study, all wording, tasks and questionnaires.
 // Edit here; study.js only renders what is defined in this file.
 
-export const STUDY_VERSION = '1.0';
+export const STUDY_VERSION = '2.0';
 
 // Where the app lives relative to this page.
 //  - GitHub Pages: the runner is copied to /AlpacaMap/study/  → app is one level up.
@@ -36,10 +36,16 @@ export const CONSENT = {
   html: `
     <p><b>Purpose.</b> We are evaluating TravelScout, a research prototype that collects travel information from several online sources and shows where they disagree.</p>
     <p><b>What you will do.</b> Use the app for about 30 minutes to complete short planning tasks for two cities, then answer questionnaires and a short interview (50–60 minutes in total).</p>
-    <p><b>What we record.</b> Your answers, task times and the buttons and views you click inside the app. No name or e-mail is stored — only a participant number. Data stays in this browser until the facilitator exports it.</p>
+    <p><b>What we record.</b> Your answers, task times and the buttons and views you click inside the app. No name or e-mail is stored, only a participant number. Data stays in this browser until the facilitator exports it.</p>
     <p><b>Your rights.</b> Taking part is voluntary. You can stop at any time without giving a reason, and ask for your data to be deleted until it is anonymised.</p>
     <p><b>Use of data.</b> Anonymised results may be published and shared as an open dataset. Recordings are never published.</p>
-    <p><b>Contact.</b> Angeliki Grammatikaki — angiegram99@gmail.com</p>`,
+    <p><b>Data protection.</b> Controller: Angeliki Grammatikaki (angiegram99@gmail.com).
+      Legal basis: your consent (Art. 6(1)(a) GDPR), which you can withdraw at any time. Only the study team sees the data;
+      this page sends nothing to a server (the app loads maps and texts from public services, which see this computer's IP address).
+      Recordings are deleted after analysis, at the latest 6 months after the session; pseudonymised answers are kept for 10 years.
+      You have the right to access, correct, delete, restrict and move your data and to object (Art. 15–21 GDPR), and to complain to
+      the Austrian data protection authority (Datenschutzbehörde, dsb.gv.at).</p>
+    <p><b>Contact.</b> Angeliki Grammatikaki (angiegram99@gmail.com)</p>`,
   items: [
     { id: 'agree', type: 'check', text: 'I have read this information and agree to take part.', required: true },
     { id: 'adult', type: 'check', text: 'I am 18 years or older.', required: true },
@@ -59,24 +65,24 @@ export const DEMOGRAPHICS = [
 export const TOUR = `
   <p>The facilitator will now show you the app. Main parts:</p>
   <ul>
-    <li><b>Explore</b> – places on the map</li>
-    <li><b>Planner</b> – AI trip planner</li>
-    <li><b>Itinerary</b> – days and stops</li>
-    <li><b>Knowledge</b> – statements about the city collected from travel guides and forums.
-      <b>Claims</b> lists them and <b>Visual</b> shows them as charts, <b>Conflicts</b> lists where statements disagree.</li>
+    <li><b>What do sources say about…</b>: topic buttons at the top of the menu (safety, transport, food …). One click shows what guides and travellers say about that topic.</li>
+    <li><b>Do sources agree?</b>: the scales button on the map. Coloured dots show places where sources agree (green) or split (amber, red).</li>
+    <li><b>Debates</b>: pairs of statements that may disagree; you decide.</li>
+    <li><b>Explore</b>: places on the map · <b>Itinerary</b>: days and stops</li>
+    <li><b>Knowledge</b>: all statements about the city, collected from travel guides and forums.</li>
   </ul>
   <p>Some information may come from one source only, some from several. Use whatever you find helpful.</p>`;
 
 // {CITY} is replaced with the block's city name.
 export const TASKS = [
   {
-    id: 'T1', title: 'Safety & health',
-    prompt: 'What do travellers and guides say about <b>safety &amp; health</b> in {CITY}? Write one or two sentences as if advising a friend.',
+    id: 'T1', title: 'Getting around',
+    prompt: 'What do travellers and guides say about <b>getting around (transport)</b> in {CITY}? Write one or two sentences as if advising a friend.',
     answer: [{ id: 'answer', type: 'textarea', text: 'Your advice', required: true }, CONF, SEQ],
   },
   {
     id: 'T2', title: 'Find disagreements',
-    prompt: 'Find up to <b>three topics or places</b> in {CITY} where the information is <b>contradictory or disputed</b>. For each, write the topic and what the disagreement is about. If you cannot find any, tick the box.',
+    prompt: 'Find up to <b>three topics or places</b> in {CITY} where guides and travellers <b>really disagree</b>. For each, write the topic or place and what exactly they disagree about. If you cannot find any, tick the box.',
     answer: [
       { id: 'none_found', type: 'check', text: 'I could not find any disagreement.' },
       { id: 'topic1', type: 'text', text: 'Topic / place 1' }, { id: 'about1', type: 'text', text: 'What is disputed?' },
@@ -87,7 +93,7 @@ export const TASKS = [
   },
   {
     id: 'T3', title: 'Check a claim',
-    prompt: 'A friend says: <i>"{CITY} is overrated for shopping."</i> Using the app, do the sources <b>agree</b> with your friend, <b>disagree</b>, give a <b>mixed</b> picture, or is there <b>no information</b>?',
+    prompt: 'A friend says: <i>"{CITY} is not safe for tourists."</i> Using the app, do the sources <b>agree</b> with your friend, <b>disagree</b>, give a <b>mixed</b> picture, or is there <b>no information</b>?',
     answer: [
       { id: 'verdict', type: 'choice', text: 'The sources…', options: ['agree', 'disagree', 'mixed', 'no information'], required: true },
       { id: 'reason', type: 'text', text: 'Short reason' }, CONF, SEQ,
@@ -95,7 +101,7 @@ export const TASKS = [
   },
   {
     id: 'T4', title: 'Plan a day',
-    prompt: 'Plan <b>one day</b> in {CITY} with <b>3–4 stops</b> in the Itinerary (or with the Planner). Then list the stops here and say briefly why you picked them.',
+    prompt: 'Plan <b>one day</b> in {CITY} with <b>3–4 stops</b> in the Itinerary. Then list the stops here and say briefly why you picked them.',
     answer: [
       { id: 'stops', type: 'textarea', text: 'Your stops (one per line)', required: true },
       { id: 'why', type: 'text', text: 'Why these?' },
@@ -115,12 +121,13 @@ export const TLX = [
 ].map(([id, name, text, lo, hi]) => ({ id: `tlx_${id}`, type: 'slider', min: 0, max: 100, text: `<b>${name}.</b> ${text}`, lo, hi }));
 
 export const PAIRS = {
-  perType: 2,                                   // pairs per claim type
-  types: ['evaluation', 'temporal', 'conditional'],
+  perType: 2,                                   // pairs per statement type (paper, Section 3)
+  types: ['practical', 'evaluative', 'norm'],
+  file: 'pairs.json',                           // built by user_study/analysis/make_pairs.py
   items: [
     { id: 'disagree', type: 'choice', text: 'Do these two statements really disagree?', options: ['Yes', 'Partly', 'No'], required: true },
     { id: 'impact', type: 'scale', min: 1, max: 5, text: 'Would this disagreement change your travel plans?', lo: 'Not at all', hi: 'A lot', required: true },
-    { id: 'kind', type: 'choice', text: 'What kind of statement is <b>A</b>?', options: ['Personal opinion', 'Fact', 'Practical or cultural tip', 'Not sure'] },
+    { id: 'kind', type: 'choice', text: 'What kind of statement is <b>A</b>?', options: ['An opinion or rating', 'Practical information (hours, prices, routes, rules)', 'A custom or expected behaviour', 'A historical or descriptive fact', 'Not sure'] },
   ],
 };
 
@@ -138,19 +145,12 @@ export const SUS = [
 ].map((text, i) => likert5(`sus${i + 1}`, text));
 
 // View names as they appear in the app; also used to classify logged clicks.
-export const VIEWS = ['Explore', 'Planner', 'TripSpace', 'Insights', 'Knowledge · Ingest', 'Knowledge · Claims', 'Knowledge · Visual', 'Knowledge · Conflicts', 'Overview', 'Itinerary', 'Budget', 'Packing', 'Notes', 'Docs', 'Export'];
+export const VIEWS = ['Topic buttons (What do sources say about…)', 'Map panel (Do sources agree?)', 'Time lens', 'Debates', 'Place window (click on a pin)', 'Knowledge', 'Explore', 'Itinerary'];
 
 export const INTEGRATION = [
   likert5('int_helped', 'Seeing where sources disagree helped me decide what to put in my plan.'),
   likert5('int_inside', 'I would prefer conflict information inside the planner (e.g. a warning on a stop) instead of in a separate view.'),
   likert5('int_standalone', 'I would use a tool that only shows source conflicts, without any planning features.'),
-];
-
-export const PRIVACY = [
-  likert5('priv_device', 'It matters to me that my travel plans are processed on my own device.'),
-  likert5('priv_server_ok', 'I would be comfortable if the analysis of public sources ran on a server.'),
-  likert5('priv_share_itinerary', 'I would be comfortable sharing my itinerary with a server to get better suggestions.'),
-  { id: 'priv_not_share', type: 'multi', text: 'Which information would you not want to share with an online service?', options: ['Destinations', 'Dates', 'Budget', 'Travel companions', 'Documents (tickets, bookings)', 'None'] },
 ];
 
 export const FINAL = [

@@ -157,7 +157,7 @@ export const PackingPanel=({tripData,setTripData})=>{
       <div className="budget-overview" style={{marginBottom:'1rem'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.5rem'}}>
           <span style={{fontWeight:'600',fontSize:'0.9rem'}}>Packing Progress</span>
-          <span style={{fontSize:'0.82rem',color:overallPct===100?'var(--success)':'var(--text-secondary)'}}>{checkedItems}/{totalItems} items{overallPct===100?' — done!':''}</span>
+          <span style={{fontSize:'0.82rem',color:overallPct===100?'var(--success)':'var(--text-secondary)'}}>{checkedItems}/{totalItems} items{overallPct===100?', done!':''}</span>
         </div>
         <div className="budget-bar-track">
           <div className="budget-bar-fill" style={{width:`${overallPct}%`,background:overallPct===100?'var(--success)':'var(--grad-primary)'}}/>
@@ -173,7 +173,7 @@ export const PackingPanel=({tripData,setTripData})=>{
       {addingList&&(
         <div className="add-form" style={{marginBottom:'0.75rem'}}>
           <input type="text" placeholder="List name…" value={newListName} onChange={e=>setNewListName(e.target.value)} autoFocus style={{fontSize:'0.85rem',padding:'0.4rem 0.65rem'}} onKeyDown={e=>{if(e.key==='Enter')addList();if(e.key==='Escape')setAddingList(false);}}/>
-          <button className="btn-primary btn-sq" onClick={addList}><Check size={14}/></button>
+          <button className="btn-primary btn-sq" onClick={addList} aria-label="Create list" title="Create list"><Check size={14}/></button>
           <button className="btn-icon btn-sq" onClick={()=>setAddingList(false)}><X size={14}/></button>
         </div>
       )}
@@ -236,7 +236,7 @@ export const PackingPanel=({tripData,setTripData})=>{
           </div>
           <form className="add-form" style={{marginTop:'0rem'}} onSubmit={e=>{e.preventDefault();addItem();}}>
             <input type="text" placeholder="Add item (e.g. passport, ID card)…" value={newItem} onChange={e=>setNewItem(e.target.value)} style={{fontSize:'0.85rem',padding:'0.5rem 0.65rem'}}/>
-            <button type="submit" className="btn-primary btn-sq"><Plus size={16}/></button>
+            <button type="submit" className="btn-primary btn-sq" aria-label="Add item" title="Add item"><Plus size={16}/></button>
           </form>
         </>
       )}

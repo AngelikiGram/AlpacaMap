@@ -23,10 +23,10 @@ export function aiSettings() {
 export function aiStatus() {
   const s = aiSettings();
   if (s.provider === 'browser') {
-    if (!hasWebGPU()) return { usable: false, provider: 'browser', reason: 'This browser cannot run the AI model (no WebGPU). Use a recent Chrome or Edge — everything else in AlpacaMap works without AI.' };
+    if (!hasWebGPU()) return { usable: false, provider: 'browser', reason: 'This browser cannot run the AI model (no WebGPU). Use a recent Chrome or Edge. Everything else in AlpacaMap works without AI.' };
     return { usable: true, provider: 'browser', needsDownload: !isBrowserModelLoaded(s.browserModel) };
   }
-  return { usable: true, provider: 'ollama', needsDownload: false, reason: isLocalHost() ? null : 'Uses Ollama on this computer — it must be running.' };
+  return { usable: true, provider: 'ollama', needsDownload: false, reason: isLocalHost() ? null : 'Uses Ollama on this computer, which must be running.' };
 }
 
 /** Sends chat messages, returns the reply text. onProgress gets model download progress (browser model). */

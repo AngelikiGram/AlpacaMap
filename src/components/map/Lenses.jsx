@@ -1,11 +1,12 @@
 // Map lenses:
-//  • Truth lens — colours the map by how much travel sources argue about each place
+//  • Truth lens, colours the map by how much travel sources argue about each place
 //    (soft overlapping circles read like a heat map: green = sources agree, red = they disagree).
-//  • Time lens — what is open, closed or packed at a chosen hour, plus golden hour for viewpoints.
+//  • Time lens, what is open, closed or packed at a chosen hour, plus golden hour for viewpoints.
 import React from 'react';
 import { Circle, CircleMarker, Tooltip } from 'react-leaflet';
 import { Scale, Clock, X, Sunrise, Sunset } from 'lucide-react';
 import { fmtMin } from '../../planner/openingHours';
+import { TOPIC_KEYWORDS } from '../../knowledge/topics';
 
 // Bands of the controversy score (same thresholds as controversyColor)
 const band = (s) => (s >= 0.75 ? 'disagree' : s >= 0.4 ? 'mixed' : 'agree');
@@ -38,11 +39,55 @@ export function TruthLensLayer({ items, onPick, focus = null }) {
 }
 
 const BAND_WORD = { agree: 'agree', mixed: 'opinions split', disagree: 'disagree' };
+const SOURCE_NAME = { wikivoyage: 'Wikivoyage', wikitravel: 'Wikitravel', wikipedia: 'Wikipedia', reddit: 'Reddit', stackexchange: 'StackExchange', manual: 'You' };
+const JUNK = /\*\*|\]\(|==|\[\s|^\W|\?\s*$/;
 
-export function TruthLensLegend({ items, topics = [], focusTopic = null, cityName, topicDisputes = 0, checked, onClose, onOpenDebates }) {
+/** Up to `n` short statements with the given sentiment, from as many different sources as possible. */
+function pickStatements(list, sentiment, n = 2, topic = '') {
+  const words = TOPIC_KEYWORDS[topic] || [];
+  const hits = (t) => { const l = t.toLowerCase(); return words.reduce((k, w) => k + (new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(l) ? 1 : 0), 0); };
+  const cand = (list || [])
+    .filter((s) => s.evaluation?.sentiment === sentiment && s.claim && s.claim.length >= 40 && s.claim.length <= 200 && !JUNK.test(s.claim))
+    .map((s) => ({ s, k: hits(s.claim) }))
+    .sort((a, b) => b.k - a.k || (b.s.evaluation?.intensity || 0) - (a.s.evaluation?.intensity || 0))
+    .map((x) => x.s);
+  const out = []; const used = new Set();
+  for (const s of cand) { if (!used.has(s.source?.sourceType)) { out.push(s); used.add(s.source?.sourceType); } if (out.length >= n) return out; }
+  for (const s of cand) { if (!out.includes(s)) out.push(s); if (out.length >= n) break; }
+  return out;
+}
+
+/** What the sources say about one city-wide topic: a few positive and a few negative statements. */
+function TopicDetail({ topic, onOpenKnowledge }) {
+  const e = topic.evidence;
+  const pos = pickStatements(e.statementsList, 'positive', 2, topic.topic);
+  const neg = pickStatements(e.statementsList, 'negative', 2, topic.topic);
+  const Item = ({ s, tone }) => (
+    <li className={`lens-say ${tone}`}>
+      <span>{s.claim}</span>
+      <cite>{SOURCE_NAME[s.source?.sourceType] || s.source?.sourceType || 'Source'}</cite>
+    </li>
+  );
+  return (
+    <div className="lens-topic-detail">
+      <p className="lens-note">{e.statements} statements from {e.sources.length} source{e.sources.length === 1 ? '' : 's'}: {e.pos} positive, {e.neg} negative.</p>
+      {pos.length > 0 && <><div className="lens-say-head">On the positive side</div><ul>{pos.map((s) => <Item key={s.id} s={s} tone="pos" />)}</ul></>}
+      {neg.length > 0 && <><div className="lens-say-head">On the negative side</div><ul>{neg.map((s) => <Item key={s.id} s={s} tone="neg" />)}</ul></>}
+      {onOpenKnowledge && <button className="lens-link" onClick={onOpenKnowledge}>Read all {e.statements} statements →</button>}
+      {/safety|health/i.test(topic.topic || topic.place || '') && (
+        <p className="lens-note lens-disclaimer">Collected from guides and forums, not official advice. Check your government's travel advice and local emergency information.</p>
+      )}
+    </div>
+  );
+}
+
+export function TruthLensLegend({ items, topics = [], focusTopic = null, openTopic = null, setOpenTopic, onOpenKnowledge, cityName, topicDisputes = 0, checked, onClose, onOpenDebates }) {
+  const [showAll, setShowAll] = React.useState(false);
   const hot = [...items].sort((a, b) => b.score - a.score).filter((p) => p.score >= 0.4).slice(0, 3);
   const counts = items.reduce((m, p) => ((m[band(p.score)] += 1), m), { agree: 0, mixed: 0, disagree: 0 });
-  const shownTopics = topics.filter((t) => t.score >= 0.4 || (focusTopic && t.place === focusTopic)).slice(0, 4);
+  const important = topics.filter((t) => t.score >= 0.4 || t.place === focusTopic || t.place === openTopic);
+  const shownTopics = showAll ? topics : (important.length ? important : topics).slice(0, 4);
+  const hiddenCount = topics.length - shownTopics.length;
   const topicWord = (t) => (t.evidence?.level === 'disputed' ? 'disagree' : t.evidence?.level === 'conditional' ? 'depends on conditions' : BAND_WORD[band(t.score)]);
   return (
     <div className="lens-legend" role="region" aria-label="Truth lens legend">
@@ -73,20 +118,28 @@ export function TruthLensLegend({ items, topics = [], focusTopic = null, cityNam
       )}
       {shownTopics.length > 0 && (
         <div className="lens-topics">
-          <div className="lens-topics-head">Topics about the whole city (not on the map)</div>
-          {shownTopics.map((t) => (
-            <div key={t.place} className={`lens-hot ${focusTopic === t.place ? 'focus' : ''}`}
-              title={`${t.evidence.pos} positive and ${t.evidence.neg} negative statements`}>
-              <span className="lens-dot" style={{ background: t.color }} />{t.topic}
-              <em>{focusTopic === t.place ? 'open in Debates' : topicWord(t)}</em>
-            </div>
-          ))}
+          <div className="lens-topics-head">What sources say about the whole city (click a topic)</div>
+          {shownTopics.map((t) => {
+            const open = openTopic === t.place;
+            return (
+              <React.Fragment key={t.place}>
+                <button type="button" className={`lens-hot lens-topic-btn ${focusTopic === t.place || open ? 'focus' : ''}`}
+                  aria-expanded={open} onClick={() => setOpenTopic?.(open ? null : t.place)}>
+                  <span className="lens-dot" style={{ background: t.color }} />{t.topic}
+                  <em>{focusTopic === t.place ? 'open in Debates' : topicWord(t)} {open ? '▴' : '▾'}</em>
+                </button>
+                {open && <TopicDetail topic={t} onOpenKnowledge={onOpenKnowledge} />}
+              </React.Fragment>
+            );
+          })}
+          {hiddenCount > 0 && <button type="button" className="lens-link" onClick={() => setShowAll(true)}>Show {hiddenCount} more topics</button>}
         </div>
       )}
       {topicDisputes > 0 && (
         <button className="lens-cta" onClick={onOpenDebates}>⚖️ Judge {topicDisputes} possible disagreements →</button>
       )}
-      {!checked && <p className="lens-note dim">Colours come from the tone of the statements. Knowledge → Conflicts checks which ones really contradict each other.</p>}
+      {!checked && <p className="lens-note dim">Colours come from the tone of the statements. Knowledge → Conflicts checks which ones may really contradict each other.</p>}
+      <p className="lens-note dim">Topics, colours and tone are assigned automatically and can be wrong.</p>
     </div>
   );
 }
@@ -107,7 +160,7 @@ export function TimeLensLayer({ items, onPick }) {
         pathOptions={{ color: p.status === 'golden' ? '#fde68a' : '#0b1020', weight: p.status === 'golden' ? 3 : 1, fillColor: s.color, fillOpacity: s.fill, dashArray: p.status === 'closed' ? '2,2' : null }}
         eventHandlers={{ click: () => onPick?.(p) }}>
         <Tooltip direction="top" offset={[0, -6]}>
-          <b>{p.name}</b><br />{{ open: 'Open', closed: 'Closed', busy: 'Busy', golden: 'Golden hour' }[p.status]}{p.note ? ` — ${p.note}` : ''}
+          <b>{p.name}</b><br />{{ open: 'Open', closed: 'Closed', busy: 'Busy', golden: 'Golden hour' }[p.status]}{p.note ? `, ${p.note}` : ''}
         </Tooltip>
       </CircleMarker>
     );
@@ -137,7 +190,7 @@ export function TimeLensControl({ date, setDate, minutes, setMinutes, dates, len
         <span><i style={{ background: TIME_STYLE.busy.color }} />{counts.busy || 0} busy</span>
         {golden && <span><i style={{ background: TIME_STYLE.golden.color }} />golden hour ✨</span>}
       </div>
-      {!lens.items.length && <p className="lens-note">🦙 No opening hours known for places here yet — open Explore to load the city's places.</p>}
+      {!lens.items.length && <p className="lens-note">🦙 No opening hours known for places here yet, open Explore to load the city's places.</p>}
     </div>
   );
 }

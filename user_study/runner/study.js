@@ -36,13 +36,12 @@ function buildSteps(order) {
     const block = b + 1;
     steps.push({ type: 'prepare', block, cond, city });
     C.TASKS.forEach((t) => steps.push({ type: 'task', block, cond, city, task: t.id }));
-    steps.push({ type: 'form', id: `tlx_b${block}`, block, title: `Workload — part ${block} of 2`, intro: 'Think about the tasks you just did for <b>' + C.CITIES[city].name + '</b>.', items: C.TLX });
+    steps.push({ type: 'form', id: `tlx_b${block}`, block, title: `Workload, part ${block} of 2`, intro: 'Think about the tasks you just did for <b>' + C.CITIES[city].name + '</b>.', items: C.TLX });
   });
   steps.push({ type: 'pairs' });
   steps.push({ type: 'form', id: 'sus', title: 'Your overall impression', intro: 'Think about the whole app.', items: C.SUS });
   steps.push({ type: 'views' });
   steps.push({ type: 'form', id: 'integration', title: 'Disagreements and planning', items: C.INTEGRATION });
-  steps.push({ type: 'form', id: 'privacy', title: 'Privacy', items: C.PRIVACY });
   steps.push({ type: 'form', id: 'final', title: 'Last questions', items: C.FINAL });
   steps.push({ type: 'done' });
   return steps;
@@ -191,39 +190,20 @@ frame.addEventListener('load', () => {
 // ───────────────────────── statement pairs (RQ4) ─────────────────────────
 function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
+// Pairs come from a fixed file (pairs.json, built by analysis/make_pairs.py with the paper's candidate-pair rules
+// and statement types), so every participant sees real, pre-checked pairs; the draw is seeded per participant.
 async function buildPairs() {
   const rand = rng(S.pnum * 7919 + 17);
-  const pick = (arr) => arr[Math.floor(rand() * arr.length)];
-  const candidates = { };
-  for (const slug of Object.keys(C.CITIES)) {
-    const nodes = await cityNodes(slug);
-    const byPlace = {};
-    for (const n of nodes) {
-      const s = n.evaluation?.sentiment;
-      if (s !== 'positive' && s !== 'negative') continue;
-      (byPlace[n.place] ||= []).push(n);
-    }
-    for (const [place, list] of Object.entries(byPlace)) {
-      for (const a of list) {
-        const opp = list.filter((b) => b.evaluation.sentiment !== a.evaluation.sentiment && b.source?.sourceType !== a.source?.sourceType);
-        if (!opp.length || a.claim.length > 260) continue;
-        (candidates[a.claimType] ||= []).push({ city: slug, place, a, opp });
-      }
-    }
-  }
+  const data = await fetch(new URL(C.PAIRS.file, location.href)).then((r) => r.json());
   const pairs = []; const used = new Set();
   for (const type of C.PAIRS.types) {
-    const pool = (candidates[type] || []).slice();
+    const pool = (data.types?.[type] || []).slice();
     for (let k = 0; k < C.PAIRS.perType && pool.length; k++) {
-      let c, guard = 0;
-      do { c = pick(pool); guard++; } while ((used.has(c.place) || c.a.claim.length < 30) && guard < 50);
+      let idx, guard = 0;
+      do { idx = Math.floor(rand() * pool.length); guard++; } while (used.has(pool[idx].place) && guard < 50);
+      const c = pool.splice(idx, 1)[0];
       used.add(c.place);
-      const b = pick(c.opp.filter((x) => x.claim.length <= 260)) || c.opp[0];
-      pairs.push({
-        id: `pair${pairs.length + 1}`, claimType: type, city: c.city, place: c.place,
-        a: { claim: c.a.claim, sentiment: c.a.evaluation.sentiment, source: c.a.source?.sourceType, claimType: c.a.claimType },
-        b: { claim: b.claim, sentiment: b.evaluation.sentiment, source: b.source?.sourceType, claimType: b.claimType },
-      });
+      pairs.push({ id: `pair${pairs.length + 1}`, claimType: type, statementTypes: c.types_ab, city: c.city, place: c.place, aspects: c.aspects, a: c.a, b: c.b });
     }
   }
   // shuffle so types are not in blocks
@@ -327,7 +307,7 @@ function renderTask(step) {
     $('#go').onclick = () => { rec.phase = 'working'; rec.startedAt = now(); save(); renderTask(step); };
   } else if (rec.phase === 'working') {
     panel.innerHTML = `${header(title)}<div class="task">${prompt}</div><p class="timer" id="timer"></p>
-      <div class="actions"><button class="primary" id="done">I'm done — answer</button></div>`;
+      <div class="actions"><button class="primary" id="done">Done, go to the questions</button></div>`;
     const t0 = Date.parse(rec.startedAt);
     const tick = () => { const el = $('#timer'); if (!el) return; const s = Math.floor((Date.now() - t0) / 1000); el.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; setTimeout(tick, 1000); };
     tick();
@@ -369,11 +349,11 @@ function renderViews() {
   const prev = S.answers.views || {};
   const rows = C.VIEWS.map((v, i) => {
     const a = prev[v] || {};
-    const sel = (name, max, val) => `<select name="v${i}_${name}"><option value="">–</option>${Array.from({ length: max }, (_, k) => `<option ${String(val) === String(k + 1) ? 'selected' : ''}>${k + 1}</option>`).join('')}</select>`;
+    const sel = (name, max, val) => `<select name="v${i}_${name}"><option value="">-</option>${Array.from({ length: max }, (_, k) => `<option ${String(val) === String(k + 1) ? 'selected' : ''}>${k + 1}</option>`).join('')}</select>`;
     return `<tr><td>${esc(v)}</td><td><input type="checkbox" name="v${i}_used" ${a.used ? 'checked' : ''}></td>
       <td>${sel('understood', 5, a.understood)}</td><td>${sel('useful', 5, a.useful)}</td><td><input type="checkbox" name="v${i}_remove" ${a.remove ? 'checked' : ''}></td></tr>`;
   }).join('');
-  panel.innerHTML = `${header('The app\'s views', 'Tick the views you used. For those, rate 1 (not at all) – 5 (completely).')}
+  panel.innerHTML = `${header('The app\'s views', 'Tick the views you used. For those, rate from 1 (not at all) to 5 (completely).')}
     <table class="views"><thead><tr><th>View</th><th>Used</th><th>Understood what it shows</th><th>Useful for the tasks</th><th>Would remove</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="actions"><button class="primary" id="ok">Continue</button></div>`;
   $('#ok').onclick = () => {
@@ -399,10 +379,10 @@ function renderDone() {
   panel.innerHTML = `${header(declined ? 'Session ended' : 'Thank you!')}
     <p class="sub">${declined ? 'No data will be used. Please hand the computer back to the facilitator.' : 'You are finished. Please hand the computer back to the facilitator for a short interview.'}</p>
     <details class="fac" open><summary>Facilitator</summary>
-      <ol><li>Export the session and copy the file to <code>user_study/data/</code>.</li><li>Then end the session — this restores your own app data on this computer.</li></ol>
+      <ol><li>Export the session and copy the file to <code>user_study/data/</code>.</li><li>Then end the session, this restores your own app data on this computer.</li></ol>
       <div class="actions"><button class="primary" id="export">Export session (JSON)</button><button id="end">End session &amp; restore app data</button></div>
     </details>`;
-  $('#export').onclick = () => { if (!declined) exportSession(); else alert('Participant declined — nothing to export.'); S.exported = true; save(); };
+  $('#export').onclick = () => { if (!declined) exportSession(); else alert('Participant declined, nothing to export.'); S.exported = true; save(); };
   $('#end').onclick = () => {
     if (!declined && !S.exported && !confirm('The session has not been exported. End anyway? The data will be lost.')) return;
     restoreAppStorage(); localStorage.removeItem(SESSION_KEY); S = null; location.reload();

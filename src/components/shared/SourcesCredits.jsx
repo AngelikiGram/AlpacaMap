@@ -26,7 +26,7 @@ export default function SourcesCredits() {
         {SOURCE_CREDITS.map(s => (
           <li key={s.name}>
             <a href={s.url} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>{s.name}</a>
-            {' — '}<a href={s.licenseUrl} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>{s.license}</a>
+            {', '}<a href={s.licenseUrl} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>{s.license}</a>
           </li>
         ))}
       </ul>

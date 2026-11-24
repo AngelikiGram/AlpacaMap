@@ -1,6 +1,47 @@
+import { useState } from 'react';
 import { TABS } from '../../utils';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Scale, X } from 'lucide-react';
 import { QuickPlanBox } from './QuickPlanBox.jsx';
+
+// "What do sources say about…": one click opens the map's "Do sources agree?" panel with that topic expanded
+const ASK_TOPICS = [
+  ['Safety & Health', '🛡️'], ['Transport', '🚇'], ['Food & Drink', '🍽️'],
+  ['Money & Costs', '💶'], ['Climate', '🌦️'], ['Nightlife', '🌙'],
+];
+const askTopic = (topic) => window.dispatchEvent(new CustomEvent('alpacamap-open-topic', { detail: { topic } }));
+
+const INTRO_KEY = 'alpacamap_intro_seen';
+const introSeen = () => { try { return localStorage.getItem(INTRO_KEY) === '1'; } catch { return true; } };
+
+function IntroCard({ onClose }) {
+  return (
+    <div className="intro-card" role="note">
+      <div className="intro-head"><b>How AlpacaMap works</b>
+        <button type="button" className="intro-close" onClick={onClose} aria-label="Close"><X size={14} /></button></div>
+      <ol>
+        <li><b>Ask a topic.</b> Pick one of the topics below to read what guides and travellers say about it.</li>
+        <li><b>Look at the map.</b> Coloured dots show places where sources agree (green) or split (amber, red).</li>
+        <li><b>Judge disagreements.</b> In <i>Debates</i> you decide whether two statements really disagree.</li>
+      </ol>
+      <button type="button" className="intro-ok" onClick={onClose}>Got it</button>
+    </div>
+  );
+}
+
+function AskSources({ hasKnowledge }) {
+  return (
+    <section className="menu-section ask-sources">
+      <h3 className="menu-section-title"><Scale size={12} /> What do sources say about…</h3>
+      {hasKnowledge ? (
+        <div className="ask-chips">
+          {ASK_TOPICS.map(([t, icon]) => (
+            <button key={t} type="button" className="ask-chip" onClick={() => askTopic(t)}>{t}</button>
+          ))}
+        </div>
+      ) : <p className="menu-item-desc">Add a city to your trip (London, Paris, Rome, Edinburgh or Zurich have ready-made knowledge).</p>}
+    </section>
+  );
+}
 
 // Grouped, compact main menu. Every entry is a real <button> (keyboard + screen-reader friendly)
 // and shows its description inline instead of behind a hover tooltip.
@@ -14,8 +55,12 @@ const SECTIONS = [
 const badgeFor = (id, { gcUndiscovered, debateCount }) =>
   id === 'analytics' ? gcUndiscovered : id === 'debates' ? debateCount : 0;
 
-export const MenuPanel = ({ setActiveTab, gcUndiscovered, debateCount = 0, onApplyQuickPlan, hasTrip, isDemo, onLoadDemo, onNewTrip }) => (
+export const MenuPanel = ({ setActiveTab, gcUndiscovered, debateCount = 0, onApplyQuickPlan, hasTrip, isDemo, onLoadDemo, onNewTrip, hasKnowledge = false }) => {
+  const [showIntro, setShowIntro] = useState(() => !introSeen());
+  const closeIntro = () => { setShowIntro(false); try { localStorage.setItem(INTRO_KEY, '1'); } catch { /* ignore */ } };
+  return (
   <nav className="menu-panel" aria-label="Main menu">
+    {showIntro && <IntroCard onClose={closeIntro} />}
     {onApplyQuickPlan && <QuickPlanBox onApply={onApplyQuickPlan} hasTrip={hasTrip} />}
     {isDemo && (
       <div className="demo-ribbon">
@@ -23,6 +68,7 @@ export const MenuPanel = ({ setActiveTab, gcUndiscovered, debateCount = 0, onApp
         <button type="button" onClick={onNewTrip}>Start empty</button>
       </div>
     )}
+    <AskSources hasKnowledge={hasKnowledge} />
     {SECTIONS.map(section => (
       <section key={section.title} className="menu-section">
         <h3 className="menu-section-title">{section.title}</h3>
@@ -51,5 +97,8 @@ export const MenuPanel = ({ setActiveTab, gcUndiscovered, debateCount = 0, onApp
     {!isDemo && onLoadDemo && (
       <button type="button" className="menu-demo-link" onClick={onLoadDemo}>🦙 Show me the London demo trip</button>
     )}
+    {!showIntro && <button type="button" className="menu-demo-link" onClick={() => setShowIntro(true)}>How does AlpacaMap work?</button>}
+    <button type="button" className="menu-demo-link menu-about-link" onClick={() => setActiveTab('about')}>About, privacy &amp; imprint</button>
   </nav>
-);
+  );
+};

@@ -54,8 +54,8 @@ export const CoherencePanel = ({ tripData }) => {
   const cards = [
     { icon: <MapPin size={14}/>, label: 'Destinations', value: locations.length, color: '#3b82f6' },
     { icon: <Bookmark size={14}/>, label: 'Saved places', value: totalPlaces, color: '#8b5cf6' },
-    { icon: <CalendarDays size={14}/>, label: 'Days planned', value: totalDays > 0 ? `${activeDays} / ${totalDays}` : '—', color: '#10b981' },
-    { icon: <Route size={14}/>, label: 'Total distance', value: totalKm > 0 ? `${Math.round(totalKm).toLocaleString()} km` : '—', color: '#f59e0b' },
+    { icon: <CalendarDays size={14}/>, label: 'Days planned', value: totalDays > 0 ? `${activeDays} / ${totalDays}` : '-', color: '#10b981' },
+    { icon: <Route size={14}/>, label: 'Total distance', value: totalKm > 0 ? `${Math.round(totalKm).toLocaleString()} km` : '-', color: '#f59e0b' },
   ];
 
   return (

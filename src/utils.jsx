@@ -20,27 +20,27 @@ export const MAP_LAYERS = [
     id:'clean', icon:<Layers size={14}/>, label:'Clean', desc:'Clean light map (Esri)',
     url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
     labelsUrl:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-    attr:'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors',maxNative:16,labelsMaxNative:16,subdomains:'',
+    attr:'Tiles © Esri, Esri, HERE, Garmin, © OpenStreetMap contributors',maxNative:16,labelsMaxNative:16,subdomains:'',
   },
   {
     id:'satellite', icon:<Satellite size={14}/>, label:'Satellite', desc:'Aerial imagery with place labels',
     url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     labelsUrl:'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-    attr:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community', maxNative:17, subdomains:'',
+    attr:'Tiles © Esri, Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community', maxNative:17, subdomains:'',
   },
   {
-    id:'terrain', icon:<MountainSnow size={14}/>, label:'Terrain', desc:'Topographic map — trails, elevation',
+    id:'terrain', icon:<MountainSnow size={14}/>, label:'Terrain', desc:'Topographic map, trails, elevation',
     url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-    attr:'Tiles © Esri — Esri, HERE, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors', maxNative:19, subdomains:'',
+    attr:'Tiles © Esri, Esri, HERE, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors', maxNative:19, subdomains:'',
   },
   {
-    id:'dark', icon:<Moon size={14}/>, label:'Dark', desc:'Dark mode — great for night planning',
+    id:'dark', icon:<Moon size={14}/>, label:'Dark', desc:'Dark mode, great for night planning',
     url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
     labelsUrl:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-    attr:'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors',maxNative:16,labelsMaxNative:16,subdomains:'',
+    attr:'Tiles © Esri, Esri, HERE, Garmin, © OpenStreetMap contributors',maxNative:16,labelsMaxNative:16,subdomains:'',
   },
   {
-    id:'osm', icon:<TreePine size={14}/>, label:'Outdoors', desc:'Full OSM detail — trails, parks, POIs',
+    id:'osm', icon:<TreePine size={14}/>, label:'Outdoors', desc:'Full OSM detail, trails, parks, POIs',
     url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attr:'© OpenStreetMap contributors', maxNative:19, subdomains:'abc',
   },
@@ -91,7 +91,7 @@ export const createGlyphIcon = (typeString, highlighted = false) => {
   return L.divIcon({ className:'', html, iconSize:[sz,h], iconAnchor:[sz/2, tipY], popupAnchor:[0, -tipY+midY] });
 };
 
-// White-border + glow variant for saved places — bigger, crisper than recommendation pins
+// White-border + glow variant for saved places, bigger, crisper than recommendation pins
 export const createSavedGlyphIcon = (typeString) => {
   const details = getTypeDetails(typeString);
   const color = details.color;
@@ -104,7 +104,7 @@ export const createSavedGlyphIcon = (typeString) => {
   return L.divIcon({ className:'', html, iconSize:[sz,h], iconAnchor:[sz/2, tipY], popupAnchor:[0, -tipY+midY] });
 };
 
-// AI-suggested preview marker — amber/gold glyph with dashed outline to distinguish from all other pin types
+// AI-suggested preview marker, amber/gold glyph with dashed outline to distinguish from all other pin types
 export const createPreviewIcon = (typeString) => {
   const details = getTypeDetails(typeString);
   const color = details.color;
@@ -466,6 +466,7 @@ export const TABS=[
   {id:'notes',      label:'Notes',      Icon:BookOpen,     desc:'Free notes per trip and city'},
   {id:'documents',  label:'Docs',       Icon:FileText,     desc:'Tickets, bookings and other documents'},
   {id:'route',      label:'Export',     Icon:Download,     desc:'Export to Google Maps, KML or a file'},
+  {id:'about',      label:'About & privacy', Icon:Info,    desc:'What the app does with your data, sources, licences and imprint'},
 ];
 
 
@@ -612,7 +613,7 @@ export const searchOverpass = async (center, radiusKm, categories) => {
     return result;
   };
 
-  // Only fetch categories not already cached — a cached query covers our area if its bbox contains our actual search bbox
+  // Only fetch categories not already cached, a cached query covers our area if its bbox contains our actual search bbox
   const uncachedCats = categories.filter(cat =>
     !overpassCache.queries.some(q =>
       q.categories?.has(cat) &&
@@ -631,7 +632,7 @@ export const searchOverpass = async (center, radiusKm, categories) => {
 
   const bbox = `(${qSouth},${qWest},${qNorth},${qEast})`;
 
-  // Parks/beaches/hiking are stored as way+relation in OSM — must use nwr.
+  // Parks/beaches/hiking are stored as way+relation in OSM, must use nwr.
   // All other categories are nodes or ways → nw is sufficient and much faster.
   // Splitting into two parallel queries prevents a slow nwr from blocking everything.
   const AREA_CATS = new Set(['Parks', 'Hiking', 'Beaches', 'Camping', 'Viewpoints']);
@@ -661,7 +662,7 @@ export const searchOverpass = async (center, radiusKm, categories) => {
     }
   }
 
-  // Only endpoints with CORS headers — others block browser requests
+  // Only endpoints with CORS headers, others block browser requests
   const urls = [
     'https://overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',

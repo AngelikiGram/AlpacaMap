@@ -1,7 +1,7 @@
 # TravelScout user study — protocol
 
 ## Goal
-Evaluate TravelScout with end users (reviewer comment C1) and answer RQ1–RQ6
+Evaluate TravelScout with end users (reviewer comment C1) and answer RQ1–RQ5
 (see `reviewer_comments_mapping.md`).
 
 ## Design
@@ -34,32 +34,32 @@ Evaluate TravelScout with end users (reviewer comment C1) and answer RQ1–RQ6
 |---|---|---|
 | 1. Welcome & consent | 5 min | `consent_form.md`, shown in the runner; consent is required to continue |
 | 2. Demographics | 3 min | `questionnaires.md` §Demographics |
-| 3. App tour | 5 min | Facilitator shows map, Planner, Itinerary, Knowledge (Ingest/Claims/Visual/Conflicts). Same script for everyone: `tasks.md` §Tour |
+| 3. App tour | 5 min | Facilitator shows the first-visit guide, a topic button (Culture), the coloured dots, Debates, Explore and Itinerary. Same script for everyone: `tasks.md` §Tour |
 | 4. Block 1 | 15 min | Tasks T1–T4 in condition/city 1, then §SEQ after each task, §TLX after the block |
 | 5. Block 2 | 15 min | Same tasks in condition/city 2 |
 | 6. Statement pairs | 5 min | §Statement pairs (RQ4) |
-| 7. Post-study questionnaire | 7 min | §SUS, §Views, §Integration, §Privacy |
+| 7. Post-study questionnaire | 6 min | §SUS, §Views, §Integration |
 | 8. Interview | 5–10 min | `interview_guide.md` |
 | 9. Export | 1 min | Runner downloads `P##_session.json`; facilitator copies it into `user_study/data/` |
 
 ## Measures
-- **Task success** — T2 and T3 are scored automatically against ground truth computed from the app's data; T1 and T4 are coded by two raters (see `tasks.md` coding rules, report Cohen's κ).
+- **Task success** — T2 and T3 are scored automatically against ground truth computed from the app's data; T2 is also coded by two raters for real disagreements, and T1 and T4 are coded by two raters (see `tasks.md`, report Cohen's κ).
 - **Time on task** — start/stop in the runner.
 - **Confidence** — 1–7 after T1–T3.
 - **SEQ** — Single Ease Question (1–7) after each task.
 - **NASA-TLX (raw)** — after each block.
 - **SUS** — once, at the end.
 - **Interaction log** — clicks in the app (tab/view names), with task id and timestamp.
-- **View ratings, integration, privacy, open comments** — post-study.
+- **View ratings, integration, open comments** — post-study.
 
-## Ground truth for contested topics
-A topic is *contested* when it has at least one positive and one negative statement **from different sources** — the same rule the app uses to colour a place as contested, restricted to cross-source disagreement. `analysis/analyze.py` recomputes this from `public/preprocessed/<city>.json`, so the scoring always matches the data shown.
+## Ground truth
+T2 is scored against the topics and places that the app's *Do sources agree?* panel shows as "opinions split" with all sources: the same score as `src/knowledge/controversy.js` (`controversyScore` ≥ 0.4, at least 3 statements). `analysis/analyze.py` recomputes this from `public/preprocessed/<city>.json`. Because this score is based on the tone of statements, T2 answers are also coded by hand for whether they name a real disagreement about the same thing (the paper's definition, Section 3). T3's correct answer is computed per condition from the Safety & Health statements visible in it (see `tasks.md`).
 
 ## Hypotheses
-- H1 (RQ3): In M, participants identify more contested topics (higher recall) than in S.
-- H2 (RQ3): In M, T3 agreement judgements are more often correct and confidence is better calibrated.
+- H1 (RQ3): In M, participants identify more topics or places where sources disagree (higher recall) than in S.
+- H2 (RQ3): In M, T3 answers are more often correct ("mixed") and confidence is better calibrated.
 - H3 (RQ2): Workload (TLX) is higher in M, and a minority of views accounts for most interaction time.
-- H4 (RQ4): Conflicts in opinions are rated as more relevant for planning than conflicts in temporal or conditional statements.
+- H4 (RQ4): Pairs of evaluative statements and social norms are judged as real disagreements less often than pairs of practical statements, but are rated as more relevant for planning.
 
 ## Analysis plan
 - Paired comparisons S vs M: Wilcoxon signed-rank (time, TLX, confidence, recall); McNemar for T3 correctness; report effect size r and 95% CI.

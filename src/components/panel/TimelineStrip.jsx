@@ -86,7 +86,7 @@ export const TimelineStrip=({tripData,setActiveCity,setActiveTab,setCalendarExpa
           const city=tripData.locations.find(l=>l.name.toLowerCase().startsWith(day.location.toLowerCase().split(',')[0].toLowerCase()));
           const color=city?getCityColor(city.id,tripData.locations):'#64748b';
           return(
-            <div key={day.id} className="timeline-day" style={{'--city-color':color}}
+            <div key={day.id} className="timeline-day" role="button" tabIndex={0} style={{'--city-color':color}}
               onClick={()=>{
                 setCalendarExpandedDay(day.id);
                 setActiveTab('calendar');

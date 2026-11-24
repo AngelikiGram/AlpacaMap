@@ -1,0 +1,21 @@
+# AlpacaMap (TravelScout)
+
+> A free, map-based travel planner that collects statements about a city from Wikivoyage, Wikitravel,
+> Wikipedia, Reddit and Travel StackExchange and shows where these sources agree or disagree.
+> Research prototype; no account, no cookies, no tracking.
+
+## What it does
+- "What do sources say about…": one click shows what guides and travellers say about safety, transport, food, money, climate or nightlife in a city.
+- Truth lens: coloured dots on the map mark places where sources agree (green) or where opinions split (amber, red).
+- Time lens: which places are open, closed or busy at a chosen hour.
+- Debates: pairs of statements that may disagree; the traveller judges them.
+- Itinerary, routes, budget, packing lists and notes, stored only in the visitor's browser.
+
+## Data and limits
+- Ready-made knowledge for London, Paris, Rome, Edinburgh and Zurich; other cities are loaded live.
+- Topics, tone and "possible contradiction" labels are assigned automatically and can be wrong.
+- Not official travel advice.
+
+## Links
+- App: https://angelikigram.github.io/AlpacaMap/
+- Source code: https://github.com/AngelikiGram/AlpacaMap

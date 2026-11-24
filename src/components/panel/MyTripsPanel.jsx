@@ -98,7 +98,7 @@ export const MyTripsPanel = ({ savedTrips, currentTripId, onLoad, onNew, onDelet
         )}
         {savedTrips.length === 0 && (
           <p style={{ fontSize:'0.82rem', color:'var(--text-secondary)', margin:'1rem 0', lineHeight:1.5 }}>
-            No saved trips yet. Start planning — your trips auto-save every few seconds.
+            No saved trips yet. Start planning, your trips auto-save every few seconds.
           </p>
         )}
         {savedTrips.map(trip => (

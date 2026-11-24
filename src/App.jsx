@@ -33,6 +33,7 @@ import { CoherencePanel } from "./components/panel/CoherencePanel";
 import { loadKG as idbLoadKG, saveKG as idbSaveKG, stripKG } from "./storage/kgStore";
 import { RouteSpacePanel } from "./components/panel/RouteSpacePanel.jsx";
 import { MenuPanel } from "./components/panel/MenuPanel.jsx";
+import { AboutPanel } from "./components/panel/AboutPanel.jsx";
 import { DebatesPanel } from "./components/panel/DebatesPanel.jsx";
 import { bundledKeyFor, hasBundled, loadBundledKnowledge, mergeStatements } from "./knowledge/bundled";
 import { buildDebates, answeredKeys } from "./knowledge/debates";
@@ -42,7 +43,7 @@ const KnowledgePanel = lazy(() => import('./components/panel/KnowledgePanel.jsx'
 const AnalyticsPanel = lazy(() => import('./components/panel/AnalyticsPanel.jsx'));
 import { MapBoundsTracker, MapZoomTracker, MapClickHandler, MapFlyController, SmartMapController } from "./components/map/MapControllers";
 import { CITY_PALETTE, getCityColor, MAP_LAYERS, SENTINEL_NONE, getTypeDetails, createDayStopIcon, createGlyphIcon, createCityIcon, classifyWeather, detectOSMCategory, processOverpassResults, scorePlaceQuality, nameSim, semanticDedup, getZoomParams, filterMarkersAdaptive, loadTrips, loadPrefs, saveTrips, savePrefs, detectLocationType, createSearchResultIcon, getAllMapPoints, buildArc, getDistanceKm, INITIAL_TRIP, TRIPS_KEY, PREFS_KEY, TABS, wmoIcon, formatDur, searchOverpass } from "./utils";
-import { searchNominatim, fetchPlaceImage } from "./api";
+import { searchNominatim, fetchPlaceImage, isWikimediaImage } from "./api";
 import { OVERPASS_URL, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS, CATEGORY_ZOOM_PRIORITY, SEARCH_KEYWORDS, INTEREST_CATEGORIES, LOCATION_TYPE_PRESETS, EVENT_TYPES, TRANSPORT_ICON, EVT_EMOJI, DOC_SECTIONS, BUDGET_CATEGORIES, PACKING_TEMPLATES, ENTITY_PROFILES } from "./config";
 
 let DefaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow, iconSize: [25,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
@@ -241,7 +242,7 @@ export default function App(){
       try{
         const trips=loadTrips();
         const idx=trips.findIndex(t=>t.id===currentTripId);
-        // Explore's search results are a cache (thousands of places for big cities like London) — keep only the
+        // Explore's search results are a cache (thousands of places for big cities like London), keep only the
         // first 400 per city in localStorage so a big city can't fill the 5 MB browser limit
         const slim=(d)=>({...d,locations:(d.locations||[]).map(l=>(l.recommendations?.length||0)>400?{...l,recommendations:l.recommendations.slice(0,400)}:l)});
         const entry={id:currentTripId,title:tripData.title,lastModified:new Date().toISOString(),data:slim(kgInIdb?stripKG(tripData):tripData)};
@@ -252,7 +253,7 @@ export default function App(){
         setStorageError(null);
       }catch(e){
         console.error('Saving failed:',e);
-        setStorageError(e?.name==='QuotaExceededError'?'Browser storage is full — export your trip to keep it.':'Could not save — export your trip to keep it.');
+        setStorageError(e?.name==='QuotaExceededError'?'Browser storage is full, export your trip to keep it.':'Could not save, export your trip to keep it.');
       }
     },1500);
     return()=>clearTimeout(autoSaveTimer.current);
@@ -336,10 +337,14 @@ export default function App(){
     const input=document.createElement('input');input.type='file';input.accept='.json';
     input.onchange=e=>{
       const file=e.target.files?.[0];if(!file)return;
+      if(file.size>20*1024*1024){alert('This trip file is too large (over 20 MB).');return;}
       const reader=new FileReader();
       reader.onload=ev=>{
         try{
           const parsed=JSON.parse(ev.target.result);
+          // Only accept files that look like an AlpacaMap trip: an object with a list of cities
+          const d=parsed?.data||parsed;
+          if(!d||typeof d!=='object'||Array.isArray(d)||!Array.isArray(d.locations))throw new Error('not a trip');
           const entry={id:parsed.id||(`trip-${Date.now()}`),title:parsed.title||'Imported Trip',lastModified:new Date().toISOString(),data:parsed.data||parsed};
           const trips=loadTrips();
           const idx=trips.findIndex(t=>t.id===entry.id);
@@ -398,7 +403,7 @@ export default function App(){
     }
 
     let extract = place.extract || '';
-    let heroImage=(place.liveImage&&place.liveImage!==SENTINEL_NONE)?place.liveImage:null;
+    let heroImage=isWikimediaImage(place.liveImage)?place.liveImage:null;
     // Fetch Wikipedia extract and hero image in parallel (no artificial delay)
     await Promise.allSettled([
       extract ? Promise.resolve() : fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(place.name.split(',')[0])}?origin=*`,{signal:AbortSignal.timeout(5000)})
@@ -537,8 +542,9 @@ export default function App(){
 
   const renderPanel=()=>{
     switch(activeTab){
-      case 'menu':     return<MenuPanel     activeTab={activeTab} setActiveTab={setActiveTab} gcUndiscovered={gcUndiscovered} debateCount={debateCount} onApplyQuickPlan={applyQuickPlan} hasTrip={tripData.locations.length>0} isDemo={!!tripData.demo} onLoadDemo={loadDemoTrip} onNewTrip={createNewTrip}/>;
+      case 'menu':     return<MenuPanel     activeTab={activeTab} setActiveTab={setActiveTab} gcUndiscovered={gcUndiscovered} debateCount={debateCount} onApplyQuickPlan={applyQuickPlan} hasTrip={tripData.locations.length>0} isDemo={!!tripData.demo} onLoadDemo={loadDemoTrip} onNewTrip={createNewTrip} hasKnowledge={(tripData.knowledgeGraph?.nodes?.length||0)>0}/>;
       case 'debates':  return<DebatesPanel  tripData={tripData} setTripData={setTripData} onOpenTab={setActiveTab}/>;
+      case 'about':    return<AboutPanel/>;
       case 'locations':return null;
       case 'route':    return<ExportPanel   tripData={tripData}/>;
       case 'calendar': return<CalendarPanel tripData={tripData} setTripData={setTripData} expandedDays={calendarExpandedDays} setExpandedDays={setCalendarExpandedDays}/>;
@@ -546,7 +552,7 @@ export default function App(){
       case 'packing':  return<PackingPanel  tripData={tripData} setTripData={setTripData}/>;
       case 'notes':    return<NotesPanel    tripData={tripData} setTripData={setTripData}/>;
       case 'documents':return<DocumentsPanel tripData={tripData} setTripData={setTripData}/>;
-      case 'tripmind': return<TripMindPanel tripData={tripData} setTripData={setTripData} activeCity={activeCity} aiActiveDay={aiActiveDay} onDayChange={setAiActiveDay} triggerPlaceInfo={triggerPlaceInfo} onPreviewPlaces={setTripMindPreviewPlaces} onFlyTo={coords=>setPreviewFlyTarget({lat:coords[0],lon:coords[1],zoom:16,duration:0.7})} />;
+      case 'tripmind': return<><p className="ai-generated-note">Plans and texts here are <b>written by an AI model</b> and can contain mistakes, closed places or wrong times. Check before you go.</p><TripMindPanel tripData={tripData} setTripData={setTripData} activeCity={activeCity} aiActiveDay={aiActiveDay} onDayChange={setAiActiveDay} triggerPlaceInfo={triggerPlaceInfo} onPreviewPlaces={setTripMindPreviewPlaces} onFlyTo={coords=>setPreviewFlyTarget({lat:coords[0],lon:coords[1],zoom:16,duration:0.7})} /></>;
       case 'analyze':  return<CoherencePanel tripData={tripData}/>;
       case 'routespace': return<RouteSpacePanel tripData={tripData} setTripData={setTripData} activeCity={activeCity} routeSpaceRoute={routeSpaceRoute} setRouteSpaceRoute={setRouteSpaceRoute} setStopStabilityMap={setStopStabilityMap} triggerPlaceInfo={triggerPlaceInfo} aiInterests={aiInterests} onSwitchToCalendar={()=>setActiveTab('calendar')} showRouteOnMap={showRouteOnMap} setShowRouteOnMap={setShowRouteOnMap} onOpenTab={setActiveTab} />;
       case 'knowledge':  return<Suspense fallback={<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'200px',color:'rgba(255,255,255,0.4)',fontSize:'0.8rem'}}>Loading Knowledge Graph…</div>}><KnowledgePanel tripData={tripData} setTripData={setTripData} triggerPlaceInfo={triggerPlaceInfo} activeCity={activeCity} /></Suspense>;
@@ -584,6 +590,7 @@ export default function App(){
         knowledgeGraph={tripData.knowledgeGraph}
         itinerary={tripData.itinerary}
         onOpenDebates={()=>{ setPanelOpen(true); setActiveTab('debates'); }}
+        onOpenKnowledge={()=>{ setPanelOpen(true); setActiveTab('knowledge'); }}
       />
       {kgAutoStatus && <div className={`alpaca-toast ${kgAutoStatus.done?'done':''}`} role="status">{kgAutoStatus.text}</div>}
       {showWelcome && tripData.demo && (
@@ -591,17 +598,18 @@ export default function App(){
           <div className="welcome-alpaca" aria-hidden>🦙</div>
           <div>
             <b>Welcome to AlpacaMap</b>
-            <p>A travel planner that reads guides and traveller forums and tells you where they <em>disagree</em>. This is a demo weekend in London — try:</p>
+            <p>A travel planner that reads guides and traveller forums and tells you where they <em>disagree</em>. This is a demo weekend in London, try:</p>
             <ul>
-              <li><b>Truth lens</b> (top right) — green where sources agree, red where they argue</li>
-              <li><b>Time</b> — what's open, closed or packed at any hour</li>
-              <li><b>Itinerary</b> — Sunday has two ⚠ timing problems</li>
-              <li><b>Debates</b> — judge disputed tips yourself</li>
+              <li><b>Truth lens</b> (top right), green where sources agree, red where they argue</li>
+              <li><b>Time</b>: what's open, closed or packed at any hour</li>
+              <li><b>Itinerary</b>: Sunday has two ⚠ timing problems</li>
+              <li><b>Debates</b>: judge disputed tips yourself</li>
             </ul>
             <div className="welcome-actions">
               <button className="btn-primary" onClick={dismissWelcome}>Explore the demo</button>
               <button className="btn-secondary" onClick={()=>{ dismissWelcome(); setActiveTab('menu'); setPanelOpen(true); setTimeout(()=>document.querySelector('.quickplan-form input')?.focus(),50); }}>Plan my own trip</button>
             </div>
+            <p className="welcome-privacy">No account, no cookies, no tracking: your trips stay in this browser. Maps and texts are loaded from public services. <button type="button" className="link-btn" onClick={()=>{ dismissWelcome(); setActiveTab('about'); setPanelOpen(true); }}>About &amp; privacy</button></p>
           </div>
         </div>
       )}

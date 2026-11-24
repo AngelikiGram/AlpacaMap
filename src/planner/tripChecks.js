@@ -68,7 +68,7 @@ export function checkStop({ date, time, place, evidence }) {
       const seasonHit = c.season && c.season === season;
       if (timeHit || weekHit || seasonHit) {
         const why = timeHit ? `in the ${c.timeOfDay}` : weekHit ? 'at weekends' : `in ${c.season}`;
-        out.push({ kind: 'crowds', severity: 'medium', text: `${src}: very busy ${why} — you're going ${weekHit ? `on ${WEEKDAY_NAMES[wd]}` : `at ${time}`}`, detail: t, source: src });
+        out.push({ kind: 'crowds', severity: 'medium', text: `${src}: very busy ${why}, and you're going ${weekHit ? `on ${WEEKDAY_NAMES[wd]}` : `at ${time}`}`, detail: t, source: src });
         seen.add('crowds');
       }
     }

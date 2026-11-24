@@ -536,7 +536,7 @@ function SearchResultsPanel({ data, onSelect, onClose }) {
   );
 }
 
-export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds, triggerPlaceInfo, pendingPin, setPendingPin, mapCenter, setMapCenter, mapLayer, setMapLayer, onAddClickDestination, highlightedPlace, visibleCategories, setVisibleCategories, aiInterests, setAiInterests, aiPlan, aiActiveDay, aiDayDisplay, setAiDayDisplay, showNeighborhoods, setShowNeighborhoods, osmHardCap, setOsmHardCap, categoryDisplayLimit, setCategoryDisplayLimit, mapMarkerLimitFactor, setMapMarkerLimitFactor, poiQualityThreshold, setPoiQualityThreshold, searchRadius, setSearchRadius, recFilterText, infoOpen, previewPlaces, previewFlyTarget, routeSpaceRoute, showRouteOnMap, stopStabilityMap, activeTab, panelOpen, hasTimeline, knowledgeGraph, itinerary = [], onOpenDebates }) => {
+export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds, triggerPlaceInfo, pendingPin, setPendingPin, mapCenter, setMapCenter, mapLayer, setMapLayer, onAddClickDestination, highlightedPlace, visibleCategories, setVisibleCategories, aiInterests, setAiInterests, aiPlan, aiActiveDay, aiDayDisplay, setAiDayDisplay, showNeighborhoods, setShowNeighborhoods, osmHardCap, setOsmHardCap, categoryDisplayLimit, setCategoryDisplayLimit, mapMarkerLimitFactor, setMapMarkerLimitFactor, poiQualityThreshold, setPoiQualityThreshold, searchRadius, setSearchRadius, recFilterText, infoOpen, previewPlaces, previewFlyTarget, routeSpaceRoute, showRouteOnMap, stopStabilityMap, activeTab, panelOpen, hasTimeline, knowledgeGraph, itinerary = [], onOpenDebates, onOpenKnowledge }) => {
   const [fetchedPaths, setFetchedPaths] = useState({});
   const [searchResults, setSearchResults] = useState(null); // { results: [...], query: '' } or null
   const [showLayerMenu, setShowLayerMenu] = useState(false);
@@ -646,7 +646,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
     return new Set(allCityNames.map(name => name.toLowerCase().trim()));
   }, [allCityNames]);
 
-  // Pre-compute per-place stats once when the graph changes — O(n) build, O(1) per-marker lookup
+  // Pre-compute per-place stats once when the graph changes, O(n) build, O(1) per-marker lookup
   const knowledgeStats = useMemo(() => {
     const placeMap = new Map(); // cleanName → nodes[]
     const cityMap = new Map(); // cityNameLower → nodes[]
@@ -743,7 +743,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
     return paths;
   }, [showKnowledgeOverlay, knowledgeGraph?.nodes, resolvePlaceCoords]);
 
-  // Pre-compute overlay panel stats — avoids 3 separate .filter() calls inside JSX on every render
+  // Pre-compute overlay panel stats, avoids 3 separate .filter() calls inside JSX on every render
   const evidenceMap = useMemo(() => buildPlaceEvidence(knowledgeGraph?.nodes || [], knowledgeGraph?.verified, { cityNames: (locations || []).map(l => l.name) }), [knowledgeGraph?.nodes, knowledgeGraph?.verified, locations]);
   const evidenceLevelFor = useCallback((name) => findEvidence(name, evidenceMap)?.level || null, [evidenceMap]);
 
@@ -756,6 +756,18 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
   const lensCityName = (activeCity?.name || '').split(',')[0];
   // City-wide topics ("London · Climate") have no position; the lens panel lists them
   const topicItems = useMemo(() => (lensMode === 'truth' ? buildTopicLens(evidenceMap, lensCityName) : []), [lensMode, evidenceMap, lensCityName]);
+  // City-wide topic expanded in the lens panel; the menu's "What do sources say about…" chips open one
+  const [openTopic, setOpenTopic] = useState(null);
+  useEffect(() => {
+    const on = (e) => {
+      const topic = e.detail?.topic;
+      if (!topic) return;
+      setLensMode('truth');
+      setOpenTopic(`${lensCityName || (activeCity?.name || '').split(',')[0]} · ${topic}`);
+    };
+    window.addEventListener('alpacamap-open-topic', on);
+    return () => window.removeEventListener('alpacamap-open-topic', on);
+  }, [lensCityName, activeCity?.name]);
   // The Debates card currently open (DebatesPanel → 'alpacamap-debate-focus')
   const [debateFocus, setDebateFocus] = useState(null);
   useEffect(() => {
@@ -799,7 +811,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
   const timeLens = useTimeLens(lensPts, evidenceMap, { date: lensDate, minutes: lensMinutes, center: activeCity?.coords || null, enabled: lensMode === 'time' });
   const pickLensPlace = useCallback((p) => triggerPlaceInfo?.({ id: p.id || `lens-${p.name}`, name: p.name, type: p.type || 'attraction', coords: p.coords, osmTags: p.osmTags }), [triggerPlaceInfo]);
 
-  // City knowledge summary for the map overlay — restricted to the city in focus.
+  // City knowledge summary for the map overlay, restricted to the city in focus.
   const overlaySummary = useMemo(() => {
     const all = knowledgeGraph?.nodes || [];
     if (!all.length) return null;
@@ -969,8 +981,8 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
             </div>
 
             <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-              <div style={row} title={o.checked ? 'Checked statement by statement with the AI model (Knowledge → Conflicts)' : 'Positive and negative statements from different sources — not checked yet (Knowledge → Conflicts)'}>
-                <span>{o.checked ? 'Real contradictions' : 'Opposite views (not checked)'}</span>
+              <div style={row} title={o.checked ? 'Checked statement by statement with the AI model (Knowledge → Conflicts)' : 'Positive and negative statements from different sources, not checked yet (Knowledge → Conflicts)'}>
+                <span>{o.checked ? 'Possible contradictions (checked automatically)' : 'Opposite views (not checked)'}</span>
                 <strong style={{ color: o.disputed.length ? '#f59e0b' : 'var(--text-primary)' }}>{o.disputed.length}</strong>
               </div>
               {o.checked && o.depends > 0 && <div style={row}><span>Depends on conditions</span><strong style={{ color: 'var(--text-primary)' }}>{o.depends}</strong></div>}
@@ -1432,6 +1444,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
 
       {lensMode === 'truth' && (
         <TruthLensLegend items={truthItems} topics={topicItems} focusTopic={debateFocus && !debateFocus.onMap ? debateFocus.place : null}
+          openTopic={openTopic} setOpenTopic={setOpenTopic} onOpenKnowledge={onOpenKnowledge}
           cityName={lensCityName} topicDisputes={topicDisputes} checked={!!knowledgeGraph?.verified}
           onClose={() => setLensMode(null)} onOpenDebates={onOpenDebates} />
       )}
@@ -1446,7 +1459,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
         onClose={() => { setSearchResults(null); if (activeCity?.coords) setFlyTarget({ lat: activeCity.coords[0], lon: activeCity.coords[1], zoom: activeCity.zoomLevel || 14 }); }}
       />
 
-      {/* Draw area button — top-left, RouteSpace mode only */}
+      {/* Draw area button, top-left, RouteSpace mode only */}
       {activeTab === 'routespace' && (
         <div style={{ position: 'absolute', top: '68px', left: '12px', zIndex: 1100 }}>
           <button className="layer-toggle-btn"
@@ -1563,7 +1576,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
               {searchRadius != null && setSearchRadius && (
                 <>
                   <div className="layer-menu-header">Search radius</div>
-                  <p style={{ fontSize: '0.67rem', color: 'var(--text-secondary)', margin: '2px 0 6px', lineHeight: 1.4 }}>The blue circle on the map — only places inside it are loaded.</p>
+                  <p style={{ fontSize: '0.67rem', color: 'var(--text-secondary)', margin: '2px 0 6px', lineHeight: 1.4 }}>The blue circle on the map, only places inside it are loaded.</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '12px' }}>
                     <input type="range" min={1} max={20} step={1} value={searchRadius}
                       onChange={e => setSearchRadius(Number(e.target.value))}

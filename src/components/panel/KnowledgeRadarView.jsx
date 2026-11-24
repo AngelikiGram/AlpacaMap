@@ -122,7 +122,7 @@ function RadarSVG({ data, hovKey, onHover, onClick, size = 260, dark = true }) {
           onClick={() => onClick && onClick(data[i].key)}/>
       ))}
 
-      {/* Spoke-end category glyphs — fixed size to avoid layout shift */}
+      {/* Spoke-end category glyphs, fixed size to avoid layout shift */}
       {data.map((d, i) => {
         const lp = spoke(i, abbrR);
         const isHov = hovKey === d.key;
@@ -378,7 +378,7 @@ export default function KnowledgeRadarView({ nodes }) {
   const [sinceYear, setSinceYear] = useState(null);
   const [expanded, setExpanded] = useState(false);
 
-  // Temporal filter — shows knowledge as it existed from a given year onward
+  // Temporal filter, shows knowledge as it existed from a given year onward
   const temporalNodes = useMemo(() => {
     if (!sinceYear) return nodes;
     return nodes.filter(n => {
@@ -555,7 +555,7 @@ export default function KnowledgeRadarView({ nodes }) {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', marginBottom: '2px' }}>Hover a spoke to inspect</div>
-              {/* Chip list — all covered categories */}
+              {/* Chip list, all covered categories */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
                 {radarData.filter(d => d.count > 0).sort((a, b) => b.count - a.count).map(d => (
                   <button key={d.key} onClick={() => setActiveKey(activeKey === d.key ? null : d.key)}
@@ -598,7 +598,7 @@ export default function KnowledgeRadarView({ nodes }) {
       {activeKey && filteredClaims.length > 0 && (() => {
         const cat      = RADAR_CATEGORIES.find(c => c.key === activeKey);
         const catStats = stats[activeKey] || { count: 0, pos: 0, neg: 0 };
-        const total    = catStats.count;  // actual count from classifier — not sliced
+        const total    = catStats.count;  // actual count from classifier, not sliced
         const neg      = catStats.neg;
         const pos      = catStats.pos;
         const neu      = total - pos - neg;
@@ -628,7 +628,7 @@ export default function KnowledgeRadarView({ nodes }) {
                 <span style={{ fontSize:'0.62rem', fontWeight:'700', color:cat?.color, display:'flex', alignItems:'center', gap:'4px' }}>
                   {cat && <cat.Icon size={10}/>} {activeKey}
                   <span style={{ color:'rgba(255,255,255,0.3)', fontWeight:'400', fontSize:'0.56rem' }}>
-                    — {total} claim{total !== 1 ? 's' : ''}{total > SHOW_MAX ? ` · top ${SHOW_MAX} shown` : ''}
+, {total} claim{total !== 1 ? 's' : ''}{total > SHOW_MAX ? ` · top ${SHOW_MAX} shown` : ''}
                   </span>
                 </span>
                 <button onClick={() => setActiveKey(null)} style={{ background:'none', border:'none', color:'var(--text-secondary)', cursor:'pointer', fontSize:'0.75rem' }}>✕</button>

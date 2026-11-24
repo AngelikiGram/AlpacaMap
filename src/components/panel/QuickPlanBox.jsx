@@ -144,7 +144,7 @@ export function QuickPlanBox({ onApply, hasTrip }) {
               </button>
             )}
           </div>
-          {flagged > 0 && <p className="qp-note warn">⚠ {flagged} stop{flagged > 1 ? 's' : ''} flagged by travel sources — hover for details. You can swap them later in the Itinerary.</p>}
+          {flagged > 0 && <p className="qp-note warn">⚠ {flagged} stop{flagged > 1 ? 's' : ''} flagged by travel sources, hover for details. You can swap them later in the Itinerary.</p>}
         </div>
       )}
     </section>

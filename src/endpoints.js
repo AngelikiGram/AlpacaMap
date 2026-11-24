@@ -1,6 +1,6 @@
 // Where external APIs are reached from.
 // - `npm run dev`: through the Vite dev-server proxies in vite.config.js.
-// - Built site (GitHub Pages): directly — there is no server to proxy through,
+// - Built site (GitHub Pages): directly, there is no server to proxy through,
 //   so only services that send CORS headers can be used.
 const DEV = import.meta.env.DEV;
 

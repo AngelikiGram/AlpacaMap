@@ -39,7 +39,7 @@
    inverts the interface and turns hues back (invert + hue-rotate keeps green green and
    red red). Map tiles, markers, lens halos, photos and videos are inverted a second time
    so they keep their real colours. Toggle: map controls → Light/Dark, or ?theme=light. */
-html[data-theme="light"] { background: #f4f6fb; }
+html[data-theme="light"] { background: #f4f6fb; --text-secondary: #a2afc0; } /* inverted: darker grey, contrast ≥ 4.5:1 on the light background */
 html[data-theme="light"] body { background: #f4f6fb; }
 html[data-theme="light"] #root { filter: invert(1) hue-rotate(180deg); }
 html[data-theme="light"] .leaflet-map-pane,
@@ -271,3 +271,14 @@ input::placeholder, textarea::placeholder { color: rgba(127,142,163,0.6); }
 
 /* ── Visible keyboard focus everywhere ─────────────────────── */
 :focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+
+/* ── Accessibility ─────────────────────────────────────────────────────────
+   Visible focus for keyboard users (mouse clicks do not show it), and calmer motion
+   for people who ask their system for reduced motion. */
+:where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid #60a5fa !important;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

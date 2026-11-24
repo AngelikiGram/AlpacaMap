@@ -8,7 +8,7 @@ An interactive travel planning app that runs in your browser. It builds trips on
 
 - **Stays in your browser:** your trips, itinerary, budget, notes and the collected knowledge (localStorage + IndexedDB). There is no AlpacaMap server and no account.
 - **AI processing:** runs locally — either in the browser or through [Ollama](https://ollama.com/) on your own computer. Your plans are never sent to a cloud AI service.
-- **Sent to third-party services:** looking things up necessarily sends the *place names and map areas* you search for to the services that answer them — OpenStreetMap (Nominatim, Overpass), Wikipedia/Wikivoyage/Wikidata, StackExchange, PullPush (Reddit archive), Open-Meteo (weather), OSRM (routing) and Esri (map tiles). These requests contain no personal data beyond what any browser sends.
+- **Sent to third-party services:** looking things up necessarily sends the *place names and map areas* you search for to the services that answer them — OpenStreetMap (Nominatim, Overpass), Wikipedia/Wikivoyage/Wikidata, StackExchange, PullPush (Reddit archive), Open-Meteo (weather), OSRM (routing) and Esri (map tiles). Like every web request, these include your IP address and browser details, which are personal data under the GDPR; each service handles them under its own privacy policy. Fonts and stylesheets are bundled with the app, so loading the page itself contacts no third party besides GitHub Pages. Place photos come only from Wikimedia Commons and show their author and licence. The in-app **About & privacy** page lists all services.
 
 Data sources and licenses: see [DATA_LICENSES.md](DATA_LICENSES.md).
 

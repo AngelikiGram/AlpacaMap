@@ -76,11 +76,11 @@ export const TripInsights=({tripData,setActiveTab})=>{
   if(noPlaces.length>0) insights.push({Icon:MapPin,text:`${noPlaces.map(c=>c.name.split(',')[0]).join(', ')}: no saved places`,tab:'locations'});
   const spent=tripData.budget.expenses.reduce((s,e)=>s+Number(e.amount),0);
   const pct=tripData.budget.total>0?spent/tripData.budget.total:0;
-  if(pct>0.8) insights.push({Icon:DollarSign,text:`Budget ${Math.round(pct*100)}% used — review spending`,tab:'budget'});
+  if(pct>0.8) insights.push({Icon:DollarSign,text:`Budget ${Math.round(pct*100)}% used, review spending`,tab:'budget'});
   const pt=tripData.packing.reduce((s,l)=>s+l.items.length,0);
   const pd=tripData.packing.reduce((s,l)=>s+l.items.filter(i=>i.checked).length,0);
   if(pt>0&&pd<pt) insights.push({Icon:Package,text:`Packing ${Math.round(pd/pt*100)}% complete`,tab:'packing'});
-  if(insights.length===0)return<div style={{fontSize:'0.8rem',color:'var(--success)',marginBottom:'0.75rem',fontWeight:'500'}}>All good — trip is on track.</div>;
+  if(insights.length===0)return<div style={{fontSize:'0.8rem',color:'var(--success)',marginBottom:'0.75rem',fontWeight:'500'}}>All good, trip is on track.</div>;
   return(
     <div className="insights-widget">
       <div className="section-label" style={{marginBottom:'0.4rem'}}>Insights</div>

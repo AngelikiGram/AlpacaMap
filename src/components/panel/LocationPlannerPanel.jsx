@@ -198,7 +198,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
         }
       })
       .catch(() => {
-        // Safe to ignore — will fall back to live Overpass query
+        // Safe to ignore, will fall back to live Overpass query
       });
   }, [activeCity?.id]);
 
@@ -219,7 +219,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
     }
   }, [activeCity?.id, mapBounds != null]);
 
-  // Background preloader — silently fetch ALL categories into cache so Parks/Historic
+  // Background preloader, silently fetch ALL categories into cache so Parks/Historic
   // are instant when the user enables them, without blocking the main search
   useEffect(() => {
     clearTimeout(preloadTimerRef.current);
@@ -238,7 +238,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
         try {
           const { fetchPromise } = await searchOverpass(center, searchRadius, [cat]);
           if (fetchPromise) await fetchPromise;
-        } catch { /* silent — background preload failures are OK */ }
+        } catch { /* silent, background preload failures are OK */ }
         // Small gap between background requests to be polite to servers
         await new Promise(r => setTimeout(r, 800));
       }
@@ -391,7 +391,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
     setIsSearching(true);
     setLlmStatus('Querying OpenStreetMap…');
 
-    // Single call for all categories — searchOverpass builds compact grouped queries internally
+    // Single call for all categories, searchOverpass builds compact grouped queries internally
     // (nw for point types, nwr for area types) so firing multiple batches only causes rate-limiting
     let anyLoaded = false;
     try {
@@ -450,8 +450,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
             const typeLabel={city:'City',nature:'Nature',coastal:'Coastal',mountain:'Mountain'}[locType];
             const color=getCityColor(city.id,tripData.locations);
             return(
-              <div key={city.id} className="city-card" style={{'--card-color':color}} onClick={()=>setActiveCity(city)}>
-                <div className="city-card-bar" style={{background:color}}/>
+              <div key={city.id} className="city-card" role="button" tabIndex={0} style={{'--card-color':color}} onClick={()=>setActiveCity(city)}>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontWeight:'600',fontSize:'0.875rem',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{city.name}</div>
                   <div style={{display:'flex',gap:'0.4rem',alignItems:'center',marginTop:'0.25rem'}}>
@@ -468,7 +467,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
           })}
         </div>
 
-        {/* Add city with suggestions — portal dropdown avoids overflow clipping */}
+        {/* Add city with suggestions, portal dropdown avoids overflow clipping */}
         <div ref={cityAnchorRef}>
           <div className="add-form" style={{marginTop:'0.5rem'}}>
             <input
@@ -662,7 +661,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
                           style={{padding:'0.6rem', flex:'0 0 250px', outline: isHighlighted ? '2px solid #3b82f6' : undefined, outlineOffset: 2}}
                           ref={el => { recRefs.current[rec.id] = el; }}
                         >
-                          <div className="rec-card-left" onClick={()=>triggerPlaceInfo(rec)} style={{gap:'10px'}}>
+                          <div className="rec-card-left" role="button" tabIndex={0} onClick={()=>triggerPlaceInfo(rec)} style={{gap:'10px'}}>
                             <LiveImage rec={rec} color={color} icon={icon} activeCityName={activeCity.name} />
                             <div style={{flex:1,minWidth:0}}>
                               <div style={{display:'flex',alignItems:'center',gap:'5px',justifyContent:'space-between',width:'100%'}}>
@@ -734,6 +733,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
           <div
             key={place.id}
             className={`place-card${isHighlighted ? ' highlighted-pulse' : ''}`}
+            role="button" tabIndex={0}
             onClick={()=>triggerPlaceInfo(place)}
             style={{alignItems:'flex-start', flexDirection: 'column', outline: isHighlighted ? '2px solid #3b82f6' : undefined, outlineOffset: 2}}
             ref={el => { placeRefs.current[place.id] = el; }}

@@ -15,6 +15,7 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Responsi
 
 import { CITY_PALETTE, getCityColor, MAP_LAYERS, SENTINEL_NONE, getTypeDetails, createDayStopIcon, createGlyphIcon, createCityIcon, classifyWeather, detectOSMCategory, processOverpassResults, scorePlaceQuality, nameSim, semanticDedup, getZoomParams, filterMarkersAdaptive, loadTrips, loadPrefs, saveTrips, savePrefs, detectLocationType, createSearchResultIcon, getAllMapPoints, buildArc, getDistanceKm, INITIAL_TRIP, TRIPS_KEY, PREFS_KEY, TABS, wmoIcon, formatDur, searchOverpass } from "../../utils.jsx";
 import { searchNominatim, fetchPlaceImage } from "../../api.js";
+import { PhotoCredit } from "./PhotoCredit.jsx";
 import { OVERPASS_URL, OVERPASS_TAGS, TOURIST_LANDMARK_TAGS, CATEGORY_ZOOM_PRIORITY, SEARCH_KEYWORDS, INTEREST_CATEGORIES, LOCATION_TYPE_PRESETS, EVENT_TYPES, TRANSPORT_ICON, EVT_EMOJI, DOC_SECTIONS, BUDGET_CATEGORIES, PACKING_TEMPLATES, ENTITY_PROFILES } from "../../config.jsx";
 
 import { LiveImage } from "./LiveImage.jsx";
@@ -160,6 +161,7 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
                 );
               })()}
             </div>
+            {place.heroImage && <div style={{marginTop:'-0.75rem',marginBottom:'1rem'}}><PhotoCredit url={place.heroImage}/></div>}
             {place.isCity && <WeatherWidget coords={place.coords}/>}
             {place.highlights?.length>0&&(
               <div className="highlights-box">
@@ -210,9 +212,9 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
 
             {dispute && (
               <div className={`iw-dispute ${dispute.verified ? 'verified' : ''}`}>
-                <div className="iw-dispute-head">⚖️ <b>{dispute.headline}</b><span>{dispute.verified ? 'checked by the in-browser model' : 'tone differs — not yet checked'}</span></div>
-                <div className="iw-side pos">“{dispute.a}” <cite>— {sourceLabel(dispute.aSource)}</cite></div>
-                <div className="iw-side neg">“{dispute.b}” <cite>— {sourceLabel(dispute.bSource)}</cite></div>
+                <div className="iw-dispute-head">⚖️ <b>{dispute.headline}</b><span>{dispute.verified ? 'checked by the in-browser model' : 'tone differs, not yet checked'}</span></div>
+                <div className="iw-side pos">“{dispute.a}” <cite>{sourceLabel(dispute.aSource)}</cite></div>
+                <div className="iw-side neg">“{dispute.b}” <cite>{sourceLabel(dispute.bSource)}</cite></div>
                 {dispute.condition && <div className="iw-cond">→ {dispute.condition}</div>}
               </div>
             )}
@@ -226,7 +228,7 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
                   ))}
                 </div>
                 {(justReported || myReports.length > 0) && (
-                  <div className="iw-report-done">✓ {myReports.length || 1} report{(myReports.length || 1) > 1 ? 's' : ''} from you — counted in the Truth lens and evidence badges.</div>
+                  <div className="iw-report-done">✓ {myReports.length || 1} report{(myReports.length || 1) > 1 ? 's' : ''} from you, counted in the Truth lens and evidence badges.</div>
                 )}
               </div>
             )}

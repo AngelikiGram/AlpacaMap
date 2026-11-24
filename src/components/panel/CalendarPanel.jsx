@@ -358,10 +358,10 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
 
   return(
     <div>
-      {sorted.length===0&&<p className="panel-hint">No days yet. Add a day below — or type a trip like “3 days in Rome, love food” into the box on the home screen.</p>}
+      {sorted.length===0&&<p className="panel-hint">No days yet. Add a day below, or type a trip like “3 days in Rome, love food” into the box on the home screen.</p>}
       {stopWarnings.size>0&&(
         <button type="button" className="trip-check-banner" onClick={()=>setExpandedDays?.(prev=>[...new Set([...prev,...warningDays])])}>
-          ⚠ {stopWarnings.size} stop{stopWarnings.size>1?'s':''} may clash with opening hours or crowds — {warningDays.length>1?'show days':'show day'}
+          ⚠ {stopWarnings.size} stop{stopWarnings.size>1?'s':''} may clash with opening hours or crowds, {warningDays.length>1?'show days':'show day'}
         </button>
       )}
       {sorted.map(day=>{
@@ -405,7 +405,7 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
                 <div style={{flex:1, display:'flex', gap:'0.4rem', flexDirection:'column', padding:'0.2rem 0'}} onClick={e=>e.stopPropagation()}>
                   <div style={{display:'flex', gap:'0.4rem'}}>
                     <input type="date" value={editDayDate} onChange={e=>setEditDayDate(e.target.value)} style={{fontSize:'0.8rem', padding:'0.2rem 0.4rem', flex: 1}}/>
-                    <button className="btn-primary" style={{padding:'0.2rem 0.6rem', fontSize:'0.75rem', background:color}} onClick={saveEditDay}><Check size={11}/></button>
+                    <button className="btn-primary" style={{padding:'0.2rem 0.6rem', fontSize:'0.75rem', background:color}} onClick={saveEditDay} aria-label="Save day" title="Save day"><Check size={11}/></button>
                     <button className="btn-icon" style={{padding:'0.2rem 0.4rem'}} onClick={()=>setEditingDayId(null)}><X size={11}/></button>
                   </div>
                   <input type="text" value={editDayLoc} onChange={e=>setEditDayLoc(e.target.value)} style={{fontSize:'0.8rem', padding:'0.2rem 0.4rem'}} placeholder="Location..." list="saved-locations"/>
@@ -435,12 +435,12 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
             </div>
             {isOpen&&(
               <div className="cal-day-body">
-                {day.events.length===0&&<div style={{fontSize:'0.78rem',color:'var(--text-secondary)',padding:'0.3rem 0 0.5rem'}}>No events yet — add one below.</div>}
+                {day.events.length===0&&<div style={{fontSize:'0.78rem',color:'var(--text-secondary)',padding:'0.3rem 0 0.5rem'}}>No events yet, add one below.</div>}
                 {isWetDay(forecastFor(day))&&(
                   <div className="rain-plan">
                     <div className="rain-plan-head">🌧 Rain likely ({forecastFor(day).precipProb??'?'}%) {!rainPlans[day.id]&&<button type="button" onClick={()=>makeRainPlan(day)}>Make a rain plan</button>}</div>
                     {rainPlans[day.id]?.loading&&<div className="rain-plan-row dim">🦙 Looking for indoor places nearby…</div>}
-                    {rainPlans[day.id]&&!rainPlans[day.id].loading&&rainPlans[day.id].swaps.length===0&&<div className="rain-plan-row dim">No outdoor stops to swap — you're covered.</div>}
+                    {rainPlans[day.id]&&!rainPlans[day.id].loading&&rainPlans[day.id].swaps.length===0&&<div className="rain-plan-row dim">No outdoor stops to swap, you're covered.</div>}
                     {rainPlans[day.id]?.swaps?.map(sw=>(
                       <div key={sw.eventId} className="rain-plan-row">
                         <span>{sw.time} <s>{sw.from}</s> → <b>{sw.to.name}</b> <em>{sw.distKm<1?`${Math.round(sw.distKm*1000)} m`:`${sw.distKm.toFixed(1)} km`} away</em></span>

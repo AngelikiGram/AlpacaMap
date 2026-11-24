@@ -112,12 +112,12 @@ export function DebatesPanel({ tripData, setTripData, onOpenTab }) {
             </div>
             <blockquote className="debate-side pos">
               <p>“{card.a.text}”</p>
-              <cite>— {sourceLabel(card.a.source)}</cite>
+              <cite>{sourceLabel(card.a.source)}</cite>
             </blockquote>
             <div className="debate-vs">vs</div>
             <blockquote className="debate-side neg">
               <p>“{card.b.text}”</p>
-              <cite>— {sourceLabel(card.b.source)}</cite>
+              <cite>{sourceLabel(card.b.source)}</cite>
             </blockquote>
             {card.condition && <div className="debate-cond"><Sparkles size={11} /> {card.condition}</div>}
             <div className="debate-q">{checked ? 'Which matches what you know?' : 'Do these two really disagree?'}</div>

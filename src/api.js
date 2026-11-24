@@ -20,12 +20,52 @@ export const searchNominatim = async (query, opts = {}) => {
   return r.json();
 };
 
-// Optional CORS proxy for scraping images from other sites (set VITE_CORS_PROXY in .env).
-// The old default, corsproxy.io, now requires an API key, so these steps are skipped unless one is set.
-const CORS_PROXY = import.meta.env.VITE_CORS_PROXY || '';
+// Place photos come only from Wikimedia Commons (directly, via Wikidata P18 or a Wikipedia thumbnail):
+// every file there has a known author and free licence, which the app shows next to the photo.
+// Web image search, scraped og:images and company logos were removed: their copyright is unknown.
+export const isWikimediaImage = (url) =>
+  typeof url === 'string' && /^https:\/\/(upload\.wikimedia\.org|commons\.wikimedia\.org)\//.test(url);
+
+// Commons file name from a Special:FilePath or upload.wikimedia.org URL (thumbnails included).
+const commonsFileName = (url) => {
+  try {
+    const u = new URL(url);
+    if (u.hostname === 'commons.wikimedia.org') {
+      const m = u.pathname.match(/\/(?:wiki\/)?(?:Special:FilePath|File:)\/?(.+)$/);
+      return m ? decodeURIComponent(m[1]) : null;
+    }
+    const parts = u.pathname.split('/').map(decodeURIComponent);
+    const i = parts.indexOf('thumb');
+    return i >= 0 ? parts[i + 3] : parts[parts.length - 1];
+  } catch { return null; }
+};
+
+const creditCache = new Map();
+const stripHtml = (s) => (s || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+
+// { author, license, page } for a Wikimedia image, from the Commons API (cached per file).
+export const fetchImageCredit = (url) => {
+  const file = isWikimediaImage(url) && commonsFileName(url);
+  if (!file) return Promise.resolve(null);
+  if (!creditCache.has(file)) {
+    creditCache.set(file, fetch(`https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent('File:' + file)}&prop=imageinfo&iiprop=extmetadata&format=json&origin=*`, { signal: AbortSignal.timeout(6000) })
+      .then(r => r.json())
+      .then(j => {
+        const pg = Object.values(j?.query?.pages || {})[0];
+        const md = pg?.imageinfo?.[0]?.extmetadata || {};
+        return {
+          author: stripHtml(md.Artist?.value) || 'Unknown author',
+          license: stripHtml(md.LicenseShortName?.value) || 'see file page',
+          page: `https://commons.wikimedia.org/wiki/${encodeURIComponent('File:' + file)}`,
+        };
+      })
+      .catch(() => ({ author: 'Wikimedia Commons', license: 'see file page', page: `https://commons.wikimedia.org/wiki/${encodeURIComponent('File:' + file)}` })));
+  }
+  return creditCache.get(file);
+};
 
 export const fetchPlaceImage = async (osmTags, name, type, cityName) => {
-  if (osmTags?.image && /^https?:\/\//.test(osmTags.image)) return osmTags.image;
+  if (isWikimediaImage(osmTags?.image)) return osmTags.image;
 
   const phase1 = await Promise.race([
     (async () => {
@@ -71,59 +111,6 @@ export const fetchPlaceImage = async (osmTags, name, type, cityName) => {
     })(),
     new Promise(resolve => setTimeout(() => resolve(null), 4000)),
   ]);
-  if (phase1) return phase1;
-
-  try {
-    const q = [name, cityName].filter(Boolean).join(' ');
-    // api.duckduckgo.com allows browser requests directly — no proxy needed
-    const targetUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1&skip_disambig=1`;
-    const j = await fetch(targetUrl, { signal: AbortSignal.timeout(5000) }).then(r => r.json());
-    if (j?.Image && /^https?:\/\//.test(j.Image)) return j.Image;
-  } catch {}
-
-  if (CORS_PROXY && osmTags?.website) {
-    try {
-      const html = await fetch(
-        `${CORS_PROXY}${encodeURIComponent(osmTags.website)}`,
-        { signal: AbortSignal.timeout(6000) }
-      ).then(r => r.text());
-      const m = html.match(/property="og:image"\s+content="([^"]+)"/i) ||
-                html.match(/content="([^"]+)"\s+property="og:image"/i) ||
-                html.match(/name="twitter:image"\s+content="([^"]+)"/i) ||
-                html.match(/content="([^"]+)"\s+name="twitter:image"/i);
-      if (m?.[1] && /^https?:\/\//.test(m[1])) return m[1];
-    } catch {}
-  }
-
-  if (CORS_PROXY) try {
-    const query = [name, type, cityName].filter(Boolean).join(' ');
-    const encoded = encodeURIComponent(query);
-    const proxy = CORS_PROXY;
-    const html = await fetch(
-      `${proxy}${encodeURIComponent(`https://duckduckgo.com/?q=${encoded}&iax=images&ia=images`)}`,
-      { signal: AbortSignal.timeout(5000) }
-    ).then(r => r.text());
-    const vqd = html.match(/\bvqd=([\d-]+)/)?.[1] || html.match(/"vqd":"([^"]+)"/)?.[1];
-    if (vqd) {
-      const data = await fetch(
-        `${proxy}${encodeURIComponent(`https://duckduckgo.com/i.js?q=${encoded}&vqd=${encodeURIComponent(vqd)}&f=,,,,,&p=1&o=json`)}`,
-        { signal: AbortSignal.timeout(5000) }
-      ).then(r => r.json());
-      const img = data?.results?.[0]?.thumbnail || data?.results?.[0]?.image;
-      if (img && /^https?:\/\//.test(img)) return img;
-    }
-  } catch {}
-
-  if (osmTags?.website) {
-    try {
-      const domain = new URL(osmTags.website).hostname.replace(/^www\./, '');
-      const res = await fetch(`https://logo.clearbit.com/${domain}`, { signal: AbortSignal.timeout(4000) });
-      if (res.ok && res.headers.get('content-type')?.startsWith('image/')) {
-        return `https://logo.clearbit.com/${domain}`;
-      }
-    } catch {}
-  }
-
-  return null;
+  return isWikimediaImage(phase1) ? phase1 : null;
 };
 

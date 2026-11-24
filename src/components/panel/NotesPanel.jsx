@@ -2,6 +2,10 @@ import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Pencil, Eye, Trash2, X, Maximize2 } from 'lucide-react';
 
+// Notes are shown with simple markup (==highlight==, *bold*). The text is escaped first, so HTML or scripts
+// in a note (for example from an imported trip file) are shown as text and never run.
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 export const NotesPanel=({tripData,setTripData})=>{
   const[editModes, setEditModes]=useState({}); // { [key]: boolean }
   const[activeModalNote, setActiveModalNote]=useState(null); // key of note open in modal
@@ -81,7 +85,7 @@ export const NotesPanel=({tripData,setTripData})=>{
   // Helper to render parsed view mode lines (todos, highlight ==text==, bold)
   const renderNoteContent = (key, text, bg) => {
     if (!text.trim()) {
-      return <div style={{ fontStyle: 'italic', opacity: 0.45, fontSize: '0.9rem' }}>Empty note — click or Edit below to write.</div>;
+      return <div style={{ fontStyle: 'italic', opacity: 0.45, fontSize: '0.9rem' }}>Empty note, click or Edit below to write.</div>;
     }
 
     return text.split('\n').map((line, idx) => {
@@ -92,7 +96,7 @@ export const NotesPanel=({tripData,setTripData})=>{
         const contentText = todoMatch[3];
         
         // Highlight ==text== inside todo item
-        const htmlContent = contentText
+        const htmlContent = escapeHtml(contentText)
           .replace(/==(.*?)==/g, '<mark style="background: rgba(252, 211, 77, 0.7); padding: 0 4px; border-radius: 2px; border: 1px dashed rgba(0,0,0,0.1)">$1</mark>')
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>');
 
@@ -142,7 +146,7 @@ export const NotesPanel=({tripData,setTripData})=>{
       }
 
       // Regular line: parse highlights and bold
-      const htmlContent = line
+      const htmlContent = escapeHtml(line)
         .replace(/==(.*?)==/g, '<mark style="background: rgba(252, 211, 77, 0.7); padding: 0 4px; border-radius: 2px; border: 1px dashed rgba(0,0,0,0.1)">$1</mark>')
         .replace(/\*(.*?)\*/g, '<strong>$1</strong>');
 
@@ -272,9 +276,6 @@ export const NotesPanel=({tripData,setTripData})=>{
 
   return(
     <div>
-      {/* Load hand-drawn font from Google Fonts */}
-      <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet" />
-      
       <style>{`
         .post-it-grid {
           display: grid;

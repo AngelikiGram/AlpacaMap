@@ -262,8 +262,8 @@ function StatCards({ stats, dark }) {
   const items = [
     { icon: <MapPin size={13}/>,       label:'Destinations', value: stats.locations.length,                                                    color:'#3b82f6' },
     { icon: <Bookmark size={13}/>,     label:'Saved places', value: stats.totalPlaces,                                                         color:'#8b5cf6' },
-    { icon: <CalendarDays size={13}/>, label:'Days planned', value: stats.totalDays > 0 ? `${stats.activeDays}/${stats.totalDays}` : '—',      color:'#10b981' },
-    { icon: <Route size={13}/>,        label:'Distance',     value: stats.totalKm > 0 ? `${Math.round(stats.totalKm).toLocaleString()} km` : '—', color:'#f59e0b' },
+    { icon: <CalendarDays size={13}/>, label:'Days planned', value: stats.totalDays > 0 ? `${stats.activeDays}/${stats.totalDays}` : '-',      color:'#10b981' },
+    { icon: <Route size={13}/>,        label:'Distance',     value: stats.totalKm > 0 ? `${Math.round(stats.totalKm).toLocaleString()} km` : '-', color:'#f59e0b' },
   ];
   return (
     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', marginBottom:'18px' }}>
@@ -414,7 +414,7 @@ function ExpandedModal({ onClose, tripData, setTripData, tripId, activeCity, sav
         const parsed = JSON.parse(ev.target.result);
         // Support both v2 bundle format and legacy plain tripData
         const td = parsed.version === 2 ? parsed.tripData : parsed;
-        if (!td?.locations) { alert('Invalid trip file — no locations found.'); return; }
+        if (!td?.locations) { alert('Invalid trip file, no locations found.'); return; }
         if (setTripData) setTripData(td);
         // Restore extra localStorage keys if present
         if (parsed.extras) {
@@ -532,7 +532,7 @@ function ExpandedModal({ onClose, tripData, setTripData, tripId, activeCity, sav
                     <span style={{ fontSize:'1.6rem', fontWeight:800, color:accent }}>{(savedPlaces.length * 1.4).toFixed(1)}</span>
                     <span style={{ fontSize:'0.8rem', color:'#64748b' }}>km²</span>
                   </div>
-                  <div style={{ fontSize:'0.65rem', color:'#94a3b8', marginTop:'3px' }}>Estimated area — <strong style={{color:'#475569'}}>City-Sprawling</strong> style</div>
+                  <div style={{ fontSize:'0.65rem', color:'#94a3b8', marginTop:'3px' }}>Estimated area, <strong style={{color:'#475569'}}>City-Sprawling</strong> style</div>
                 </div>
 
               </>)}

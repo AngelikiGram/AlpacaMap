@@ -30,7 +30,6 @@
     "@huggingface/transformers": "^4.3.2",
     "@mlc-ai/web-llm": "^0.2.89",
     "leaflet": "^1.9.4",
-    "leaflet-geosearch": "^4.4.0",
     "lucide-react": "^1.11.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
