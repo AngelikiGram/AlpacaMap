@@ -2,6 +2,7 @@ import { useMemo, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Activity, MapPin, Bookmark, CalendarDays, Route, TrendingUp, Brain, ShieldAlert, Sparkles, Navigation, X, Maximize2, ChevronDown, ChevronUp, Download, Upload } from 'lucide-react';
 import { getCityColor, getDistanceKm, getTypeDetails } from '../../utils';
+import { HIDE_CONFLICTS } from '../../studyMode';
 
 // ── data helpers ───────────────────────────────────────────────────────────
 
@@ -515,6 +516,7 @@ function ExpandedModal({ onClose, tripData, setTripData, tripId, activeCity, sav
                 </div>
 
                 {/* Scatter */}
+                {!HIDE_CONFLICTS && (
                 <div style={card(false)}>
                   <div style={{ fontSize:'0.72rem', fontWeight:700, color:'#0f172a', marginBottom:'3px', display:'flex', alignItems:'center', gap:'6px' }}>
                     <ShieldAlert size={13} color="#94a3b8"/> Source Conflict vs Authority
@@ -524,6 +526,7 @@ function ExpandedModal({ onClose, tripData, setTripData, tripId, activeCity, sav
                   </div>
                   <ScatterPlot data={insights.scatterData} accent={accent} dark={false}/>
                 </div>
+                )}
 
                 {/* Footprint */}
                 <div style={card(false)}>

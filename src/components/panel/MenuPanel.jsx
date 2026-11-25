@@ -1,6 +1,7 @@
 import { TABS } from '../../utils';
 import { ChevronRight, Compass, Scale } from 'lucide-react';
 import { QuickPlanBox } from './QuickPlanBox.jsx';
+import { HIDE_CONFLICTS } from '../../studyMode';
 
 // "What do sources say about…": one click opens the map's "Do sources agree?" panel with that topic expanded
 const ASK_TOPICS = ['Safety & Health', 'Transport', 'Food & Drink', 'Money & Costs', 'Climate', 'Nightlife'];
@@ -44,12 +45,12 @@ export const MenuPanel = ({ setActiveTab, gcUndiscovered, debateCount = 0, onApp
         <button type="button" onClick={onNewTrip}>Start empty</button>
       </div>
     )}
-    <AskSources hasKnowledge={hasKnowledge} />
+    {!HIDE_CONFLICTS && <AskSources hasKnowledge={hasKnowledge} />}
     {SECTIONS.map(section => (
       <section key={section.title} className="menu-section">
         <h3 className="menu-section-title">{section.title}</h3>
         <div className="menu-list">
-          {section.tabs.map(id => TABS.find(t => t.id === id)).filter(Boolean).map(tab => {
+          {section.tabs.filter(id => !(HIDE_CONFLICTS && id === 'debates')).map(id => TABS.find(t => t.id === id)).filter(Boolean).map(tab => {
             const badge = badgeFor(tab.id, { gcUndiscovered, debateCount });
             return (
               <button key={tab.id} type="button" className="menu-item" onClick={() => setActiveTab(tab.id)}>

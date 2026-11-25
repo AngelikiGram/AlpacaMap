@@ -5,6 +5,7 @@ import { TruthLensLayer, TruthLensLegend, TimeLensLayer, TimeLensControl } from 
 import { lensPoints, useTruthLens, useTimeLens } from './lensData';
 import { buildDebates, answeredKeys } from '../../knowledge/debates';
 import { buildTopicLens } from '../../knowledge/controversy';
+import { HIDE_CONFLICTS } from '../../studyMode';
 import { loadBundledOsm, osmSlugFor } from '../../knowledge/bundled';
 import { Scale, Sun } from 'lucide-react';
 import { getTheme, setTheme } from '../../theme.js';
@@ -472,7 +473,8 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
   const [nbrCity, setNbrCity] = useState('');
   const [showKnowledgeOverlay, setShowKnowledgeOverlay] = useState(false);
   // Lenses: 'truth' (where sources disagree) | 'time' (open / closed / busy at a time) | null
-  const [lensMode, setLensMode] = useState(null);
+  const [lensState, setLensMode] = useState(null);
+  const lensMode = HIDE_CONFLICTS && lensState === 'truth' ? null : lensState;
   const todayIso = new Date().toISOString().slice(0, 10);
   const [lensDate, setLensDate] = useState(todayIso);
   const [lensMinutes, setLensMinutes] = useState(() => Math.min(23 * 60, Math.max(6 * 60, Math.round((new Date().getHours() * 60 + new Date().getMinutes()) / 30) * 30)));
@@ -657,7 +659,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
 
   // Pre-compute overlay panel stats, avoids 3 separate .filter() calls inside JSX on every render
   const evidenceMap = useMemo(() => buildPlaceEvidence(knowledgeGraph?.nodes || [], knowledgeGraph?.verified, { cityNames: (locations || []).map(l => l.name) }), [knowledgeGraph?.nodes, knowledgeGraph?.verified, locations]);
-  const evidenceLevelFor = useCallback((name) => findEvidence(name, evidenceMap)?.level || null, [evidenceMap]);
+  const evidenceLevelFor = useCallback((name) => (HIDE_CONFLICTS ? null : findEvidence(name, evidenceMap)?.level || null), [evidenceMap]);
 
   // ── Lenses ──
   const lensPts = useMemo(() => (lensMode ? lensPoints(locations, activeCity) : []), [lensMode, locations, activeCity]);
@@ -1403,10 +1405,12 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
 
       {/* Map Controls */}
       <div className="map-layer-switcher">
-        <button className={`layer-toggle-btn lens-btn ${lensMode === 'truth' ? 'on' : ''}`} onClick={() => setLensMode((m) => (m === 'truth' ? null : 'truth'))}
-          title="Truth lens: colour the map by how much travel sources agree or disagree" aria-pressed={lensMode === 'truth'}>
-          <Scale size={15} /><span className="layer-toggle-label">Truth lens</span>
-        </button>
+        {!HIDE_CONFLICTS && (
+          <button className={`layer-toggle-btn lens-btn ${lensMode === 'truth' ? 'on' : ''}`} onClick={() => setLensMode((m) => (m === 'truth' ? null : 'truth'))}
+            title="Truth lens: colour the map by how much travel sources agree or disagree" aria-pressed={lensMode === 'truth'}>
+            <Scale size={15} /><span className="layer-toggle-label">Truth lens</span>
+          </button>
+        )}
         <button className={`layer-toggle-btn lens-btn ${lensMode === 'time' ? 'on' : ''}`} onClick={() => setLensMode((m) => (m === 'time' ? null : 'time'))}
           title="Time lens: what is open, closed or busy at a chosen time" aria-pressed={lensMode === 'time'}>
           <Clock size={15} /><span className="layer-toggle-label">Time</span>

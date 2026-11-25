@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import EvidenceBadge from './EvidenceBadge';
 import { buildPlaceEvidence, findEvidence } from '../../knowledge/evidence';
 import { pickDisputePair, disputeHeadline, sourceLabel } from '../../knowledge/controversy';
+import { HIDE_CONFLICTS } from '../../studyMode';
 import { QUICK_REPORTS, quickReport, reportsFor } from '../../knowledge/travellerReports';
 
 
@@ -52,7 +53,7 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
   }, [allCityNames]);
 
   const placeEvidence = useMemo(() => {
-    if (!knowledgeGraphNodes?.length || !place?.name || place.isCity) return null;
+    if (HIDE_CONFLICTS || !knowledgeGraphNodes?.length || !place?.name || place.isCity) return null;
     return findEvidence(place.name, buildPlaceEvidence(knowledgeGraphNodes, knowledgeGraphVerified, { cityNames: allCityNames }));
   }, [knowledgeGraphNodes, knowledgeGraphVerified, place?.name, place?.isCity, allCityNames]);
 
