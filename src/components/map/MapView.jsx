@@ -15,7 +15,7 @@ import { MapContainer, TileLayer, Marker, Tooltip, Polyline, Circle, Polygon, us
 import L from 'leaflet';
 import { Navigation, MapPin, SlidersHorizontal, X, ChevronDown, Check, Pencil, Layers, Clock, Moon, Eye, Star, Brain } from 'lucide-react';
 
-import { getCityColor, MAP_LAYERS, getTypeDetails, createDayStopIcon, createPreviewIcon, getAllMapPoints, buildArc, getDistanceKm } from "../../utils.jsx";
+import { getCityColor, MAP_LAYERS, getTypeDetails, createDayStopIcon, createPreviewIcon, getAllMapPoints, buildArc, getDistanceKm, spreadByQuality } from "../../utils.jsx";
 import { INTEREST_CATEGORIES } from "../../config.jsx";
 import { MapBoundsTracker, MapZoomTracker, MapClickHandler, MapFlyController, SmartMapController } from "../map/MapControllers.jsx";
 import { MapSearchBar } from "../map/MapSearchBar.jsx";
@@ -1069,8 +1069,8 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
 
               visibleCats.forEach(cat => {
                 let recsForCat = activeCity.recommendations.filter(r => r.type === cat.value && r.name.toLowerCase().includes(recFilterText.toLowerCase()));
-                // Sort by quality score descending, then distance
-                recsForCat = recsForCat.sort((a, b) => (b._qualityScore || 0) - (a._qualityScore || 0) || (a.distanceKm - b.distanceKm));
+                // Best places first, spread over the whole search area (see spreadByQuality)
+                recsForCat = spreadByQuality(recsForCat);
                 // Filter by quality threshold (0 = show all)
                 if (poiQualityThreshold > 0) {
                   recsForCat = recsForCat.filter(r => (r._qualityScore || 0) >= poiQualityThreshold);

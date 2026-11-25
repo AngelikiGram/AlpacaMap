@@ -156,6 +156,42 @@ export const detectOSMCategory = (tags, requestedCategories) => {
   return requestedCategories[0] || 'Attractions';
 };
 
+/**
+ * Orders places so that the first few cover the whole search area: the best place (quality score, then
+ * distance) of every ~1.5 km cell first, then the second best of every cell, and so on. A plain quality ranking
+ * puts all top places in the most famous district and leaves the rest of the circle empty.
+ */
+export const spreadByQuality = (places) => {
+  const better = (a, b) => (b._qualityScore || 0) - (a._qualityScore || 0) || (a.distanceKm - b.distanceKm);
+  const cells = new Map();
+  for (const p of places) {
+    const key = Array.isArray(p.coords) ? `${Math.floor(p.coords[0] / 0.014)},${Math.floor(p.coords[1] / 0.022)}` : '?';
+    if (!cells.has(key)) cells.set(key, []);
+    cells.get(key).push(p);
+  }
+  // Cell order: best place first; among cells with equally good places, the one farthest from the cells
+  // already taken (farthest-point order), so the first pins spread over the whole circle
+  const remaining = [...cells.values()].map((l) => l.sort(better));
+  const quality = (l) => l[0]._qualityScore || 0;
+  const pos = (l) => (Array.isArray(l[0].coords) ? l[0].coords : [0, 0]);
+  const lists = [];
+  const minDist = new Map(remaining.map((l) => [l, Infinity]));
+  while (remaining.length) {
+    let pick = 0;
+    for (let i = 1; i < remaining.length; i++) {
+      const a = remaining[i], b = remaining[pick];
+      if (quality(a) > quality(b) || (quality(a) === quality(b) && minDist.get(a) > minDist.get(b))) pick = i;
+    }
+    const chosen = remaining.splice(pick, 1)[0];
+    lists.push(chosen);
+    const [cl, co] = pos(chosen);
+    for (const l of remaining) { const [la, lo] = pos(l); minDist.set(l, Math.min(minDist.get(l), Math.hypot(la - cl, (lo - co) * 0.64))); }
+  }
+  const out = [];
+  for (let i = 0; out.length < places.length; i++) for (const l of lists) if (i < l.length) out.push(l[i]);
+  return out;
+};
+
 /** Up to n places spread evenly over the area (round robin over a ~2 km grid), not just the nearest n. */
 export const spreadSample = (places, n) => {
   if (places.length <= n) return places;
@@ -494,7 +530,7 @@ const overpassCache = {
 };
 
 // Restore cache from sessionStorage (survives page navigation, cleared on tab close)
-const OVERPASS_CACHE_KEY = 'alpacamap_overpass_v9';
+const OVERPASS_CACHE_KEY = 'alpacamap_overpass_v10'; // v10: bundled extracts no longer mark areas as searched
 const OVERPASS_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 // Purge all old versioned cache keys so stale data never bleeds through
 try {
@@ -530,46 +566,21 @@ const persistCache = () => {
   } catch {} // ignore quota errors
 };
 
+// Places from a bundled extract are shown at once. The area is not marked as searched: the extracts cover
+// only a few km around the centre (a few large parks and outlines reach far beyond it), so the live search
+// still runs and fills the rest of the circle.
 export const seedOverpassElements = (elements) => {
   if (!elements || !Array.isArray(elements)) return;
   for (const el of elements) {
-    if (el && el.id != null) {
-      overpassCache.elements.set(el.id, el);
-    }
-  }
-  if (elements.length > 0) {
-    let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
-    let hasCoords = false;
-    for (const el of elements) {
-      const lat = el.lat ?? el.center?.lat;
-      const lon = el.lon ?? el.center?.lon;
-      if (lat != null && lon != null) {
-        if (lat < minLat) minLat = lat;
-        if (lat > maxLat) maxLat = lat;
-        if (lon < minLon) minLon = lon;
-        if (lon > maxLon) maxLon = lon;
-        hasCoords = true;
-      }
-    }
-    if (hasCoords) {
-      const allCats = [
-        'Restaurants', 'Coffee', 'Museums', 'Art', 'Parks', 'Shopping',
-        'Attractions', 'Hiking', 'Viewpoints', 'Beaches', 'Camping', 'Historic'
-      ];
-      // Mark this box as cached for all categories
-      overpassCache.queries.push({
-        south: minLat - 0.01,
-        north: maxLat + 0.01,
-        west: minLon - 0.01,
-        east: maxLon + 0.01,
-        categories: new Set(allCats)
-      });
-    }
+    if (el && el.id != null) overpassCache.elements.set(el.id, el);
   }
   persistCache();
 };
 
 let currentAbortController = null;
+const overpassServerDownUntil = new Map();   // url -> time until which the server is skipped
+/** "Try again": ask every server again, also those that refused a moment ago. */
+export const resetOverpassServers = () => overpassServerDownUntil.clear();
 
 export const getCachedElementsInView = (bounds, categories) => {
   const { south, west, north, east } = bounds;
@@ -587,7 +598,7 @@ export const getCachedElementsInView = (bounds, categories) => {
   return result;
 };
 
-export const searchOverpass = async (center, radiusKm, categories) => {
+export const searchOverpass = async (center, radiusKm, categories, { onProgress } = {}) => {
   const lat = Array.isArray(center) ? center[0] : (center ? (center.lat ?? center.latitude) : null);
   const lon = Array.isArray(center) ? center[1] : (center ? (center.lng ?? center.lon ?? center.longitude) : null);
 
@@ -630,114 +641,119 @@ export const searchOverpass = async (center, radiusKm, categories) => {
     return result;
   };
 
-  // Only fetch categories not already cached, a cached query covers our area if its bbox contains our actual search bbox
-  const uncachedCats = categories.filter(cat =>
-    !overpassCache.queries.some(q =>
-      q.categories?.has(cat) &&
-      q.south <= south && q.north >= north &&
-      q.west <= west && q.east >= east
-    )
-  );
+  // The circle is fetched in tiles: one query for a whole 10 km city square times out on the public
+  // servers, small tiles do not. Each finished tile is recorded as searched (so it is not asked again)
+  // and reported through onProgress, so places appear on the map tile by tile.
+  const perSide = radiusKm <= 2 ? 1 : radiusKm <= 6 ? 2 : 3;
+  const tileBoxes = [];
+  for (let i = 0; i < perSide; i++) for (let j = 0; j < perSide; j++) {
+    tileBoxes.push({
+      south: qSouth + (qNorth - qSouth) * i / perSide, north: qSouth + (qNorth - qSouth) * (i + 1) / perSide,
+      west: qWest + (qEast - qWest) * j / perSide, east: qWest + (qEast - qWest) * (j + 1) / perSide,
+    });
+  }
+  const covered = (t, cat) => overpassCache.queries.some((q) => q.categories?.has(cat) && q.south <= t.south && q.north >= t.north && q.west <= t.west && q.east >= t.east);
+  const todo = tileBoxes.map((t) => ({ ...t, cats: categories.filter((cat) => !covered(t, cat)) })).filter((t) => t.cats.length);
 
-  if (uncachedCats.length === 0) {
+  if (todo.length === 0) {
     return { elements: getCachedElements(), isFresh: true };
   }
 
-  // Create a new abort controller for this request (don't abort previous, allow parallel fetches to complete)
+  // A new search replaces the previous one: its remaining tiles would only hold up this one
+  currentAbortController?.abort();
   currentAbortController = new AbortController();
   const signal = currentAbortController.signal;
 
-  const bbox = `(${qSouth},${qWest},${qNorth},${qEast})`;
-
-  // Parks/beaches/hiking are stored as way+relation in OSM, must use nwr.
-  // All other categories are nodes or ways → nw is sufficient and much faster.
-  // Splitting into two parallel queries prevents a slow nwr from blocking everything.
+  // Parks/beaches/hiking are stored as way+relation in OSM, so they need nwr; the rest are nodes or ways.
   const AREA_CATS = new Set(['Parks', 'Hiking', 'Beaches', 'Camping', 'Viewpoints']);
-  const pointCats = uncachedCats.filter(c => !AREA_CATS.has(c));
-  const areaCats  = uncachedCats.filter(c =>  AREA_CATS.has(c));
-
-  // Build nw query (point categories, grouped by key for compactness)
-  const pointByKey = new Map();
-  for (const cat of pointCats) {
-    for (const [k, v] of (OVERPASS_TAGS[cat] || [])) {
-      if (!pointByKey.has(k)) pointByKey.set(k, new Set());
-      pointByKey.get(k).add(v);
+  const buildQuery = (t, cats) => {
+    const bbox = `(${t.south},${t.west},${t.north},${t.east})`;
+    const pointByKey = new Map();
+    for (const cat of cats.filter((c) => !AREA_CATS.has(c))) {
+      for (const [k, v] of (OVERPASS_TAGS[cat] || [])) {
+        if (!pointByKey.has(k)) pointByKey.set(k, new Set());
+        pointByKey.get(k).add(v);
+      }
     }
-  }
-  const nwLines = [...pointByKey.entries()].map(([k, vals]) => {
-    const arr = [...vals];
-    return arr.length === 1
-      ? `  nw["${k}"="${arr[0]}"]["name"]${bbox};`
-      : `  nw["${k}"~"^(${arr.join('|')})$"]["name"]${bbox};`;
-  });
-
-  // Build nwr query (area categories, one line per tag pair)
-  const nwrLines = [];
-  for (const cat of areaCats) {
-    for (const [k, v] of (OVERPASS_TAGS[cat] || [])) {
-      nwrLines.push(`  nwr["${k}"="${v}"]["name"]${bbox};`);
+    const lines = [...pointByKey.entries()].map(([k, vals]) => {
+      const arr = [...vals];
+      return arr.length === 1 ? `  nw["${k}"="${arr[0]}"]["name"]${bbox};` : `  nw["${k}"~"^(${arr.join('|')})$"]["name"]${bbox};`;
+    });
+    for (const cat of cats.filter((c) => AREA_CATS.has(c))) {
+      for (const [k, v] of (OVERPASS_TAGS[cat] || [])) lines.push(`  nwr["${k}"="${v}"]["name"]${bbox};`);
     }
-  }
+    return lines.length ? `[out:json][timeout:25];\n(\n${lines.join('\n')}\n);\nout center tags;` : null;
+  };
 
-  // Only endpoints with CORS headers, others block browser requests
+  // Public servers with CORS headers, tried in turn (racing all of them triples the load on busy servers)
   const urls = [
     'https://overpass-api.de/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter',   // often answers when the main server is overloaded
     'https://overpass.kumi.systems/api/interpreter',
   ];
-
-  const filterToView = els => els.filter(el => {
-    const lat = el.lat ?? el.center?.lat;
-    const lon = el.lon ?? el.center?.lon;
-    return lat >= south && lat <= north && lon >= west && lon <= east;
-  });
-
-  // Race all endpoints; resolve with first successful response
-  const raceOverpass = (query, cats, timeoutMs) => new Promise((resolve, reject) => {
-    if (signal?.aborted) return reject(new DOMException('Aborted', 'AbortError'));
-    const controllers = [];
-    const promises = urls.map(url => new Promise(async (res, rej) => {
-      const ctrl = new AbortController();
-      controllers.push(ctrl);
-      const onAbort = () => ctrl.abort();
-      if (signal) signal.addEventListener('abort', onAbort);
-      const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+  // Servers that refuse (rate limit, unreachable) are skipped for a minute; a timeout or 504 means the
+  // query was too large for the server, which splitting the tile helps with
+  // The whole circle gets SEARCH_TIME_MS; after that the missing tiles are reported and can be retried
+  const SEARCH_TIME_MS = 45000;
+  const deadline = Date.now() + SEARCH_TIME_MS;
+  const askServers = async (query) => {
+    let heavy = false;
+    for (const url of urls) {
+      if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+      if ((overpassServerDownUntil.get(url) || 0) > Date.now()) continue;
+      const left = deadline - Date.now();
+      if (left < 3000) break;
       try {
-        const r = await fetch(url, { method: 'POST', body: query, headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctrl.signal });
-        clearTimeout(tid);
-        if (signal) signal.removeEventListener('abort', onAbort);
-        if (r.ok) {
-          const json = await r.json();
-          if (json.elements) for (const el of json.elements) overpassCache.elements.set(el.id, el);
-          overpassCache.queries.push({ south: qSouth, west: qWest, north: qNorth, east: qEast, categories: new Set(cats) });
-          persistCache();
-          res(json.elements || []);
-        } else { rej(new Error(`${r.status}`)); }
+        const r = await fetch(url, { method: 'POST', body: query, headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: AbortSignal.any([signal, AbortSignal.timeout(Math.min(30000, left))]) });
+        if (!r.ok) { const e = new Error(`${r.status}`); e.status = r.status; throw e; }
+        const json = await r.json();
+        if (Array.isArray(json.elements)) return { els: json.elements };
       } catch (e) {
-        clearTimeout(tid);
-        if (signal) signal.removeEventListener('abort', onAbort);
-        rej(e);
-      }
-    }));
-    Promise.any(promises)
-      .then(els => { for (const c of controllers) c.abort(); resolve(els); })
-      .catch(err => { for (const c of controllers) c.abort(); reject(err); });
-  });
-
-  const fetchPromise = (async () => {
-    const allLines = [...nwLines, ...nwrLines];
-    if (allLines.length === 0) return { elements: [] };
-    // Single combined query: nw for point categories + nwr for area categories.
-    // One request avoids the 4-connection overload that caused nw to time out.
-    const q = `[out:json][timeout:30];\n(\n${allLines.join('\n')}\n);\nout center tags;`;
-    // The public servers are often overloaded: try once more after a short pause before giving up
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try { return { elements: filterToView(await raceOverpass(q, uncachedCats, 28000)) }; }
-      catch (e) {
-        if (signal.aborted || e?.name === 'AbortError') throw e;
-        if (attempt === 0) await new Promise(r => setTimeout(r, 4000));
+        if (signal.aborted) throw e;
+        if (e.status === 504 || e.name === 'TimeoutError') heavy = true;
+        else overpassServerDownUntil.set(url, Date.now() + 60000);
       }
     }
-    return { elements: getCachedElements(), failed: true };
+    return { els: null, heavy };
+  };
+
+  // A tile that timed out is split into four quarters once; those are tried again
+  const fetchTile = async (t, cats, depth = 0) => {
+    if (Date.now() > deadline - 3000) return false;
+    const query = buildQuery(t, cats);
+    if (!query) return true;
+    const { els, heavy } = await askServers(query);
+    if (els) {
+      for (const el of els) overpassCache.elements.set(el.id, el);
+      overpassCache.queries.push({ south: t.south, west: t.west, north: t.north, east: t.east, categories: new Set(cats) });
+      persistCache();
+      onProgress?.(getCachedElements());
+      return true;
+    }
+    if (!heavy || depth >= 1) return false;
+    const ms = (t.south + t.north) / 2, mw = (t.west + t.east) / 2;
+    const quarters = [
+      { south: t.south, north: ms, west: t.west, east: mw }, { south: t.south, north: ms, west: mw, east: t.east },
+      { south: ms, north: t.north, west: t.west, east: mw }, { south: ms, north: t.north, west: mw, east: t.east },
+    ];
+    let ok = true;
+    for (const q of quarters) ok = (await fetchTile(q, cats, depth + 1)) && ok;
+    return ok;
+  };
+
+  const fetchPromise = (async () => {
+    // Nearest tiles first, two at a time (the rate limiter in politeFetch allows two per server)
+    const dist = (t) => Math.hypot((t.south + t.north) / 2 - lat, (t.west + t.east) / 2 - lon);
+    const queue = [...todo].sort((a, b) => dist(a) - dist(b));
+    let failedTiles = 0;
+    const worker = async () => {
+      while (queue.length) {
+        const t = queue.shift();
+        if (!(await fetchTile(t, t.cats))) failedTiles++;
+      }
+    };
+    await Promise.all([worker(), worker()]);
+    return { elements: getCachedElements(), failed: failedTiles > 0, failedTiles, totalTiles: todo.length };
   })();
 
   return { elements: getCachedElements(), isFresh: false, fetchPromise };

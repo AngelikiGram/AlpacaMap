@@ -32,7 +32,7 @@ import { makeDemoTrip } from "./demo/demoTrip";
 import "./features.css";
 const KnowledgePanel = lazy(() => import('./components/panel/KnowledgePanel.jsx'));
 const AnalyticsPanel = lazy(() => import('./components/panel/AnalyticsPanel.jsx'));
-import { SENTINEL_NONE, loadTrips, loadPrefs, saveTrips, savePrefs, getDistanceKm, INITIAL_TRIP, TABS, spreadSample } from "./utils";
+import { SENTINEL_NONE, loadTrips, loadPrefs, saveTrips, savePrefs, INITIAL_TRIP, TABS, spreadSample } from "./utils";
 import { fetchPlaceImage, isWikimediaImage } from "./api";
 
 let DefaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow, iconSize: [25,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
@@ -178,6 +178,14 @@ export default function App(){
     const on=(e)=>{ setKgAutoStatus({text:e.detail,done:true}); clearTimeout(timer); timer=setTimeout(()=>setKgAutoStatus(null),7000); };
     window.addEventListener('alpacamap-notice',on);
     return()=>{ window.removeEventListener('alpacamap-notice',on); clearTimeout(timer); };
+  },[]);
+
+  // Live place search for the map area (LocationPlannerPanel): shown as a small status on the map
+  const [placesStatus,setPlacesStatus]=useState({state:'idle'});
+  useEffect(()=>{
+    const on=(e)=>setPlacesStatus(e.detail||{state:'idle'});
+    window.addEventListener('alpacamap-places',on);
+    return()=>window.removeEventListener('alpacamap-places',on);
   },[]);
 
   // Persist map layer preference
@@ -497,6 +505,13 @@ export default function App(){
         onOpenKnowledge={()=>{ setPanelOpen(true); setActiveTab('knowledge'); }}
       />
       {kgAutoStatus && <div className={`alpaca-toast ${kgAutoStatus.done?'done':''}`} role="status">{kgAutoStatus.text}</div>}
+      {placesStatus.state==='loading' && <div className="places-loading" role="status"><span className="places-spinner" aria-hidden="true"/>Loading places in the circle…</div>}
+      {placesStatus.state==='partial' && (
+        <div className="places-loading partial" role="status">
+          {placesStatus.missing&&placesStatus.total?`${placesStatus.missing} of ${placesStatus.total} parts of the circle could not be loaded`:'Some places in the circle could not be loaded'} (OpenStreetMap is busy).
+          <button type="button" onClick={()=>window.dispatchEvent(new CustomEvent('alpacamap-search-area'))}>Try again</button>
+        </div>
+      )}
       {tourOn && <GuidedTour steps={tourSteps} onClose={()=>{ setTourOn(false); lens(null); }} />}
       {showWelcome && tripData.demo && !tourOn && (
         <div className="welcome-card" role="dialog" aria-label="Welcome to AlpacaMap">

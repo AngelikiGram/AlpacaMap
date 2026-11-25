@@ -293,3 +293,10 @@ html[data-theme="light"] .tour-spot { box-shadow: 0 0 0 9999px rgba(15, 23, 42, 
 .dest-search-row input { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 8px; font-size: 0.9rem; }
 .dest-note { margin: 6px 8px 2px; font-size: 0.8rem; line-height: 1.45; color: var(--text-secondary); }
 .menu-example-note { margin: 0 0 12px; font-size: 0.85rem; line-height: 1.5; color: var(--text-secondary); }
+
+/* Live place search running for the map area */
+.places-loading { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); z-index: 1200; display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-size: 0.85rem; color: var(--text-primary); background: rgba(8,12,26,0.9); border: 1px solid var(--border-bright); box-shadow: var(--shadow-md); pointer-events: none; }
+.places-spinner { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.25); border-top-color: var(--accent-light); animation: places-spin 0.9s linear infinite; }
+@keyframes places-spin { to { transform: rotate(360deg); } }
+.places-loading.partial { pointer-events: auto; border-color: rgba(251,191,36,0.5); }
+.places-loading button { margin-left: 4px; padding: 3px 10px; border-radius: 999px; border: 0; font: inherit; font-size: 0.8rem; font-weight: 600; color: #0b1020; background: #fbbf24; cursor: pointer; }

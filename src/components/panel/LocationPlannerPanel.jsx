@@ -4,9 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { MapPin, ChevronRight, Plus, ArrowLeft, Trash2, Loader2, ExternalLink, ChevronDown, ChevronUp, Globe, TreePine, MountainSnow, Droplets, Building } from 'lucide-react';
 
 
-import { getCityColor, getTypeDetails, classifyWeather, processOverpassResults, scorePlaceQuality, detectLocationType, getDistanceKm, searchOverpass, getCachedElementsInView, seedOverpassElements } from "../../utils.jsx";
+import { getCityColor, getTypeDetails, classifyWeather, spreadByQuality, resetOverpassServers, processOverpassResults, scorePlaceQuality, detectLocationType, getDistanceKm, searchOverpass, getCachedElementsInView, seedOverpassElements } from "../../utils.jsx";
 import { searchNominatim } from "../../api.js";
-import { OVERPASS_TAGS, INTEREST_CATEGORIES, LOCATION_TYPE_PRESETS, ENTITY_PROFILES } from "../../config.jsx";
+import { INTEREST_CATEGORIES, LOCATION_TYPE_PRESETS, ENTITY_PROFILES } from "../../config.jsx";
 import { LiveImage } from "../shared/LiveImage.jsx";
 import { PortalDropdown } from "../shared/PortalDropdown.jsx";
 import { WeatherWidget } from "../shared/WeatherWidget.jsx";
@@ -57,7 +57,6 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
   const findRecsRef  = useRef(null);
   const panTimerRef  = useRef(null);
   const lastSearchCenterRef = useRef(null);
-  const preloadTimerRef = useRef(null);
   const [cityWeather, setCityWeather] = useState(null);
   const [expandedPlaces, setExpandedPlaces] = useState({});
   const [catPages, setCatPages] = useState({});  // cat.value → number of pages shown (each page = base limit)
@@ -139,32 +138,12 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
     }
   }, [activeCity?.id, mapBounds != null]);
 
-  // Background preloader, silently fetch ALL categories into cache so Parks/Historic
-  // are instant when the user enables them, without blocking the main search
+  // "Try again" on the map (App) searches the current circle again
   useEffect(() => {
-    clearTimeout(preloadTimerRef.current);
-    if (!activeCity?.coords || !mapBounds) return;
-    preloadTimerRef.current = setTimeout(async () => {
-      const ALL_CATS = Object.keys(OVERPASS_TAGS);
-      const locType = detectLocationType(activeCity.name);
-      const preset = new Set(LOCATION_TYPE_PRESETS[locType] || []);
-      const bgCats = ALL_CATS.filter(c => !preset.has(c)); // categories NOT in the default preset
-      if (bgCats.length === 0) return;
-      const center = mapCenter
-        ? [mapCenter.lat, mapCenter.lng]
-        : activeCity.coords;
-      // Fetch each background category one at a time to avoid hammering Overpass
-      for (const cat of bgCats) {
-        try {
-          const { fetchPromise } = await searchOverpass(center, searchRadius, [cat]);
-          if (fetchPromise) await fetchPromise;
-        } catch { /* silent, background preload failures are OK */ }
-        // Small gap between background requests to be polite to servers
-        await new Promise(r => setTimeout(r, 800));
-      }
-    }, 3000); // wait 3s so the main search completes first
-    return () => clearTimeout(preloadTimerRef.current);
-  }, [activeCity?.id, mapBounds != null]); // eslint-disable-line react-hooks/exhaustive-deps
+    const on = () => { resetOverpassServers(); lastSearchCenterRef.current = null; findRecsRef.current?.(); };
+    window.addEventListener('alpacamap-search-area', on);
+    return () => window.removeEventListener('alpacamap-search-area', on);
+  }, []);
 
   // Auto-search as the map pans to a new area or radius changes
   // Note: aiInterests changes do NOT re-query because we always fetch ALL_CATEGORIES;
@@ -310,19 +289,29 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
     setIsSearching(true);
     setLlmStatus('Querying OpenStreetMap…');
 
-    // Single call for all categories, searchOverpass builds compact grouped queries internally
-    // (nw for point types, nwr for area types) so firing multiple batches only causes rate-limiting
+    // searchOverpass fetches the circle in tiles; each finished tile is shown right away (onProgress)
     let anyLoaded = false;
+    const places = (status) => window.dispatchEvent(new CustomEvent('alpacamap-places', { detail: status }));
+    const showPartial = (elements) => {
+      if (reqId !== requestCountRef.current) return;
+      const partial = processOverpassResults({ elements }, cats, currentCenter, searchRadius, osmHardCap);
+      partial.forEach(r => scorePlaceQuality(r, tripData.aiPlan));
+      applyWeather(partial);
+      if (partial.length) { anyLoaded = true; applyResults(partial, reqId, null, null); }
+    };
     try {
-      let data = await searchOverpass(currentCenter, searchRadius, cats);
+      let data = await searchOverpass(currentCenter, searchRadius, cats, { onProgress: showPartial });
       if (reqId !== requestCountRef.current) return;
 
       if (data.fetchPromise) {
+        // The map shows the search state for the circle (App listens): loading, done, or partly failed
+        places({ state: 'loading' });
         data = await data.fetchPromise;
         if (reqId !== requestCountRef.current) return;
-        if (data.failed) lastSearchCenterRef.current = null;   // any map move retries the search
-        if (data.failed) window.dispatchEvent(new CustomEvent('alpacamap-notice', {
-          detail: 'OpenStreetMap is busy, so only part of this area has places. Move the map a little to try again.' }));
+        if (data.failed) lastSearchCenterRef.current = null;   // any map move retries the missing tiles
+        places(data.failed ? { state: 'partial', missing: data.failedTiles, total: data.totalTiles } : { state: 'idle' });
+      } else {
+        places({ state: 'idle' });
       }
 
       const results = processOverpassResults(data, cats, currentCenter, searchRadius, osmHardCap);
@@ -339,6 +328,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
       const isAbort = err.name === 'AbortError' ||
         (err instanceof AggregateError && err.errors?.every(e => e.name === 'AbortError'));
       if (!isAbort) console.warn('Overpass fetch failed:', err.message);
+      places(isAbort ? { state: 'idle' } : { state: 'partial' });
     }
 
     if (reqId === requestCountRef.current) {
@@ -546,7 +536,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
             })
             .map(cat => {
               const allForCat = activeCity.recommendations.filter(r => r.type === cat.value && r.name.toLowerCase().includes(recFilterText.toLowerCase()));
-              const sorted = allForCat.sort((a, b) => (b._qualityScore || 0) - (a._qualityScore || 0) || (a.distanceKm - b.distanceKm));
+              const sorted = spreadByQuality(allForCat);   // same order as the map pins
               const baseLimit = Math.max(1, Math.round(categoryDisplayLimit * mapMarkerLimitFactor));
               const pages = catPages[cat.value] || 1;
               const shownLimit = baseLimit * pages;
