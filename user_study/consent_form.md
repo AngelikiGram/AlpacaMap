@@ -1,11 +1,11 @@
-# Consent to take part in the TravelScout study
+# Consent to take part in the AlpacaMap study
 
-**Purpose.** We are evaluating TravelScout, a research prototype that collects travel information
+**Purpose.** We are evaluating AlpacaMap (called TravelScout in our publications), a research prototype that collects travel information
 from several online sources and shows where they disagree. We want to learn how people use it to
 plan a trip.
 
 **What you will do.** Use the app for about 30 minutes to complete short planning tasks for two
-cities, answer a few questionnaires and a short interview. Total time: about 50–60 minutes.
+cities, answer a few questionnaires and a short interview. Total time: about 50 to 60 minutes.
 
 **What we record.**
 - Your answers, task times and the buttons and views you click inside the app.
@@ -33,9 +33,9 @@ dataset. Recordings are never published and are deleted after analysis.
 - *How long:* recordings are deleted after analysis, at the latest 6 months after your session. Pseudonymised
   answers are kept for 10 years (good scientific practice) and then deleted; anonymised data may be kept and
   published without time limit.
-- *Your rights:* access, rectification, erasure, restriction, data portability and objection (Art. 15–21 GDPR).
+- *Your rights:* access, rectification, erasure, restriction, data portability and objection (Art. 15 to 21 GDPR).
   Contact the study lead with your participant number. You may also complain to the Austrian data protection
-  authority (Datenschutzbehörde, Barichgasse 40–42, 1030 Wien, dsb.gv.at).
+  authority (Datenschutzbehörde, Barichgasse 40-42, 1030 Wien, dsb.gv.at).
 
 **Contact.** Angeliki Grammatikaki, angiegram99@gmail.com
 

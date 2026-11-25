@@ -6,6 +6,7 @@ import { Plus, Trash2, X, ChevronDown, ChevronUp, Check, Pencil, Sparkles, GripV
 
 import { getCityColor, getDistanceKm } from "../../utils.jsx";
 import EvidenceBadge from "../shared/EvidenceBadge";
+import { HIDE_CONFLICTS } from "../../studyMode";
 import { buildPlaceEvidence, findEvidence } from "../../knowledge/evidence";
 import { checkItinerary, makePlaceResolver, fetchDailyForecast, isWetDay, suggestRainSwaps } from "../../planner/tripChecks";
 import { poiFromOsm } from "../../planner/quickPlan";
@@ -435,7 +436,7 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
                       <GripVertical size={11} style={{ cursor: 'grab', color: 'rgba(255,255,255,0.18)', flexShrink: 0 }} />
                       <div className="time-col" style={{display:'flex',alignItems:'center',gap:'4px'}}>{EVT_EMOJI[evt.type]||'•'} {evt.time}</div>
                       <div className="activity-col" style={{fontSize:'0.9rem'}}>{evt.title}</div>
-                      <EvidenceBadge evidence={findEvidence(evt.title,evidenceMap)}/>
+                      {!HIDE_CONFLICTS&&<EvidenceBadge evidence={findEvidence(evt.title,evidenceMap)}/>}
                       <button className="btn-icon" style={{padding:'0.2rem'}} onClick={e=>{e.stopPropagation();deleteEvt(day.id,evt.id);}}>
                         <Trash2 size={11} color="var(--danger)"/>
                       </button>

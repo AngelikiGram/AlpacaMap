@@ -12,6 +12,7 @@ import { isUsefulClaim, isJunkPlace, excerpt } from '../../knowledge/quality';
 import SourcesCredits from '../shared/SourcesCredits';
 import VerifiedConflicts from './VerifiedConflicts';
 import { summarizeVerified } from '../../knowledge/contradictions';
+import { HIDE_CONFLICTS } from '../../studyMode';
 import { credibility as credibilityOf } from '../../knowledge/credibility';
 
 // Progress messages while collecting knowledge; shown on the dev server only.
@@ -2520,7 +2521,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
         { label: 'Statements', val: nodes.length, color: '#8b5cf6' },
         { label: 'Places', val: uniquePlaces.size, color: '#3b82f6' },
         { label: 'Possible contradictions', val: conflictCount, color: conflictCount > 0 ? '#ef4444' : 'var(--text-secondary)' },
-      ].map(s => (
+      ].filter(s => !(HIDE_CONFLICTS && s.label === 'Possible contradictions')).map(s => (
         <div key={s.label} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '6px 8px', textAlign: 'center' }}>
           <div style={{ fontSize: '1.1rem', fontWeight: '800', color: s.color }}>{s.val}</div>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</div>
@@ -2608,7 +2609,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           ['graph', 'Statements', BarChart2],
           ['visual', 'Charts', GitBranch],
           ['conflicts', 'Contradiction check', AlertTriangle],
-        ].map(([id, label, Icon]) => (
+        ].filter(([id]) => !(HIDE_CONFLICTS && id === 'conflicts')).map(([id, label, Icon]) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', fontSize: '0.75rem', padding: '6px 0', background: tab === id ? 'rgba(139,92,246,0.2)' : 'transparent', color: tab === id ? '#c084fc' : 'var(--text-secondary)', border: 'none', cursor: 'pointer', fontWeight: tab === id ? '700' : '400', borderRight: id !== 'conflicts' ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
             <Icon size={10} />{label}
@@ -3340,7 +3341,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
       )}
 
       {/* ── CONFLICTS TAB ── */}
-      {tab === 'conflicts' && (
+      {tab === 'conflicts' && !HIDE_CONFLICTS && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <VerifiedConflicts nodes={rawNodes} verified={verified} onSave={saveVerified} />
           {contradictions.length > 0 && (

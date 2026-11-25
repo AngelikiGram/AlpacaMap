@@ -1,0 +1,12 @@
+{
+  "practical": ["e8397eff", "350a2299", "642e2d23", "4df062c5"],
+  "evaluative": ["98671fc5", "a12c0505", "042a5e96", "946ab8ea"],
+  "norm": [
+    {"city": "london", "a": "Pushing and rushing are seen as extremely rude", "b": "Refrain from walking slowly in tight spaces"},
+    {"city": "rome", "a": "Tipping is not generally a thing in Italy", "b": "Waiters have been known to take advantage"},
+    {"city": "paris", "a": "On the other hand, you will probably get the cold shoulder", "a_source": "wikivoyage",
+     "b": "Some of their reputation for brusqueness"},
+    {"city": "rome", "a": "Peter's in particular is known for rejecting", "b": "The dress code is strict",
+     "a_text": "St. Peter's in particular is known for rejecting tourists for uncovered knees, shoulders, midriffs, etc."}
+  ]
+}

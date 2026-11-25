@@ -57,3 +57,5 @@ details.fac { margin-top: 28px; color: var(--muted); }
 details.fac summary { cursor: pointer; }
 .spinner { width: 28px; height: 28px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
 @keyframes spin { to { transform: rotate(360deg); } }
+.q.missing, tr.missing td { outline: 1px solid var(--err); outline-offset: 4px; border-radius: 6px; }
+.slider input[data-touched="false"] { opacity: .45; }
