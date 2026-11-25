@@ -110,14 +110,12 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
       })
       .then(data => {
         if (data && Array.isArray(data.elements) && data.elements.length > 0) {
-          console.log(`Seeding ${data.elements.length} offline OSM elements for ${activeCity.name}`);
-          seedOverpassElements(data.elements);
-          // Refresh recommendations list immediately with the newly seeded cached elements
+          seedOverpassElements(data.elements, data.coverage);
           findRecsRef.current?.();
         }
       })
       .catch(() => {
-        // Safe to ignore, will fall back to live Overpass query
+        // No extract for this city: the live search covers it
       });
   }, [activeCity?.id]);
 

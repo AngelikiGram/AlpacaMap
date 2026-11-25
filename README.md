@@ -68,6 +68,11 @@ npm run preprocess                 # all cities
 npm run clean-data                 # drop unusable statements from public/preprocessed/
 ```
 
+The map places for the five bundled cities come from OpenStreetMap files, not from live queries,
+so they load at once and cover 10 km around each centre. To rebuild them, put the `.osm.pbf` files
+listed at the top of `scripts/build_osm_extracts.mjs` into `scratch/osm_src/` and run
+`node scripts/build_osm_extracts.mjs`. Outside those areas the app asks the public Overpass servers.
+
 `scripts/train_nlp.py` rebuilds the keyword and sentiment lists in `src/data/nlp_data.json`
 (`pip install -r scripts/requirements.txt`).
 

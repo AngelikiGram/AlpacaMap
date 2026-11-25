@@ -566,13 +566,17 @@ const persistCache = () => {
   } catch {} // ignore quota errors
 };
 
-// Places from a bundled extract are shown at once. The area is not marked as searched: the extracts cover
-// only a few km around the centre (a few large parks and outlines reach far beyond it), so the live search
-// still runs and fills the rest of the circle.
-export const seedOverpassElements = (elements) => {
+// Places from a bundled extract are shown at once. An extract built by scripts/build_osm_extracts.mjs
+// holds every place of the app's categories in its "coverage" square, so that square counts as searched
+// and the live search only runs for circles that reach beyond it. Older extracts without it never do.
+export const seedOverpassElements = (elements, coverage = null) => {
   if (!elements || !Array.isArray(elements)) return;
   for (const el of elements) {
     if (el && el.id != null) overpassCache.elements.set(el.id, el);
+  }
+  const { south, north, west, east } = coverage || {};
+  if ([south, north, west, east].every(Number.isFinite)) {
+    overpassCache.queries.push({ south, north, west, east, categories: new Set(Object.keys(OVERPASS_TAGS)) });
   }
   persistCache();
 };
@@ -652,7 +656,12 @@ export const searchOverpass = async (center, radiusKm, categories, { onProgress 
       west: qWest + (qEast - qWest) * j / perSide, east: qWest + (qEast - qWest) * (j + 1) / perSide,
     });
   }
-  const covered = (t, cat) => overpassCache.queries.some((q) => q.categories?.has(cat) && q.south <= t.south && q.north >= t.north && q.west <= t.west && q.east >= t.east);
+  // A tile counts as searched when its part inside the circle's box is (the padding around it is optional)
+  const covered = (t, cat) => {
+    const c = { south: Math.max(t.south, south), north: Math.min(t.north, north), west: Math.max(t.west, west), east: Math.min(t.east, east) };
+    if (c.south >= c.north || c.west >= c.east) return true;
+    return overpassCache.queries.some((q) => q.categories?.has(cat) && q.south <= c.south && q.north >= c.north && q.west <= c.west && q.east >= c.east);
+  };
   const todo = tileBoxes.map((t) => ({ ...t, cats: categories.filter((cat) => !covered(t, cat)) })).filter((t) => t.cats.length);
 
   if (todo.length === 0) {
