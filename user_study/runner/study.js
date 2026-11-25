@@ -64,7 +64,8 @@ function renderItems(items, prefix, values = {}) {
     if (q.type === 'scale') {
       const opts = [];
       for (let i = q.min; i <= q.max; i++) opts.push(`<label class="pt"><input type="radio" name="${name}" value="${i}" ${String(v) === String(i) ? 'checked' : ''}><span>${i}</span></label>`);
-      return `<fieldset class="q"><legend>${q.text}${req}</legend><div class="scale"><small>${q.lo || ''}</small>${opts.join('')}<small>${q.hi || ''}</small></div></fieldset>`;
+      // One row of equal cells; the end labels sit under the first and last value
+      return `<fieldset class="q"><legend>${q.text}${req}</legend><div class="scale" style="--n:${q.max - q.min + 1}"><div class="scale-points">${opts.join('')}</div><div class="scale-ends" aria-hidden="true"><small>${q.lo || ''}</small><small>${q.hi || ''}</small></div></div></fieldset>`;
     }
     if (q.type === 'slider') {
       return `<fieldset class="q"><legend>${q.text}</legend><div class="slider"><small>${q.lo}</small><input type="range" name="${name}" min="${q.min}" max="${q.max}" step="5" value="${v ?? 50}" data-touched="${v != null}"><small>${q.hi}</small></div></fieldset>`;

@@ -62,7 +62,7 @@ The traveller profile is the one entered in the Planner.
 - **Debate cards**: verified pairs first ("Which do you trust?"), then unchecked candidate pairs from
   `candidatePairs` with opposite tone ("Do these really disagree?"), at most 3 per place/topic.
   Answers are stored as pairs with `by: 'you'` in `knowledgeGraph.verified.pairs` and are kept when the NLI check is re-run.
-- **Learned aspects**: siding with the cautionary statement or answering "they disagree" adds +1 to that aspect
+- **Learned aspects**: siding with the cautionary statement or answering "they really disagree" adds +1 to that aspect
   (localStorage `alpacamap_aspect_weights`); relevance.js adds 0.1 per point (max 0.3).
 
 ## 7. Traveller reports (`travellerReports.js`)

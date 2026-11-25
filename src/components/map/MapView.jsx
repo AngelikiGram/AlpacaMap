@@ -409,12 +409,12 @@ function SearchResultsPanel({ data, onSelect, onClose }) {
       {/* Header */}
       <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-          <span style={{ fontSize: '0.78rem', fontWeight: '800', color: '#fff' }}>"{query}"</span>
+          <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#fff' }}>"{query}"</span>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '4px', display: 'flex' }}>
             <X size={14} />
           </button>
         </div>
-        <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.38)' }}>{results.length} places found</div>
+        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.38)' }}>{results.length} places found</div>
       </div>
       {/* Results list */}
       <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin' }}>
@@ -431,11 +431,11 @@ function SearchResultsPanel({ data, onSelect, onClose }) {
             }}
             onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.05)'}
             onMouseLeave={e => e.currentTarget.style.background='transparent'}>
-              <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: isOsm ? '#10b981' : '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.62rem', fontWeight: '800', color: '#fff', flexShrink: 0, marginTop: '1px' }}>{i+1}</div>
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: isOsm ? '#10b981' : '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: '800', color: '#fff', flexShrink: 0, marginTop: '1px' }}>{i+1}</div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: '0.76rem', fontWeight: '700', color: '#fff', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
-                {sub && <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>}
-                <span style={{ fontSize: '0.58rem', fontWeight: '700', color: isOsm ? '#34d399' : '#60a5fa', background: isOsm ? 'rgba(16,185,129,0.12)' : 'rgba(59,130,246,0.12)', padding: '1px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '3px' }}>{typeLabel}</span>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#fff', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                {sub && <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>}
+                <span style={{ fontSize: '0.72rem', fontWeight: '700', color: isOsm ? '#34d399' : '#60a5fa', background: isOsm ? 'rgba(16,185,129,0.12)' : 'rgba(59,130,246,0.12)', padding: '1px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '3px' }}>{typeLabel}</span>
               </div>
               <MapPin size={13} style={{ color: isOsm ? '#10b981' : '#3b82f6', flexShrink: 0, marginTop: '3px' }} />
             </div>
@@ -589,14 +589,29 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
     return { placeStats, cityStats };
   }, [knowledgeGraph?.nodes, cityNamesSet]);
 
-  const getClaimsForPlace = useCallback((name, isCity = false) => {
+  // Fuzzy fallback: only compare against known places that share a word with the name (same first-match order)
+  const placeWordIndex = useMemo(() => {
+    const idx = new Map(); let i = 0;
+    for (const k of knowledgeStats.placeStats.keys()) { for (const w of new Set(k.split(/\s+/))) { if (!idx.has(w)) idx.set(w, []); idx.get(w).push(i); } i++; }
+    return { idx, entries: [...knowledgeStats.placeStats.entries()] };
+  }, [knowledgeStats]);
+  const fuzzyCandidates = (name) => {
+    const hits = new Set();
+    for (const w of name.split(/\s+/)) for (const i of placeWordIndex.idx.get(w) || []) hits.add(i);
+    return [...hits].sort((a, b) => a - b).map((i) => placeWordIndex.entries[i]);
+  };
+  // Pins ask for the same names on every render; remember the answers until the statements change
+  const placeLookupCache = useMemo(() => new Map(), [knowledgeStats]); // eslint-disable-line react-hooks/exhaustive-deps
+  const cached = (key, compute) => { if (!placeLookupCache.has(key)) placeLookupCache.set(key, compute()); return placeLookupCache.get(key); };
+
+  const getClaimsForPlace = useCallback((name, isCity = false) => cached(`c|${isCity}|${name}`, () => {
     if (!name) return 0;
     const pName = name.toLowerCase().trim();
     const cleanPName = cleanNameForMatching(pName);
     let pc = knowledgeStats.placeStats.get(cleanPName)?.count || 0;
     if (pc === 0) {
       // Fuzzy substring matching fallback for OSM name variations
-      for (const [k, v] of knowledgeStats.placeStats.entries()) {
+      for (const [k, v] of fuzzyCandidates(cleanPName)) {
         if (!isGenericWord(k) && !isGenericWord(cleanPName)) {
           if (isWordMatch(cleanPName, k)) {
             pc = v.count;
@@ -607,16 +622,16 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
     }
     if (!isCity) return pc;
     return pc + (knowledgeStats.cityStats.get(pName)?.count || 0);
-  }, [knowledgeStats]);
+  }), [knowledgeStats]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const getPlaceSentimentInfo = useCallback((name, isCity = false) => {
+  const getPlaceSentimentInfo = useCallback((name, isCity = false) => cached(`s|${isCity}|${name}`, () => {
     if (!name) return null;
     const pName = name.toLowerCase().trim();
     const cleanPName = cleanNameForMatching(pName);
     let ps = knowledgeStats.placeStats.get(cleanPName);
     if (!ps) {
       // Fuzzy substring matching fallback for OSM name variations
-      for (const [k, v] of knowledgeStats.placeStats.entries()) {
+      for (const [k, v] of fuzzyCandidates(cleanPName)) {
         if (!isGenericWord(k) && !isGenericWord(cleanPName)) {
           if (isWordMatch(cleanPName, k)) {
             ps = v;
@@ -632,7 +647,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
     const pos = (cs?.pos || 0) + (ps?.pos || 0);
     const neg = (cs?.neg || 0) + (ps?.neg || 0);
     return { total: count, pos, neg, ratio: pos / (pos + neg || 1), isWarning: cs?.isWarning || ps?.isWarning || false };
-  }, [knowledgeStats]);
+  }), [knowledgeStats]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sequencePaths = useMemo(() => {
     if (!showKnowledgeOverlay || !knowledgeGraph?.nodes) return [];
@@ -852,7 +867,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
             zIndex: 1100, display: 'flex', alignItems: 'center', gap: '5px',
             background: 'rgba(8,12,26,0.88)', backdropFilter: 'blur(12px)',
             border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px',
-            color: '#fff', fontSize: '0.72rem', fontWeight: '700',
+            color: '#fff', fontSize: '0.8rem', fontWeight: '700',
             padding: '5px 10px', cursor: 'pointer', letterSpacing: '0.02em',
           }}
         >
@@ -873,11 +888,11 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
             position: 'absolute', top: '140px', right: '20px', zIndex: 1000, width: '232px',
             background: 'rgba(8,12,26,0.94)', backdropFilter: 'blur(12px)',
             border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 14px',
-            boxShadow: '0 8px 28px rgba(0,0,0,0.5)', pointerEvents: 'auto', fontSize: '0.72rem', color: 'var(--text-secondary)',
+            boxShadow: '0 8px 28px rgba(0,0,0,0.5)', pointerEvents: 'auto', fontSize: '0.8rem', color: 'var(--text-secondary)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
               <Brain size={14} color="var(--text-secondary)" />
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>What sources say · {o.city}</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>What sources say · {o.city}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               <div style={row}><span>Statements</span><strong style={{ color: 'var(--text-primary)' }}>{o.total.toLocaleString()}</strong></div>
@@ -894,7 +909,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                 {o.neu > 0 && <div style={{ flex: o.neu, background: '#64748b' }} />}
                 {o.neg > 0 && <div style={{ flex: o.neg, background: '#ef4444' }} />}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '0.66rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '0.75rem' }}>
                 <span style={{ color: '#10b981' }}>{pct(o.pos)}% positive</span>
                 <span>{pct(o.neu)}% neutral</span>
                 <span style={{ color: '#ef4444' }}>{pct(o.neg)}% negative</span>
@@ -902,7 +917,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
             </div>
 
             <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-              <div style={row} title={o.checked ? 'Checked statement by statement with the AI model (Knowledge → Conflicts)' : 'Positive and negative statements from different sources, not checked yet (Knowledge → Conflicts)'}>
+              <div style={row} title={o.checked ? 'Checked statement by statement with the AI model (Knowledge → Contradiction check)' : 'Positive and negative statements from different sources, not checked yet (Knowledge → Contradiction check)'}>
                 <span>{o.checked ? 'Possible contradictions (checked automatically)' : 'Opposite views (not checked)'}</span>
                 <strong style={{ color: o.disputed.length ? '#f59e0b' : 'var(--text-primary)' }}>{o.disputed.length}</strong>
               </div>
@@ -914,12 +929,12 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
               )}
             </div>
 
-            <div style={{ marginTop: '8px', fontSize: '0.62rem', lineHeight: 1.6 }}>
+            <div style={{ marginTop: '8px', fontSize: '0.75rem', lineHeight: 1.6 }}>
               Pins: <b style={{ color: LEVELS.disputed.color }}>!</b> sources disagree · <b style={{ color: LEVELS.conditional.color }}>~</b> depends / mixed · <b style={{ color: LEVELS.thin.color }}>?</b> little evidence (faded)
             </div>
             <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
               {o.sources.map(([name, n]) => (
-                <span key={name} style={{ fontSize: '0.62rem', padding: '1px 6px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>{name} {n}</span>
+                <span key={name} style={{ fontSize: '0.75rem', padding: '1px 6px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>{name} {n}</span>
               ))}
             </div>
           </div>
@@ -932,7 +947,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <div style={{ width: '12px', height: '3px', background: '#c084fc', borderRadius: '2px' }} />
-              <span style={{ fontSize: '0.7rem', color: '#c084fc', fontWeight: '600' }}>Active Route</span>
+              <span style={{ fontSize: '0.8rem', color: '#c084fc', fontWeight: '600' }}>Active Route</span>
             </div>
           </div>
         </div>
@@ -994,7 +1009,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <span>{activeCity.name}</span>
                       {showKnowledgeOverlay && claimsCount > 0 && (
-                        <span style={{ background: 'rgba(99,102,241,0.18)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '6px', padding: '2px 6px', fontSize: '0.62rem', color: '#a5b4fc', marginLeft: '6px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <span style={{ background: 'rgba(99,102,241,0.18)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '6px', padding: '2px 6px', fontSize: '0.75rem', color: '#a5b4fc', marginLeft: '6px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
                             <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
                             <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
@@ -1021,7 +1036,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                       <Star size={11} fill="#fbbf24" color="#fbbf24" style={{ verticalAlign: 'middle' }} />
                       <span>{p.name}</span>
                       {showKnowledgeOverlay && claimsCount > 0 && (
-                        <span style={{ background: 'rgba(99,102,241,0.18)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '6px', padding: '2px 6px', fontSize: '0.62rem', color: '#a5b4fc', marginLeft: '6px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <span style={{ background: 'rgba(99,102,241,0.18)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '6px', padding: '2px 6px', fontSize: '0.75rem', color: '#a5b4fc', marginLeft: '6px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
                             <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
                             <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
@@ -1082,7 +1097,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <span>{r.name}</span>
                         {showKnowledgeOverlay && claimsCount > 0 && (
-                          <span style={{ background: 'rgba(99,102,241,0.18)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '6px', padding: '2px 6px', fontSize: '0.62rem', color: '#a5b4fc', marginLeft: '6px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                          <span style={{ background: 'rgba(99,102,241,0.18)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '6px', padding: '2px 6px', fontSize: '0.75rem', color: '#a5b4fc', marginLeft: '6px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
                               <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
                               <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
@@ -1145,7 +1160,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <span>{placeObj.name}</span>
                             {claimsCount > 0 && (
-                              <span style={{ background: 'rgba(99,102,241,0.18)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '6px', padding: '2px 6px', fontSize: '0.62rem', color: '#a5b4fc', marginLeft: '6px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              <span style={{ background: 'rgba(99,102,241,0.18)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '6px', padding: '2px 6px', fontSize: '0.75rem', color: '#a5b4fc', marginLeft: '6px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
                                   <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
                                   <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
@@ -1172,7 +1187,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                 pathOptions={{ color: '#6366f1', weight: 3, dashArray: '5, 8', opacity: 0.85 }}
               >
                 <Tooltip sticky>
-                  <div style={{ fontSize: '0.72rem', padding: '2px', fontFamily: 'Inter, sans-serif' }}>
+                  <div style={{ fontSize: '0.8rem', padding: '2px', fontFamily: 'Inter, sans-serif' }}>
                     <div style={{ fontWeight: '700', color: '#818cf8' }}>Sequence Direction</div>
                     <strong>{p.from}</strong> → <strong>{p.to}</strong>
                     <div style={{ color: 'rgba(255,255,255,0.7)', marginTop: '4px', fontStyle: 'italic' }}>"{p.claim}"</div>
@@ -1196,7 +1211,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                 <Marker key={`gc-${c.key}`} position={c.coords} icon={icon} zIndexOffset={200}
                   eventHandlers={{ click: () => window._geocacheInvestigate?.(c.key) }}>
                   <Tooltip direction="top" offset={[0, -16]} className="custom-tooltip">
-                    <div style={{ fontFamily:'Inter,sans-serif', fontSize:'0.72rem' }}>
+                    <div style={{ fontFamily:'Inter,sans-serif', fontSize:'0.8rem' }}>
                       <div style={{ fontWeight:'700', color: found ? '#10b981' : '#f59e0b' }}>
                         {found ? '✓ Conquered' : '! Active Quest'}
                       </div>
@@ -1224,7 +1239,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <span>{loc.name}</span>
                       {showKnowledgeOverlay && claimsCount > 0 && (
-                        <span style={{ background: 'rgba(99,102,241,0.18)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '6px', padding: '2px 6px', fontSize: '0.62rem', color: '#a5b4fc', marginLeft: '6px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <span style={{ background: 'rgba(99,102,241,0.18)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '6px', padding: '2px 6px', fontSize: '0.75rem', color: '#a5b4fc', marginLeft: '6px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
                             <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
                             <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
@@ -1305,7 +1320,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                 >
                   <Tooltip direction="top" offset={[0, -16]} className="custom-tooltip" permanent={false}>
                     <div style={{ fontWeight: 'bold' }}>{stop.name}</div>
-                    <div style={{ fontSize: '0.68rem', color: group === 'anchor' ? '#fbbf24' : group === 'alternative' ? '#a78bfa' : '#22d3ee', marginTop: '2px' }}>
+                    <div style={{ fontSize: '0.75rem', color: group === 'anchor' ? '#fbbf24' : group === 'alternative' ? '#a78bfa' : '#22d3ee', marginTop: '2px' }}>
                       {tooltipLabel}
                     </div>
                   </Tooltip>
@@ -1425,8 +1440,8 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                   onClick={() => { setMapLayer(layer.id); setShowLayerMenu(false); }}>
                   <span className="layer-menu-icon">{layer.icon}</span>
                   <div style={{ flex: 1, textAlign: 'left' }}>
-                    <div style={{ fontWeight: '600', fontSize: '0.82rem', color: mapLayer === layer.id ? 'var(--accent-primary)' : 'var(--text-primary)' }}>{layer.label}</div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginTop: '1px' }}>{layer.desc}</div>
+                    <div style={{ fontWeight: '600', fontSize: '0.9rem', color: mapLayer === layer.id ? 'var(--accent-primary)' : 'var(--text-primary)' }}>{layer.label}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1px' }}>{layer.desc}</div>
                   </div>
                   {mapLayer === layer.id && <Check size={13} color="var(--accent-primary)" style={{ flexShrink: 0 }} />}
                 </button>
@@ -1437,7 +1452,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
                   {[['current', 'Active day only'], ['all', 'All days'], ['none', 'Hidden']].map(([v, l]) => (
                     <button key={v} className={`layer-menu-item ${aiDayDisplay === v ? 'active' : ''}`} onClick={() => setAiDayDisplay(v)}>
                       <Eye size={13} style={{ flexShrink: 0, opacity: 0.7 }} />
-                      <div style={{ flex: 1, textAlign: 'left', fontSize: '0.8rem' }}>{l}</div>
+                      <div style={{ flex: 1, textAlign: 'left', fontSize: '0.9rem' }}>{l}</div>
                       {aiDayDisplay === v && <Check size={13} color="var(--accent-primary)" style={{ flexShrink: 0 }} />}
                     </button>
                   ))}
@@ -1447,16 +1462,16 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
               <button className={`layer-menu-item ${showNeighborhoods ? 'active' : ''}`} onClick={() => setShowNeighborhoods(v => !v)}>
                 <Layers size={13} style={{ flexShrink: 0, opacity: 0.7 }} />
                 <div style={{ flex: 1, textAlign: 'left' }}>
-                  <div style={{ fontWeight: '600', fontSize: '0.82rem', color: showNeighborhoods ? 'var(--accent-primary)' : 'var(--text-primary)' }}>Neighborhoods</div>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginTop: '1px' }}>{nbrLoading ? 'Loading…' : neighborhoods.length > 0 ? `${neighborhoods.length} districts loaded` : 'Districts & neighborhoods'}</div>
+                  <div style={{ fontWeight: '600', fontSize: '0.9rem', color: showNeighborhoods ? 'var(--accent-primary)' : 'var(--text-primary)' }}>Neighborhoods</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1px' }}>{nbrLoading ? 'Loading…' : neighborhoods.length > 0 ? `${neighborhoods.length} districts loaded` : 'Districts & neighborhoods'}</div>
                 </div>
                 {showNeighborhoods && <Check size={13} color="var(--accent-primary)" style={{ flexShrink: 0 }} />}
               </button>
               <button className={`layer-menu-item ${showKnowledgeOverlay ? 'active' : ''}`} onClick={() => handleToggleKnowledgeOverlay(!showKnowledgeOverlay)}>
                 <Brain size={13} style={{ flexShrink: 0, opacity: 0.7 }} />
                 <div style={{ flex: 1, textAlign: 'left' }}>
-                  <div style={{ fontWeight: '600', fontSize: '0.82rem', color: showKnowledgeOverlay ? 'var(--accent-primary)' : 'var(--text-primary)' }}>Knowledge Overlay</div>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginTop: '1px' }}>
+                  <div style={{ fontWeight: '600', fontSize: '0.9rem', color: showKnowledgeOverlay ? 'var(--accent-primary)' : 'var(--text-primary)' }}>Knowledge Overlay</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1px' }}>
                     {knowledgeGraph?.nodes?.length ? `${knowledgeGraph.nodes.length} nodes loaded` : 'Show tips & sequence overlay'}
                   </div>
                 </div>
@@ -1475,7 +1490,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
 
               {/* What types to show on the map right now */}
               <div className="layer-menu-header">Show on map</div>
-              <p style={{ fontSize: '0.67rem', color: 'var(--text-secondary)', margin: '2px 0 8px', lineHeight: 1.4 }}>Tap a type to hide or show those pins. All active = show everything.</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '2px 0 8px', lineHeight: 1.4 }}>Tap a type to hide or show those pins. All active = show everything.</p>
               <div className="chip-group" style={{ flexWrap: 'wrap', marginBottom: '14px' }}>
                 {INTEREST_CATEGORIES.map(({ value, label }) => {
                   const { icon } = getTypeDetails(value);
@@ -1497,12 +1512,12 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
               {searchRadius != null && setSearchRadius && (
                 <>
                   <div className="layer-menu-header">Search radius</div>
-                  <p style={{ fontSize: '0.67rem', color: 'var(--text-secondary)', margin: '2px 0 6px', lineHeight: 1.4 }}>The blue circle on the map, only places inside it are loaded.</p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '2px 0 6px', lineHeight: 1.4 }}>The blue circle on the map, only places inside it are loaded.</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '12px' }}>
                     <input type="range" min={1} max={20} step={1} value={searchRadius}
                       onChange={e => setSearchRadius(Number(e.target.value))}
                       style={{ flex: 1, accentColor: 'var(--accent-primary)' }} />
-                    <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', minWidth: '44px', textAlign: 'right' }}>{searchRadius} km</span>
+                    <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', minWidth: '44px', textAlign: 'right' }}>{searchRadius} km</span>
                   </div>
                 </>
               )}
@@ -1511,37 +1526,37 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
               {setPoiQualityThreshold && (
                 <>
                   <div className="layer-menu-header">POI quality threshold</div>
-                  <p style={{ fontSize: '0.67rem', color: 'var(--text-secondary)', margin: '2px 0 6px', lineHeight: 1.4 }}>Hide low-scored places. 0 = show all. Higher = only well-rated POIs appear on the map.</p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '2px 0 6px', lineHeight: 1.4 }}>Hide low-scored places. 0 = show all. Higher = only well-rated POIs appear on the map.</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '12px' }}>
-                    <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>All</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>All</span>
                     <input type="range" min="0" max="0.8" step="0.1" value={poiQualityThreshold}
                       onChange={e => setPoiQualityThreshold(Number(e.target.value))}
                       style={{ flex: 1, accentColor: 'var(--accent-primary)' }} />
-                    <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Best only</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Best only</span>
                   </div>
                 </>
               )}
 
               {/* How many pins appear at once */}
               <div className="layer-menu-header">Pin density</div>
-              <p style={{ fontSize: '0.67rem', color: 'var(--text-secondary)', margin: '2px 0 6px', lineHeight: 1.4 }}>How crowded the map looks. Lower = fewer but cleaner. Higher = more places shown.</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '2px 0 6px', lineHeight: 1.4 }}>How crowded the map looks. Lower = fewer but cleaner. Higher = more places shown.</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '12px' }}>
-                <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Fewer</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Fewer</span>
                 <input type="range" min="0.5" max="10.0" step="0.5" value={mapMarkerLimitFactor}
                   onChange={e => setMapMarkerLimitFactor(Number(Number(e.target.value).toFixed(1)))}
                   style={{ flex: 1, accentColor: 'var(--accent-primary)' }} />
-                <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>More</span>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-primary)', minWidth: '32px', textAlign: 'right' }}>{mapMarkerLimitFactor >= 10 ? 'All' : `×${mapMarkerLimitFactor}`}</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>More</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--accent-primary)', minWidth: '32px', textAlign: 'right' }}>{mapMarkerLimitFactor >= 10 ? 'All' : `×${mapMarkerLimitFactor}`}</span>
               </div>
 
               {/* How many results per category in the Explore panel */}
               <div className="layer-menu-header">Results per category</div>
-              <p style={{ fontSize: '0.67rem', color: 'var(--text-secondary)', margin: '2px 0 6px', lineHeight: 1.4 }}>Max places shown per type (e.g. Restaurants, Museums) in the Explore list.</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '2px 0 6px', lineHeight: 1.4 }}>Max places shown per type (e.g. Restaurants, Museums) in the Explore list.</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '4px' }}>
                 <input type="range" min="2" max="100" step="2" value={categoryDisplayLimit}
                   onChange={e => setCategoryDisplayLimit(Number(e.target.value))}
                   style={{ flex: 1, accentColor: 'var(--accent-primary)' }} />
-                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--accent-primary)', minWidth: '36px', textAlign: 'right' }}>{categoryDisplayLimit >= 100 ? 'All' : categoryDisplayLimit}</span>
+                <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent-primary)', minWidth: '36px', textAlign: 'right' }}>{categoryDisplayLimit >= 100 ? 'All' : categoryDisplayLimit}</span>
               </div>
             </div>
           )}

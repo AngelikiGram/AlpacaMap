@@ -85,7 +85,7 @@ export const NotesPanel=({tripData,setTripData})=>{
   // Helper to render parsed view mode lines (todos, highlight ==text==, bold)
   const renderNoteContent = (key, text, bg) => {
     if (!text.trim()) {
-      return <div style={{ fontStyle: 'italic', opacity: 0.45, fontSize: '0.9rem' }}>Empty note, click or Edit below to write.</div>;
+      return <div style={{ fontStyle: 'italic', opacity: 0.45, fontSize: '1rem' }}>Empty note, click or Edit below to write.</div>;
     }
 
     return text.split('\n').map((line, idx) => {
@@ -226,7 +226,7 @@ export const NotesPanel=({tripData,setTripData})=>{
           {/* Edit/View Toggle */}
           <button 
             className="btn-primary" 
-            style={{ padding: '3px 8px', color: '#fff', background: '#1e293b', borderRadius: '4px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '3px', border: 'none' }}
+            style={{ padding: '3px 8px', color: '#fff', background: '#1e293b', borderRadius: '4px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '3px', border: 'none' }}
             onClick={() => setEditModes(prev => ({ ...prev, [key]: !prev[key] }))}
           >
             {isEditing ? <Eye size={11}/> : <Pencil size={11}/>}
@@ -247,14 +247,14 @@ export const NotesPanel=({tripData,setTripData})=>{
 
           {/* Font Size Number Input */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '4px' }}>
-            <span style={{ fontSize: '0.65rem', color: '#475569', fontWeight: 'bold' }}>Size:</span>
+            <span style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 'bold' }}>Size:</span>
             <input 
               type="number" 
               min="12" 
               max="36" 
               value={fontSize} 
               onChange={e => updateFontSize(key, e.target.value)}
-              style={{ width: '40px', fontSize: '0.75rem', padding: '2px 4px', background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '4px', color: '#1e293b', textAlign: 'center' }}
+              style={{ width: '40px', fontSize: '0.85rem', padding: '2px 4px', background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '4px', color: '#1e293b', textAlign: 'center' }}
             />
           </div>
 

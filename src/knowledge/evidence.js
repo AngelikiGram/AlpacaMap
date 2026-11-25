@@ -36,7 +36,30 @@ export function buildPlaceEvidence(nodes = [], verified = null, { cityNames = []
     text: ` ${normalizeName(n.claim)} `,
     place: normalizeName(n.place),
   }));
-  return { items, verified, ignore, size: items.length, cache: new Map() };
+  // Lookup tables so findEvidence touches only statements that share a word or place with the name
+  // (a city has thousands of statements and the map asks for about a thousand places)
+  const byWord = new Map();
+  const byPlace = new Map();
+  items.forEach((it, i) => {
+    for (const w of new Set(it.text.split(' '))) if (w.length >= 3) { if (!byWord.has(w)) byWord.set(w, []); byWord.get(w).push(i); }
+    if (!byPlace.has(it.place)) byPlace.set(it.place, []);
+    byPlace.get(it.place).push(i);
+  });
+  return { items, verified, ignore, size: items.length, cache: new Map(), byWord, byPlace };
+}
+
+// Same rule as a full scan: filed under the place, under a place named inside it, or mentions all its distinctive words
+function matchItems(index, key, words) {
+  const hit = new Set();
+  for (const [place, ids] of index.byPlace) {
+    if (place === key || (place.length >= 5 && key.includes(place) && !place.includes(' · '))) ids.forEach((i) => hit.add(i));
+  }
+  const lists = words.map((w) => index.byWord.get(w) || []).sort((a, b) => a.length - b.length);
+  if (lists.length && lists[0].length) {
+    const rest = lists.slice(1).map((l) => new Set(l));
+    for (const i of lists[0]) if (rest.every((s) => s.has(i))) hit.add(i);
+  }
+  return [...hit].sort((a, b) => a - b).map((i) => index.items[i]);
 }
 
 function levelOf(e) {
@@ -57,8 +80,7 @@ export function findEvidence(name, index) {
   const words = distinctiveWords(name).filter((w) => !index.ignore?.has(w));
   let result = null;
   if (words.length) {
-    const matched = index.items.filter(({ text, place }) =>
-      place === key || (place.length >= 5 && key.includes(place) && !place.includes(' · ')) || words.every((w) => text.includes(` ${w} `)));
+    const matched = matchItems(index, key, words);
     if (matched.length) {
       const e = { place: name, key, statements: matched.length, pos: 0, neg: 0, neu: 0, sources: new Set(), contradictions: [], depends: [] };
       const ids = new Set();

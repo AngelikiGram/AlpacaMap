@@ -181,8 +181,8 @@ export const MapSearchBar = ({ onFlyTo, panelOpen, onSearchResults, mapBounds })
               <div key={i} className="map-searchbar-item" onMouseDown={() => select(r)}>
                 <span style={{ fontSize: '1rem', flexShrink: 0 }}>{typeIcon}</span>
                 <div style={{ overflow: 'hidden', flex: 1 }}>
-                  <div style={{ fontWeight: '600', fontSize: '0.83rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{parts[0]}</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{parts.slice(1, 4).join(', ')}</div>
+                  <div style={{ fontWeight: '600', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{parts[0]}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{parts.slice(1, 4).join(', ')}</div>
                 </div>
               </div>
             );

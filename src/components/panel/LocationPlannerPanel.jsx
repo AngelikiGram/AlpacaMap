@@ -372,10 +372,10 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
             return(
               <div key={city.id} className="city-card" role="button" tabIndex={0} style={{'--card-color':color}} onClick={()=>setActiveCity(city)}>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontWeight:'600',fontSize:'0.875rem',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{city.name}</div>
+                  <div style={{fontWeight:'600',fontSize:'0.9rem',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{city.name}</div>
                   <div style={{display:'flex',gap:'0.4rem',alignItems:'center',marginTop:'0.25rem'}}>
-                    <span className="tag" style={{fontSize:'0.62rem',background:`${color}20`,color,borderColor:`${color}40`,border:'1px solid'}}>{typeLabel}</span>
-                    <span style={{fontSize:'0.7rem',color:'var(--text-secondary)'}}>{city.places.length} saved · {city.recommendations.length} suggestions</span>
+                    <span className="tag" style={{fontSize:'0.75rem',background:`${color}20`,color,borderColor:`${color}40`,border:'1px solid'}}>{typeLabel}</span>
+                    <span style={{fontSize:'0.8rem',color:'var(--text-secondary)'}}>{city.places.length} saved · {city.recommendations.length} suggestions</span>
                   </div>
                 </div>
                 <div style={{display:'flex',gap:'0.25rem',alignItems:'center',flexShrink:0}}>
@@ -438,10 +438,10 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
               <div key={i} className="suggestion-item" onMouseDown={()=>selectCitySuggestion(s)}>
                 <span style={{flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', width:'24px'}}>{typeIcon}</span>
                 <div style={{overflow:'hidden',flex:1}}>
-                  <div style={{fontWeight:'600',fontSize:'0.83rem',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.shortName}</div>
-                  <div style={{fontSize:'0.68rem',color:'var(--text-secondary)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.label}</div>
+                  <div style={{fontWeight:'600',fontSize:'0.9rem',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.shortName}</div>
+                  <div style={{fontSize:'0.75rem',color:'var(--text-secondary)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.label}</div>
                 </div>
-                {i===0&&<span style={{fontSize:'0.6rem',color:'var(--accent-primary)',flexShrink:0,fontWeight:'700'}}>↵ ENTER</span>}
+                {i===0&&<span style={{fontSize:'0.75rem',color:'var(--accent-primary)',flexShrink:0,fontWeight:'700'}}>↵ ENTER</span>}
               </div>
             );
           })}
@@ -461,9 +461,9 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
           <div style={{width:'10px',height:'10px',borderRadius:'50%',background:cityColor,boxShadow:`0 0 8px ${cityColor}`}}/>
           <div style={{fontWeight:'700',fontSize:'1rem'}}>{activeCity.name}</div>
         </div>
-        <span className="tag" style={{fontSize:'0.62rem',background:`${cityColor}20`,color:cityColor,border:`1px solid ${cityColor}40`}}>{typeLabel}</span>
+        <span className="tag" style={{fontSize:'0.75rem',background:`${cityColor}20`,color:cityColor,border:`1px solid ${cityColor}40`}}>{typeLabel}</span>
       </div>
-      <p style={{fontSize:'0.72rem',color:'var(--text-secondary)',marginBottom:'0.5rem'}}>Click map to pin a place · Drag circle center to shift search</p>
+      <p style={{fontSize:'0.8rem',color:'var(--text-secondary)',marginBottom:'0.5rem'}}>Click map to pin a place · Drag circle center to shift search</p>
       <WeatherWidget coords={activeCity.coords}
         startDate={(()=>{const ds=(tripData.itinerary||[]).filter(d=>d.date).map(d=>d.date).sort();return ds[0]||null;})()}
         endDate={(()=>{const ds=(tripData.itinerary||[]).filter(d=>d.date).map(d=>d.date).sort();return ds[ds.length-1]||null;})()}
@@ -475,8 +475,8 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
           border:'1px solid rgba(255,255,255,0.06)', marginTop:'8px', marginBottom:'4px'}}>
           <span style={{fontSize:'1.1rem'}}>{cityWeather.emoji}</span>
           <div style={{flex:1, minWidth:0}}>
-            <span style={{fontSize:'0.72rem',fontWeight:'600',color:'var(--text-primary)'}}>{cityWeather.label} · {cityWeather.temp}°C  </span>
-            <span style={{fontSize:'0.68rem',color:'var(--text-secondary)'}}>
+            <span style={{fontSize:'0.8rem',fontWeight:'600',color:'var(--text-primary)'}}>{cityWeather.label} · {cityWeather.temp}°C  </span>
+            <span style={{fontSize:'0.75rem',color:'var(--text-secondary)'}}>
               {(cityWeather.profile==='rain'||cityWeather.profile==='storm'||cityWeather.profile==='snow') && 'Indoor venues prioritised'}
               {cityWeather.profile==='hot' && 'Beaches & shaded spots boosted'}
               {cityWeather.profile==='cold' && 'Layer up for outdoor activities'}
@@ -486,12 +486,12 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
       )}
 
       {llmStatus&&(
-        <div style={{fontSize:'0.7rem',color:cityColor,marginBottom:'0.5rem',textAlign:'center',display:'flex',justifyContent:'center',alignItems:'center',gap:'4px'}}>
+        <div style={{fontSize:'0.8rem',color:cityColor,marginBottom:'0.5rem',textAlign:'center',display:'flex',justifyContent:'center',alignItems:'center',gap:'4px'}}>
           {isSearching&&<Loader2 size={12} className="spin"/>}{llmStatus}
         </div>
       )}
 
-      <div style={{fontSize:'0.7rem',color:'var(--text-secondary)',marginBottom:'0.4rem',marginTop:'0.75rem'}}>Categories:</div>
+      <div style={{fontSize:'0.8rem',color:'var(--text-secondary)',marginBottom:'0.4rem',marginTop:'0.75rem'}}>Categories:</div>
       <div className="chip-group" style={{marginBottom:'0.75rem',flexWrap:'wrap'}}>
         {INTEREST_CATEGORIES.map(cat => {
           const isOn = aiInterests.includes(cat.value);
@@ -526,7 +526,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
           <div className="section-label" style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.5rem'}}>
             <span>Nearby ({activeCity.recommendations.length})</span>
             <input type="text" placeholder="Filter…" value={recFilterText} onChange={e=>setRecFilterText(e.target.value)}
-              style={{width:'90px',padding:'0.25rem 0.5rem',fontSize:'0.7rem',borderRadius:'4px',background:'rgba(255,255,255,0.05)',color:'white',border:'1px solid rgba(255,255,255,0.1)'}}
+              style={{width:'90px',padding:'0.25rem 0.5rem',fontSize:'0.8rem',borderRadius:'4px',background:'rgba(255,255,255,0.05)',color:'white',border:'1px solid rgba(255,255,255,0.1)'}}
             />
           </div>
 
@@ -558,12 +558,12 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
               const hasMore = shownLimit < totalCount;
               return (
                 <div key={cat.value} id={`cat-section-${cat.value}`} style={{marginBottom:'1.5rem'}}>
-                  <div style={{fontSize:'0.8rem',fontWeight:'600',marginBottom:'0.5rem',display:'flex',alignItems:'center',gap:'0.4rem',color}}>
+                  <div style={{fontSize:'0.9rem',fontWeight:'600',marginBottom:'0.5rem',display:'flex',alignItems:'center',gap:'0.4rem',color}}>
                     {icon} {cat.label}
-                    <span style={{color:'var(--text-secondary)',fontWeight:'400',fontSize:'0.7rem'}}>({recsForCat.length}/{totalCount})</span>
+                    <span style={{color:'var(--text-secondary)',fontWeight:'400',fontSize:'0.8rem'}}>({recsForCat.length}/{totalCount})</span>
                     {pages > 1 && (
                       <button onClick={() => setCatPages(prev => ({...prev, [cat.value]: 1}))}
-                        style={{marginLeft:'auto',fontSize:'0.65rem',color:'var(--text-secondary)',background:'transparent',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'10px',padding:'1px 8px',cursor:'pointer',fontWeight:'600',flexShrink:0}}>
+                        style={{marginLeft:'auto',fontSize:'0.75rem',color:'var(--text-secondary)',background:'transparent',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'10px',padding:'1px 8px',cursor:'pointer',fontWeight:'600',flexShrink:0}}>
                         Show less
                       </button>
                     )}
@@ -584,14 +584,14 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
                             <div style={{flex:1,minWidth:0}}>
                               <div style={{display:'flex',alignItems:'center',gap:'5px',justifyContent:'space-between',width:'100%'}}>
                                 <div style={{display:'flex',alignItems:'center',gap:'5px',minWidth:0,flex:1}}>
-                                  {rec.rankNumber&&<span style={{background:cityColor,color:'white',fontSize:'0.58rem',padding:'1px 4px',borderRadius:'8px',fontWeight:'700'}}>#{rec.rankNumber}</span>}
-                                  <div style={{fontWeight:'600',fontSize:'0.85rem',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--text-primary)'}}>{rec.name}</div>
+                                  {rec.rankNumber&&<span style={{background:cityColor,color:'white',fontSize:'0.72rem',padding:'1px 4px',borderRadius:'8px',fontWeight:'700'}}>#{rec.rankNumber}</span>}
+                                  <div style={{fontWeight:'600',fontSize:'0.9rem',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--text-primary)'}}>{rec.name}</div>
                                 </div>
                                 {rec._qualityScore > 1 && (
-                                  <span style={{fontSize:'0.65rem',color:'var(--text-secondary)',background:'rgba(255,255,255,0.06)',padding:'1px 4px',borderRadius:'4px',flexShrink:0}} title="Quality score">★ {rec._qualityScore}</span>
+                                  <span style={{fontSize:'0.75rem',color:'var(--text-secondary)',background:'rgba(255,255,255,0.06)',padding:'1px 4px',borderRadius:'4px',flexShrink:0}} title="Quality score">★ {rec._qualityScore}</span>
                                 )}
                               </div>
-                              <div style={{fontSize:'0.7rem',color:'var(--text-secondary)', marginTop:'3px', display:'flex', alignItems:'center', gap:'6px'}}>
+                              <div style={{fontSize:'0.8rem',color:'var(--text-secondary)', marginTop:'3px', display:'flex', alignItems:'center', gap:'6px'}}>
                                 <span style={{color:'var(--text-primary)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{rec.type}</span>
                                 {rec.distanceKm!=null&&<span style={{whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:'2px'}}>· <MapPin size={10} color="#ef4444"/> {Number(rec.distanceKm).toFixed(1)} km</span>}
                               </div>
@@ -599,7 +599,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
                                 <div style={{display:'flex',gap:'3px',flexWrap:'wrap',marginTop:'3px'}}>
                                   {rec._qualityReasons.map(r=>(
                                     <span key={r} style={{
-                                      fontSize:'0.58rem',
+                                      fontSize:'0.72rem',
                                       background: r === 'AI Planned' ? 'rgba(16,185,129,0.15)' : 'rgba(59,130,246,0.15)',
                                       color: r === 'AI Planned' ? '#10b981' : 'var(--accent-primary)',
                                       padding:'1px 5px',borderRadius:'8px',whiteSpace:'nowrap',
@@ -610,7 +610,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
                                 </div>
                               )}
                               {rec._weatherWarning&&(
-                                <div style={{fontSize:'0.58rem',color:'#f59e0b',marginTop:'3px',display:'flex',alignItems:'center',gap:'3px'}}>
+                                <div style={{fontSize:'0.72rem',color:'#f59e0b',marginTop:'3px',display:'flex',alignItems:'center',gap:'3px'}}>
                                   <span>⚠️</span><span>Not ideal today</span>
                                 </div>
                               )}
@@ -619,9 +619,9 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
                           <div style={{display:'flex',flexDirection:'column',gap:'0.35rem',alignItems:'center'}}>
                             <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(rec.name+' '+activeCity.name)}`} target="_blank" rel="noreferrer" className="btn-icon" onClick={e=>e.stopPropagation()}><ExternalLink size={12}/></a>
                             {isSaved ? (
-                              <button className="chip" style={{fontSize:'0.62rem',padding:'0.2rem 0.5rem',borderColor:'var(--text-secondary)'}} onClick={(e)=>{e.stopPropagation(); removePlaceFromCity(activeCity.id, activeCity.places.find(p=>p.name===rec.name||p.id===rec.id)?.id);}}>- Remove</button>
+                              <button className="chip" style={{fontSize:'0.75rem',padding:'0.2rem 0.5rem',borderColor:'var(--text-secondary)'}} onClick={(e)=>{e.stopPropagation(); removePlaceFromCity(activeCity.id, activeCity.places.find(p=>p.name===rec.name||p.id===rec.id)?.id);}}>- Remove</button>
                             ) : (
-                              <button className="chip active" style={{fontSize:'0.62rem',padding:'0.2rem 0.5rem',background:cityColor}} onClick={(e)=>{e.stopPropagation(); handleSavePlace(rec);}}>+ Save</button>
+                              <button className="chip active" style={{fontSize:'0.75rem',padding:'0.2rem 0.5rem',background:cityColor}} onClick={(e)=>{e.stopPropagation(); handleSavePlace(rec);}}>+ Save</button>
                             )}
                           </div>
                         </div>
@@ -630,7 +630,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
                   </div>
                   {hasMore && (
                     <button onClick={() => setCatPages(prev => ({...prev, [cat.value]: (prev[cat.value] || 1) + 1}))}
-                      style={{marginTop:'8px',width:'100%',padding:'6px',fontSize:'0.7rem',fontWeight:'600',color,background:'transparent',border:`1px solid ${color}30`,borderRadius:'8px',cursor:'pointer'}}>
+                      style={{marginTop:'8px',width:'100%',padding:'6px',fontSize:'0.8rem',fontWeight:'600',color,background:'transparent',border:`1px solid ${color}30`,borderRadius:'8px',cursor:'pointer'}}>
                       Load {Math.min(baseLimit, totalCount - shownLimit)} more · {totalCount - shownLimit} remaining
                     </button>
                   )}
@@ -641,7 +641,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
       )}
 
       <div className="section-label">Saved ({activeCity.places.length})</div>
-      {activeCity.places.length===0&&<p style={{fontSize:'0.8rem',color:'var(--text-secondary)',marginBottom:'0.75rem'}}>No saved places yet.</p>}
+      {activeCity.places.length===0&&<p style={{fontSize:'0.9rem',color:'var(--text-secondary)',marginBottom:'0.75rem'}}>No saved places yet.</p>}
       {activeCity.places.map(place=>{
         const{icon,color}=getTypeDetails(place.type);
         const profile = ENTITY_PROFILES[place.type];
@@ -660,7 +660,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
               <div style={{display:'flex',gap:'0.6rem',alignItems:'flex-start', flex: 1}}>
                 <span className="place-emoji" style={{background:color,color:'white',display:'flex',alignItems:'center',justifyContent:'center',marginTop:'2px',flexShrink:0}}>{icon}</span>
                 <div style={{flex:1}}>
-                  <div style={{fontWeight:'500',fontSize:'0.85rem'}}>{place.name}</div>
+                  <div style={{fontWeight:'500',fontSize:'0.9rem'}}>{place.name}</div>
                 </div>
               </div>
               <div style={{display:'flex',gap:'0.25rem',marginTop:'2px'}}>
@@ -674,7 +674,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
             {isExpanded && (
               <div style={{paddingLeft:'2.5rem', width:'100%', marginTop:'8px'}}>
                 {profile && (
-                  <div style={{display:'flex',gap:'6px',fontSize:'0.65rem',color:'var(--text-secondary)',flexWrap:'wrap',marginBottom:'8px'}}>
+                  <div style={{display:'flex',gap:'6px',fontSize:'0.75rem',color:'var(--text-secondary)',flexWrap:'wrap',marginBottom:'8px'}}>
                     <span style={{background:'rgba(255,255,255,0.05)',padding:'2px 5px',borderRadius:'4px',display:'inline-flex',alignItems:'center'}}>⏱ {profile.duration}</span>
                     <span style={{background:'rgba(255,255,255,0.05)',padding:'2px 5px',borderRadius:'4px',display:'inline-flex',alignItems:'center'}}>💳 {profile.budget}</span>
                     {profile.tip && <span style={{background:'rgba(255,255,255,0.05)',padding:'2px 5px',borderRadius:'4px',display:'inline-flex',alignItems:'center'}}>💡 {profile.tip}</span>}
@@ -690,7 +690,7 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
                   onChange={e => updatePlaceInCity && updatePlaceInCity(activeCity.id, place.id, { notes: e.target.value })}
                   onClick={e => e.stopPropagation()}
                   onFocus={e => e.stopPropagation()}
-                  style={{width:'100%',resize:'vertical',fontSize:'0.72rem',lineHeight:'1.5',borderRadius:'6px',padding:'5px 8px',background:'rgba(255,255,255,0.05)',color:'var(--text-primary)',border:'1px solid rgba(255,255,255,0.1)',fontFamily:'Inter,sans-serif'}}
+                  style={{width:'100%',resize:'vertical',fontSize:'0.8rem',lineHeight:'1.5',borderRadius:'6px',padding:'5px 8px',background:'rgba(255,255,255,0.05)',color:'var(--text-primary)',border:'1px solid rgba(255,255,255,0.1)',fontFamily:'Inter,sans-serif'}}
                 />
               </div>
             )}
@@ -727,10 +727,10 @@ export const LocationPlannerPanel=({tripData,setTripData,activeCity,setActiveCit
           <div key={i} className="suggestion-item" onMouseDown={()=>selectPlaceSuggestion(s)}>
             <MapPin size={11} style={{flexShrink:0,color:'var(--accent-primary)'}}/>
             <div style={{overflow:'hidden',flex:1}}>
-              <div style={{fontWeight:'600',fontSize:'0.83rem',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.label}</div>
-              <div style={{fontSize:'0.68rem',color:'var(--text-secondary)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.fullLabel}</div>
+              <div style={{fontWeight:'600',fontSize:'0.9rem',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.label}</div>
+              <div style={{fontSize:'0.75rem',color:'var(--text-secondary)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.fullLabel}</div>
             </div>
-            {i===0&&<span style={{fontSize:'0.6rem',color:'var(--accent-primary)',flexShrink:0,fontWeight:'700'}}>↵</span>}
+            {i===0&&<span style={{fontSize:'0.75rem',color:'var(--accent-primary)',flexShrink:0,fontWeight:'700'}}>↵</span>}
           </div>
         ))}
       </PortalDropdown>

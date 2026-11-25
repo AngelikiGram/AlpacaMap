@@ -23,12 +23,16 @@ CITIES = ['paris', 'rome']
 TOPIC_NAMES = ['safety & health', 'transport', 'food & drink', 'money & costs', 'climate', 'nightlife', 'accommodation',
                'shopping', 'history', 'culture', 'districts', 'general']
 VIEW_KEYWORDS = {
-    'Debates': ['debates', 'not the same thing', 'they disagree', 'both true', 'trust the', 'skip'],
+    # first group: labels before the Debates redesign (Nov 2026), second: current labels
+    'Debates': ['debates', 'not the same thing', 'they disagree', 'both true', 'trust the', 'skip',
+                'where sources disagree', 'really disagree', 'both can be true', 'different things', 'i trust',
+                'how was this pair found', 'show on map'],
     'Map panel (Do sources agree?)': ['truth lens', 'do sources agree', 'judge', 'read all', 'show ', 'close truth lens'],
     'Topic buttons (What do sources say about…)': TOPIC_NAMES,
     'Time lens': ['time lens'],
     'Place window (click on a pin)': ['worth it', 'not worth it', 'very crowded', 'quiet', 'overpriced', 'was closed', 'add to'],
-    'Knowledge': ['knowledge', 'conflicts', 'claims', 'ingest'],
+    'Knowledge': ['knowledge', 'conflicts', 'claims', 'ingest',
+                  'what sources say', 'add sources', 'statements', 'charts', 'contradiction check', 'collect statements'],
     'Explore': ['explore'], 'Itinerary': ['itinerary', 'add event'],
 }
 CONFLICT_VIEWS = {'Debates', 'Map panel (Do sources agree?)', 'Topic buttons (What do sources say about…)', 'Knowledge'}

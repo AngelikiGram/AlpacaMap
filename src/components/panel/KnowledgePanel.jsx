@@ -63,7 +63,7 @@ function CredBar({ score, low, high }) {
           background: color, borderRadius: '3px',
         }} />
       </div>
-      <span style={{ fontSize: '0.58rem', color, fontWeight: '700' }}>{label}</span>
+      <span style={{ fontSize: '0.72rem', color, fontWeight: '700' }}>{label}</span>
     </div>
   );
 }
@@ -76,7 +76,7 @@ function AgeBadge({ node }) {
   const stale = isVolatile ? ageYears > 1 : ageYears > 4;
   const label = ageYears < 0.08 ? 'This week' : ageYears < 1 ? `${Math.round(ageYears * 12)}mo ago` : `${ageYears.toFixed(1)}yr ago`;
   return (
-    <span style={{ fontSize: '0.57rem', color: stale ? '#f59e0b' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+    <span style={{ fontSize: '0.72rem', color: stale ? '#f59e0b' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '3px' }}>
       {stale && <TrendingDown size={9} color="#f59e0b" />}{label}
     </span>
   );
@@ -93,7 +93,7 @@ const CLAIM_META = {
 function ClaimBadge({ type }) {
   const m = CLAIM_META[type] || { color: '#6b7280', icon: '?', label: type };
   return (
-    <span style={{ fontSize: '0.57rem', padding: '1px 6px', borderRadius: '8px', background: m.color + '20', border: `1px solid ${m.color}40`, color: m.color, fontWeight: '700' }}>
+    <span style={{ fontSize: '0.72rem', padding: '1px 6px', borderRadius: '8px', background: m.color + '20', border: `1px solid ${m.color}40`, color: m.color, fontWeight: '700' }}>
       {m.icon} {m.label}
     </span>
   );
@@ -137,7 +137,7 @@ const SOURCE_META = {
 function SourceBadge({ sourceType }) {
   const m = SOURCE_META[sourceType] || SOURCE_META.other;
   return (
-    <span style={{ fontSize: '0.57rem', padding: '1px 5px', borderRadius: '6px', background: m.color + '18', border: `1px solid ${m.color}30`, color: m.color, fontWeight: '600' }}>
+    <span style={{ fontSize: '0.72rem', padding: '1px 5px', borderRadius: '6px', background: m.color + '18', border: `1px solid ${m.color}30`, color: m.color, fontWeight: '600' }}>
       {m.icon} {m.label}
     </span>
   );
@@ -912,7 +912,7 @@ function PlaceCard({ place, expanded, onToggle, onClaimClick }) {
   return (
     <div onClick={() => onToggle(place.name)}
       style={{ background: bgColor, border: `1px solid ${accentColor}28`, borderRadius: '11px', padding: '10px', cursor: 'pointer', transition: 'box-shadow 0.15s', boxShadow: isExpanded ? `0 0 14px ${glowColor}, 0 0 0 1px ${accentColor}30` : 'none' }}>
-      <div style={{ fontSize: '0.73rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '5px', lineHeight: 1.3 }}>{displayName}</div>
+      <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '5px', lineHeight: 1.3 }}>{displayName}</div>
       <div style={{ height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden', display: 'flex', marginBottom: '8px' }}>
         {pos > 0 && <div style={{ flex: pos, background: '#10b981' }} />}
         {neu > 0 && <div style={{ flex: neu, background: '#38bdf8' }} />}
@@ -925,12 +925,12 @@ function PlaceCard({ place, expanded, onToggle, onClaimClick }) {
           return (
             <div key={n.id || i} onClick={e => { e.stopPropagation(); onClaimClick(n); }}
               style={{ cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
-              <div style={{ fontSize: '0.61rem', color: claimColor, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: isExpanded ? 99 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1 }}>
+              <div style={{ fontSize: '0.75rem', color: claimColor, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: isExpanded ? 99 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1 }}>
                 {icon} {n.claim}
               </div>
               {n.source?.url && (
                 <span onClick={e => { e.stopPropagation(); window.open(n.source.url, '_blank'); }}
-                  style={{ fontSize: '0.55rem', color: '#38bdf8', cursor: 'pointer', background: 'rgba(56,189,248,0.12)', padding: '0 3px', borderRadius: '4px', flexShrink: 0 }}>
+                  style={{ fontSize: '0.72rem', color: '#38bdf8', cursor: 'pointer', background: 'rgba(56,189,248,0.12)', padding: '0 3px', borderRadius: '4px', flexShrink: 0 }}>
                   🔗
                 </span>
               )}
@@ -938,19 +938,19 @@ function PlaceCard({ place, expanded, onToggle, onClaimClick }) {
           );
         })}
         {!isExpanded && place.nodes.length > 3 && (
-          <div style={{ fontSize: '0.58rem', color: accentColor, fontWeight: '600' }}>+{place.nodes.length - 3} more…</div>
+          <div style={{ fontSize: '0.72rem', color: accentColor, fontWeight: '600' }}>+{place.nodes.length - 3} more…</div>
         )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: '0.58rem', color: accentColor, fontWeight: '700' }}>{place.nodes.length} claim{place.nodes.length !== 1 ? 's' : ''}</span>
+        <span style={{ fontSize: '0.72rem', color: accentColor, fontWeight: '700' }}>{place.nodes.length} claim{place.nodes.length !== 1 ? 's' : ''}</span>
         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
           {place.novelty > 0.5 && (
             <span title={`Insider score: ${(place.novelty * 100).toFixed(0)}%, nuanced, multi-source, contested`}
-              style={{ fontSize: '0.5rem', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '2px', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '6px', padding: '0 4px' }}>
+              style={{ fontSize: '0.72rem', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '2px', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '6px', padding: '0 4px' }}>
               <Sparkles size={7} color="#f59e0b" /> Insider
             </span>
           )}
-          <div style={{ display: 'flex', gap: '2px', fontSize: '0.7rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '2px', fontSize: '0.8rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {[...place.sources].map(src => <span key={src} title={SOURCE_META[src]?.label || src}>{SOURCE_META[src]?.icon || '?'}</span>)}
           </div>
         </div>
@@ -1068,11 +1068,11 @@ function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, all
             placeholder="🔍 Search place name or keyword…"
             style={{
               flex: 1, minWidth: '180px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '8px', padding: '5px 10px', fontSize: '0.68rem', color: '#fff', outline: 'none'
+              borderRadius: '8px', padding: '5px 10px', fontSize: '0.75rem', color: '#fff', outline: 'none'
             }}
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.62rem', color: 'var(--text-secondary)' }}>Sort by:</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Sort by:</span>
             {[['claims', 'Claims'], ['name', 'Alphabetical'], ['novelty', 'Insider']].map(([key, label]) => (
               <button
                 key={key}
@@ -1080,7 +1080,7 @@ function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, all
                 style={{
                   background: sortBy === key ? 'rgba(139,92,246,0.18)' : 'rgba(255,255,255,0.04)',
                   border: `1px solid ${sortBy === key ? '#8b5cf6' : 'rgba(255,255,255,0.08)'}`,
-                  borderRadius: '6px', padding: '3px 8px', fontSize: '0.62rem', color: sortBy === key ? '#c4b5fd' : '#aaa',
+                  borderRadius: '6px', padding: '3px 8px', fontSize: '0.75rem', color: sortBy === key ? '#c4b5fd' : '#aaa',
                   cursor: 'pointer', fontFamily: 'Inter,sans-serif'
                 }}
               >
@@ -1092,7 +1092,7 @@ function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, all
 
         {/* Category Filter Chips */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginRight: '4px' }}>Topic:</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginRight: '4px' }}>Topic:</span>
           {CATEGORY_TAGS.map(c => {
             const isActive = filterCategory === c.name;
             return (
@@ -1102,7 +1102,7 @@ function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, all
                 style={{
                   background: isActive ? `${c.color}22` : 'rgba(255,255,255,0.03)',
                   border: `1px solid ${isActive ? c.color : 'rgba(255,255,255,0.08)'}`,
-                  borderRadius: '12px', padding: '2px 8px', fontSize: '0.6rem',
+                  borderRadius: '12px', padding: '2px 8px', fontSize: '0.75rem',
                   color: isActive ? '#fff' : '#888', cursor: 'pointer',
                   fontFamily: 'Inter,sans-serif', transition: 'all 0.15s'
                 }}
@@ -1117,7 +1117,7 @@ function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, all
       {/* Specific places */}
       {filteredSpecific.length > 0 && (
         <div>
-          <div style={{ fontSize: '0.62rem', color: '#38bdf8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <div style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
             <MapPin size={10} /> Specific Places ({filteredSpecific.length})
           </div>
           <div style={gridStyle}>
@@ -1131,7 +1131,7 @@ function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, all
         <div>
           <button onClick={() => setShowCategories(v => !v)}
             style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: '8px' }}>
-            <span style={{ fontSize: '0.62rem', color: '#8b5cf6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <span style={{ fontSize: '0.75rem', color: '#8b5cf6', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               General Insights ({filteredCategory.length} topics)
             </span>
             {showCategories ? <ChevronUp size={11} style={{ color: '#8b5cf6' }} /> : <ChevronDown size={11} style={{ color: '#8b5cf6' }} />}
@@ -1145,7 +1145,7 @@ function PlaceBubblesView({ nodes, triggerPlaceInfo, tripData, cityNamesSet, all
       )}
 
       {filteredSpecific.length === 0 && filteredCategory.length === 0 && (
-        <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.72rem', padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
           No places found matching the filters.
         </div>
       )}
@@ -1903,7 +1903,8 @@ Respond ONLY with a valid JSON array: [{"place":"...","claim":"...","sentiment":
 }
 
 export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo, activeCity }) {
-  const [tab, setTab] = useState('ingest');
+  // Open on the statements when some are loaded; on adding sources otherwise
+  const [tab, setTab] = useState(() => ((tripData?.knowledgeGraph?.nodes?.length || 0) > 0 ? 'graph' : 'ingest'));
   const [ingestText, setIngestText] = useState('');
   const [sourceType, setSourceType] = useState('blog');
   const [sourceDate, setSourceDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -2514,16 +2515,15 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
 
   // ── Stats bar ─────────────────────────────────────────────────────────────
   const statsBar = (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '6px', marginBottom: '14px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '6px', marginBottom: '14px' }}>
       {[
-        { label: 'Nodes', val: nodes.length, color: '#8b5cf6' },
+        { label: 'Statements', val: nodes.length, color: '#8b5cf6' },
         { label: 'Places', val: uniquePlaces.size, color: '#3b82f6' },
-        { label: 'Sequences', val: sequenceEdges.length, color: '#10b981' },
-        { label: 'Conflicts', val: conflictCount, color: conflictCount > 0 ? '#ef4444' : 'var(--text-secondary)' },
+        { label: 'Possible contradictions', val: conflictCount, color: conflictCount > 0 ? '#ef4444' : 'var(--text-secondary)' },
       ].map(s => (
         <div key={s.label} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '6px 8px', textAlign: 'center' }}>
           <div style={{ fontSize: '1.1rem', fontWeight: '800', color: s.color }}>{s.val}</div>
-          <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</div>
         </div>
       ))}
     </div>
@@ -2596,24 +2596,24 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <Brain size={16} style={{ color: '#8b5cf6' }} />
         <div>
-          <div style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--text-primary)' }}>Knowledge Graph</div>
-          <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)' }}>Extract · verify · reason over travel knowledge</div>
+          <div style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)' }}>What sources say</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Statements from travel guides and forums about your cities</div>
         </div>
       </div>
 
       {/* Tab strip */}
       <div style={{ display: 'flex', borderRadius: '9px', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
         {[
-          ['ingest', 'Ingest', FileText],
-          ['graph', 'Claims', BarChart2],
-          ['visual', 'Visual', GitBranch],
-          ['conflicts', 'Conflicts', AlertTriangle],
+          ['ingest', 'Add sources', FileText],
+          ['graph', 'Statements', BarChart2],
+          ['visual', 'Charts', GitBranch],
+          ['conflicts', 'Contradiction check', AlertTriangle],
         ].map(([id, label, Icon]) => (
           <button key={id} onClick={() => setTab(id)}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', fontSize: '0.62rem', padding: '6px 0', background: tab === id ? 'rgba(139,92,246,0.2)' : 'transparent', color: tab === id ? '#c084fc' : 'var(--text-secondary)', border: 'none', cursor: 'pointer', fontWeight: tab === id ? '700' : '400', borderRight: id !== 'conflicts' ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', fontSize: '0.75rem', padding: '6px 0', background: tab === id ? 'rgba(139,92,246,0.2)' : 'transparent', color: tab === id ? '#c084fc' : 'var(--text-secondary)', border: 'none', cursor: 'pointer', fontWeight: tab === id ? '700' : '400', borderRight: id !== 'conflicts' ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
             <Icon size={10} />{label}
             {id === 'conflicts' && conflictCount > 0 && (
-              <span style={{ fontSize: '0.55rem', background: '#ef4444', color: '#fff', borderRadius: '8px', padding: '0 4px', fontWeight: '800', minWidth: '14px', textAlign: 'center' }}>{conflictCount}</span>
+              <span style={{ fontSize: '0.72rem', background: '#ef4444', color: '#fff', borderRadius: '8px', padding: '0 4px', fontWeight: '800', minWidth: '14px', textAlign: 'center' }}>{conflictCount}</span>
             )}
           </button>
         ))}
@@ -2643,8 +2643,8 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Brain size={16} style={{ color: '#10b981' }} />
                   <div>
-                    <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-primary)' }}>Offline Preprocessed KG Available</span>
-                    <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)' }}>Load ready-made knowledge for {cleanTarget} bundled with the app, no internet needed</div>
+                    <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>Ready-made statements for {cleanTarget[0].toUpperCase() + cleanTarget.slice(1)}</span>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Included with the app, no internet needed. Loaded automatically when the city is in your trip.</div>
                   </div>
                 </div>
                 <button
@@ -2704,9 +2704,9 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                       setExtracting(false);
                     }
                   }}
-                  style={{ width: '100%', padding: '8px', fontSize: '0.78rem', fontWeight: '700', background: '#10b981', border: 'none', borderRadius: '6px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  style={{ width: '100%', padding: '8px', fontSize: '0.85rem', fontWeight: '700', background: '#10b981', border: 'none', borderRadius: '6px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  <RefreshCw size={12} /> Load Offline Preprocessed Graph ({cleanTarget})
+                  <RefreshCw size={12} /> Load them again
                 </button>
               </div>
             );
@@ -2719,8 +2719,8 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
               style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 13px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
                 <Wifi size={13} style={{ color: '#0ea5e9' }} />
-                <span style={{ fontSize: '0.78rem', fontWeight: '700' }}>Fetch from Online</span>
-                <span style={{ fontSize: '0.6rem', color: '#0ea5e9', background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)', padding: '1px 6px', borderRadius: '8px', fontWeight: '600' }}>{HAS_DEV_PROXY ? 'Wikivoyage · Wikitravel · Reddit · StackExchange · Wikipedia' : 'Wikivoyage · Reddit · StackExchange · Wikipedia'}</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: '700' }}>Collect fresh statements online</span>
+                <span style={{ fontSize: '0.75rem', color: '#0ea5e9', background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)', padding: '1px 6px', borderRadius: '8px', fontWeight: '600' }}>{HAS_DEV_PROXY ? 'Wikivoyage · Wikitravel · Reddit · StackExchange · Wikipedia' : 'Wikivoyage · Reddit · StackExchange · Wikipedia'}</span>
               </div>
               {showFetchPanel ? <ChevronUp size={13} style={{ opacity: 0.5 }} /> : <ChevronDown size={13} style={{ opacity: 0.5 }} />}
             </button>
@@ -2733,7 +2733,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                   <button
                     onClick={() => setFetchMode('name')}
                     style={{
-                      flex: 1, padding: '6px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '700',
+                      flex: 1, padding: '6px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '700',
                       background: fetchMode === 'name' ? 'rgba(14,165,233,0.15)' : 'rgba(0,0,0,0.2)',
                       border: `1px solid ${fetchMode === 'name' ? '#0ea5e9' : 'rgba(255,255,255,0.1)'}`,
                       color: fetchMode === 'name' ? '#0ea5e9' : 'var(--text-secondary)', cursor: 'pointer'
@@ -2744,7 +2744,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                   <button
                     onClick={() => setFetchMode('coords')}
                     style={{
-                      flex: 1, padding: '6px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '700',
+                      flex: 1, padding: '6px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '700',
                       background: fetchMode === 'coords' ? 'rgba(14,165,233,0.15)' : 'rgba(0,0,0,0.2)',
                       border: `1px solid ${fetchMode === 'coords' ? '#0ea5e9' : 'rgba(255,255,255,0.1)'}`,
                       color: fetchMode === 'coords' ? '#0ea5e9' : 'var(--text-secondary)', cursor: 'pointer'
@@ -2757,22 +2757,22 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                 {/* Inputs based on Search Mode */}
                 {fetchMode === 'name' ? (
                   <div>
-                    <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>City / Destination</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>City / Destination</div>
                     <input
                       type="text"
                       placeholder="e.g. Barcelona, Prague, Kyoto…"
                       value={fetchCity}
                       onChange={e => setFetchCity(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleFetchOnline()}
-                      style={{ width: '100%', background: 'rgba(0,0,0,0.25)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '7px', fontSize: '0.82rem', padding: '7px 10px' }}
+                      style={{ width: '100%', background: 'rgba(0,0,0,0.25)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '7px', fontSize: '0.9rem', padding: '7px 10px' }}
                     />
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div>
-                      <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Search Coordinates</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Search Coordinates</div>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <div style={{ flex: 1, background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '7px', fontSize: '0.82rem', padding: '7px 10px', color: 'var(--text-primary)' }}>
+                        <div style={{ flex: 1, background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '7px', fontSize: '0.9rem', padding: '7px 10px', color: 'var(--text-primary)' }}>
                           {customCoords
                             ? `${customCoords[0].toFixed(4)}, ${customCoords[1].toFixed(4)}`
                             : (tripData.locations?.[0]?.coords
@@ -2795,14 +2795,14 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                               }
                             );
                           }}
-                          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '7px', padding: '0 10px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.72rem', fontWeight: '600' }}
+                          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '7px', padding: '0 10px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600' }}
                         >
                           GPS
                         </button>
                       </div>
                     </div>
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.62rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                         <span>Search Radius</span>
                         <span style={{ color: '#0ea5e9', fontWeight: '700' }}>{radiusKm} km</span>
                       </div>
@@ -2820,7 +2820,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
 
                 {/* Source checkboxes, compact pill row */}
                 <div>
-                  <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sources to fetch</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sources to fetch</div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {[
                       { key: 'wikivoyage', icon: '🗺', label: 'Wikivoyage', color: '#0ea5e9', desc: 'Encyclopedic travel guides, human-curated' },
@@ -2843,8 +2843,8 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                           onChange={e => setFetchSources(prev => ({ ...prev, [src.key]: e.target.checked }))}
                           style={{ display: 'none' }}
                         />
-                        <span style={{ fontSize: '0.78rem' }}>{src.icon}</span>
-                        <span style={{ fontSize: '0.72rem', fontWeight: '600', color: fetchSources[src.key] ? src.color : 'var(--text-secondary)' }}>{src.label}</span>
+                        <span style={{ fontSize: '0.85rem' }}>{src.icon}</span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: '600', color: fetchSources[src.key] ? src.color : 'var(--text-secondary)' }}>{src.label}</span>
                         {fetchSources[src.key] && <Check size={10} style={{ color: src.color }} />}
                       </label>
                     ))}
@@ -2855,10 +2855,10 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                 <button
                   onClick={handleFetchOnline}
                   disabled={fetching || extracting || (fetchMode === 'name' && !fetchCity.trim()) || !Object.values(fetchSources).some(Boolean)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', padding: '0.65rem', fontSize: '0.82rem', fontWeight: '700', background: 'linear-gradient(135deg,#0ea5e9,#8b5cf6)', border: 'none', borderRadius: '8px', color: 'white', cursor: (fetching || extracting) ? 'not-allowed' : 'pointer', opacity: (fetching || extracting || (fetchMode === 'name' && !fetchCity.trim())) ? 0.6 : 1, transition: 'opacity 0.15s' }}>
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', padding: '0.65rem', fontSize: '0.9rem', fontWeight: '700', background: 'linear-gradient(135deg,#0ea5e9,#8b5cf6)', border: 'none', borderRadius: '8px', color: 'white', cursor: (fetching || extracting) ? 'not-allowed' : 'pointer', opacity: (fetching || extracting || (fetchMode === 'name' && !fetchCity.trim())) ? 0.6 : 1, transition: 'opacity 0.15s' }}>
                   {fetching ? <><Loader2 size={13} className="spin" /> {fetchStatus || 'Fetching…'}</> :
                     extracting ? <><Loader2 size={13} className="spin" /> Extracting… </> :
-                      <><Wifi size={13} /> Fetch & Extract Knowledge</>}
+                      <><Wifi size={13} /> Collect statements</>}
                 </button>
 
                 {/* Animated extraction progress, shown while running */}
@@ -2875,22 +2875,22 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                 {/* Fetched source summary, shown after completion */}
                 {!fetching && !extracting && fetchedPreviews.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Fetched sources</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Fetched sources</div>
                     {fetchedPreviews.map((src, i) => {
                       const isOk = src.status === 'ok' || src.status === 'extracting' || src.status === 'extracted';
                       const statusColor = src.status === 'extracted' ? '#10b981' : src.status === 'extracting' ? '#a78bfa' : src.status === 'ok' ? '#6b7280' : src.status === 'none' ? '#f59e0b' : src.status === 'error' || src.status === 'extract_error' ? '#ef4444' : '#6b7280';
                       return (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', border: `1px solid ${isOk ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.06)'}`, borderRadius: '7px', padding: '6px 10px' }}>
                           <SourceBadge sourceType={src.sourceType} />
-                          <div style={{ flex: 1, fontSize: '0.68rem', color: 'var(--text-secondary)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ flex: 1, fontSize: '0.75rem', color: 'var(--text-secondary)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {src.title || src.label}
                             {src.charCount > 0 && <span> · <span style={{ color: 'var(--text-primary)' }}>{src.charCount?.toLocaleString()} chars</span></span>}
                             {src.posts && <span> · {src.posts} posts</span>}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
-                            {src.status === 'extracted' && <><span style={{ fontSize: '0.65rem', color: '#10b981' }}>✓</span>{src.nodeCount > 0 && <span style={{ fontSize: '0.6rem', color: '#34d399', background: 'rgba(16,185,129,0.12)', padding: '0 5px', borderRadius: '6px', fontWeight: '700' }}>+{src.nodeCount} nodes</span>}</>}
-                            {src.status === 'extract_error' && <span style={{ fontSize: '0.6rem', color: '#f87171' }}>✗ {src.extractError}</span>}
-                            {(src.status === 'ok' || src.status === 'none' || src.status === 'error') && <span style={{ fontSize: '0.65rem', color: statusColor, fontWeight: '700' }}>{src.status === 'ok' ? '✓' : src.status === 'none' ? '-' : '✗'}</span>}
+                            {src.status === 'extracted' && <><span style={{ fontSize: '0.75rem', color: '#10b981' }}>✓</span>{src.nodeCount > 0 && <span style={{ fontSize: '0.75rem', color: '#34d399', background: 'rgba(16,185,129,0.12)', padding: '0 5px', borderRadius: '6px', fontWeight: '700' }}>+{src.nodeCount} nodes</span>}</>}
+                            {src.status === 'extract_error' && <span style={{ fontSize: '0.75rem', color: '#f87171' }}>✗ {src.extractError}</span>}
+                            {(src.status === 'ok' || src.status === 'none' || src.status === 'error') && <span style={{ fontSize: '0.75rem', color: statusColor, fontWeight: '700' }}>{src.status === 'ok' ? '✓' : src.status === 'none' ? '-' : '✗'}</span>}
                           </div>
                           {src.url && isOk && (
                             <a href={src.url} target="_blank" rel="noreferrer" style={{ color: 'var(--text-secondary)', opacity: 0.5, flexShrink: 0 }}>
@@ -2905,7 +2905,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
 
                 {/* Final status */}
                 {fetchStatus && !fetching && !extracting && (
-                  <div style={{ fontSize: '0.7rem', color: fetchStatus.startsWith('✓') ? '#34d399' : 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '0.8rem', color: fetchStatus.startsWith('✓') ? '#34d399' : 'var(--text-secondary)' }}>
                     {fetchStatus}
                   </div>
                 )}
@@ -2916,7 +2916,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           {/* Manual paste, collapsed by default */}
           <button
             onClick={() => setShowManualPaste(p => !p)}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '7px 12px', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '0.7rem', width: '100%' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '7px 12px', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '0.8rem', width: '100%' }}>
             <FileText size={11} />
             <span>Paste text manually</span>
             {showManualPaste ? <ChevronUp size={11} style={{ marginLeft: 'auto' }} /> : <ChevronDown size={11} style={{ marginLeft: 'auto' }} />}
@@ -2927,9 +2927,9 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
               {/* Source metadata row */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <div>
-                  <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Source type</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Source type</div>
                   <select value={sourceType} onChange={e => setSourceType(e.target.value)}
-                    style={{ width: '100%', background: 'rgba(0,0,0,0.3)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', fontSize: '0.74rem', padding: '5px 8px' }}>
+                    style={{ width: '100%', background: 'rgba(0,0,0,0.3)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', fontSize: '0.8rem', padding: '5px 8px' }}>
                     <option value="blog">Blog post</option>
                     <option value="review">Review (e.g. TripAdvisor)</option>
                     <option value="reddit">Reddit / forum</option>
@@ -2938,9 +2938,9 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                   </select>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Source date</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Source date</div>
                   <input type="date" value={sourceDate} onChange={e => setSourceDate(e.target.value)}
-                    style={{ width: '100%', background: 'rgba(0,0,0,0.3)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', fontSize: '0.74rem', padding: '5px 8px' }} />
+                    style={{ width: '100%', background: 'rgba(0,0,0,0.3)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', fontSize: '0.8rem', padding: '5px 8px' }} />
                 </div>
               </div>
               <textarea
@@ -2948,21 +2948,21 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                 value={ingestText}
                 onChange={e => setIngestText(e.target.value)}
                 rows={7}
-                style={{ resize: 'vertical', width: '100%', background: 'rgba(0,0,0,0.25)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '0.78rem', padding: '10px', fontFamily: 'inherit', lineHeight: 1.6 }}
+                style={{ resize: 'vertical', width: '100%', background: 'rgba(0,0,0,0.25)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '0.85rem', padding: '10px', fontFamily: 'inherit', lineHeight: 1.6 }}
               />
               <button className="btn-primary" onClick={() => handleExtract()} disabled={extracting || !ingestText.trim()}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '0.6rem', fontSize: '0.82rem', fontWeight: '700', background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', opacity: (!ingestText.trim() || extracting) ? 0.5 : 1 }}>
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '0.6rem', fontSize: '0.9rem', fontWeight: '700', background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', opacity: (!ingestText.trim() || extracting) ? 0.5 : 1 }}>
                 {extracting ? <><Loader2 size={13} className="spin" /> Extracting… </> : <><Brain size={13} /> Extract Knowledge</>}
               </button>
               {extractMsg && (
-                <div style={{ fontSize: '0.72rem', padding: '6px 10px', borderRadius: '7px', background: extractMsg.startsWith('✓') ? 'rgba(16,185,129,0.12)' : extractMsg.startsWith('Error') ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.04)', border: `1px solid ${extractMsg.startsWith('✓') ? 'rgba(16,185,129,0.3)' : extractMsg.startsWith('Error') ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.08)'}`, color: extractMsg.startsWith('✓') ? '#34d399' : extractMsg.startsWith('Error') ? '#fca5a5' : 'var(--text-secondary)' }}>
+                <div style={{ fontSize: '0.8rem', padding: '6px 10px', borderRadius: '7px', background: extractMsg.startsWith('✓') ? 'rgba(16,185,129,0.12)' : extractMsg.startsWith('Error') ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.04)', border: `1px solid ${extractMsg.startsWith('✓') ? 'rgba(16,185,129,0.3)' : extractMsg.startsWith('Error') ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.08)'}`, color: extractMsg.startsWith('✓') ? '#34d399' : extractMsg.startsWith('Error') ? '#fca5a5' : 'var(--text-secondary)' }}>
                   {extractMsg}
                 </div>
               )}
 
               {nodes.length > 0 && (
                 <div style={{ marginTop: '4px' }}>
-                  <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Current graph</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Current graph</div>
                   {statsBar}
                 </div>
               )}
@@ -2976,7 +2976,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
       {tab === 'graph' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {nodes.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem', fontSize: '0.78rem' }}>
+            <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem', fontSize: '0.85rem' }}>
               <Brain size={28} style={{ opacity: 0.3, marginBottom: '8px', display: 'block', margin: '0 auto 8px' }} />
               🦙 Nothing read yet for this trip. Cities with ready-made knowledge (London, Paris, Rome, Edinburgh, Zurich) load by themselves; for others, fetch it from the web.
               <div><button className="btn-primary" style={{ marginTop: '10px' }} onClick={() => setTab('ingest')}>Fetch knowledge</button></div>
@@ -2988,8 +2988,8 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
               {/* Dynamic Credibility Slider Filter */}
               <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '9px', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.67rem', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Credibility Threshold Filter</span>
-                  <span style={{ fontSize: '0.72rem', fontWeight: '800', color: credibilityThreshold > 0.7 ? '#10b981' : credibilityThreshold > 0.4 ? '#f59e0b' : '#c084fc' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Hide statements below this credibility</span>
+                  <span style={{ fontSize: '0.8rem', fontWeight: '800', color: credibilityThreshold > 0.7 ? '#10b981' : credibilityThreshold > 0.4 ? '#f59e0b' : '#c084fc' }}>
                     {(credibilityThreshold * 100).toFixed(0)}%
                   </span>
                 </div>
@@ -3001,7 +3001,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                   onChange={e => setCredibilityThreshold(Number(e.target.value) / 100)}
                   style={{ width: '100%', accentColor: '#8b5cf6', cursor: 'pointer', height: '18px' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.58rem', color: 'var(--text-secondary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
                   <span>0% (Show All)</span>
                   <span>50% (Medium)</span>
                   <span>80% (High)</span>
@@ -3011,16 +3011,16 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
               {/* Sequence map */}
               {sequenceEdges.length > 0 && (
                 <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '10px', padding: '10px 12px', marginBottom: '4px' }}>
-                  <div style={{ fontSize: '0.63rem', fontWeight: '700', color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <GitBranch size={11} /> Sequence patterns
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     {sequenceEdges.slice(0, 5).map((e, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem' }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}>
                         <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{e.from}</span>
                         <ArrowRight size={11} style={{ color: '#34d399', flexShrink: 0 }} />
                         <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{e.to}</span>
-                        {e.count > 1 && <span style={{ fontSize: '0.57rem', color: '#34d399', background: 'rgba(16,185,129,0.12)', padding: '1px 5px', borderRadius: '6px' }}>×{e.count}</span>}
+                        {e.count > 1 && <span style={{ fontSize: '0.72rem', color: '#34d399', background: 'rgba(16,185,129,0.12)', padding: '1px 5px', borderRadius: '6px' }}>×{e.count}</span>}
                       </div>
                     ))}
                   </div>
@@ -3028,31 +3028,31 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
               )}
               {/* Area Sub-tabs */}
               <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.2)', padding: '3px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '8px' }}>
-                <button onClick={() => setAreaFilter('all')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'all' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'all' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'all' ? '700' : '400', transition: 'all 0.15s' }}>
-                  All Insights ({credibleNodes.length})
+                <button onClick={() => setAreaFilter('all')} style={{ flex: 1, fontSize: '0.75rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'all' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'all' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'all' ? '700' : '400', transition: 'all 0.15s' }}>
+                  All statements ({credibleNodes.length})
                 </button>
-                <button onClick={() => setAreaFilter('inside')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'inside' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'inside' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'inside' ? '700' : '400', transition: 'all 0.15s' }}
+                <button onClick={() => setAreaFilter('inside')} style={{ flex: 1, fontSize: '0.75rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'inside' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'inside' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'inside' ? '700' : '400', transition: 'all 0.15s' }}
                   title="Claims about specific named places">
                   Named Places ({locationNodeIds.size})
                 </button>
-                <button onClick={() => setAreaFilter('others')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'others' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'others' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'others' ? '700' : '400', transition: 'all 0.15s' }}
+                <button onClick={() => setAreaFilter('others')} style={{ flex: 1, fontSize: '0.75rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'others' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'others' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'others' ? '700' : '400', transition: 'all 0.15s' }}
                   title="General topic/category claims">
-                  General Tips ({credibleNodes.length - locationNodeIds.size})
+                  City-wide ({credibleNodes.length - locationNodeIds.size})
                 </button>
               </div>
               {/* Filters */}
               <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                 <input type="text" placeholder="Search places or statements…" aria-label="Search places or statements" value={filterPlace} onChange={e => setFilterPlace(e.target.value)}
-                  style={{ flex: 1, minWidth: '100px', background: 'rgba(0,0,0,0.25)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '0.69rem', padding: '4px 8px' }} />
+                  style={{ flex: 1, minWidth: '100px', background: 'rgba(0,0,0,0.25)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '0.75rem', padding: '4px 8px' }} />
                 <select value={filterSentiment} onChange={e => setFilterSentiment(e.target.value)}
-                  style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '0.69rem', padding: '4px 6px' }}>
+                  style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '0.75rem', padding: '4px 6px' }}>
                   <option value="all">All sentiments</option>
                   <option value="positive">Positive</option>
                   <option value="negative">Negative</option>
                   <option value="neutral">Neutral</option>
                 </select>
                 <select value={filterType} onChange={e => setFilterType(e.target.value)}
-                  style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '0.69rem', padding: '4px 6px' }}>
+                  style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '0.75rem', padding: '4px 6px' }}>
                   <option value="all">All types</option>
                   <option value="temporal">Timing</option>
                   <option value="conditional">Advice</option>
@@ -3061,7 +3061,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                 </select>
                 {(filterPlace || filterSentiment !== 'all' || filterType !== 'all') && (
                   <button onClick={() => { setFilterPlace(''); setFilterSentiment('all'); setFilterType('all'); }}
-                    style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5', borderRadius: '6px', fontSize: '0.69rem', padding: '4px 8px', cursor: 'pointer' }}>
+                    style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5', borderRadius: '6px', fontSize: '0.75rem', padding: '4px 8px', cursor: 'pointer' }}>
                     Clear Filters
                   </button>
                 )}
@@ -3080,28 +3080,28 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                             <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '3px', flexWrap: 'wrap' }}>
                               <span
                                 onClick={(e) => { e.stopPropagation(); handleClaimClick(node); }}
-                                style={{ fontSize: '0.75rem', fontWeight: '700', color: '#38bdf8', cursor: 'pointer', textDecoration: 'underline' }}
+                                style={{ fontSize: '0.85rem', fontWeight: '700', color: '#38bdf8', cursor: 'pointer', textDecoration: 'underline' }}
                                 title="Click to center map and view place details"
                               >
                                 {node.place}
                               </span>
                               <ClaimBadge type={node.claimType} />
-                              <span style={{ fontSize: '0.57rem', padding: '1px 5px', borderRadius: '6px', background: node.knowledge_type === 'volatile' ? 'rgba(249,115,22,0.15)' : 'rgba(99,102,241,0.15)', color: node.knowledge_type === 'volatile' ? '#fb923c' : '#a5b4fc', fontWeight: '600' }}>
+                              <span style={{ fontSize: '0.72rem', padding: '1px 5px', borderRadius: '6px', background: node.knowledge_type === 'volatile' ? 'rgba(249,115,22,0.15)' : 'rgba(99,102,241,0.15)', color: node.knowledge_type === 'volatile' ? '#fb923c' : '#a5b4fc', fontWeight: '600' }}>
                                 {node.knowledge_type === 'volatile' ? <><Zap size={8} /> volatile</> : <><Shield size={8} /> stable</>}
                               </span>
                               {node.source?.sourceType && <SourceBadge sourceType={node.source.sourceType} />}
                               {node.source?.url && (
                                 <span
                                   onClick={(e) => { e.stopPropagation(); window.open(node.source.url, '_blank'); }}
-                                  style={{ fontSize: '0.57rem', padding: '1px 5px', borderRadius: '6px', background: 'rgba(56,189,248,0.15)', color: '#38bdf8', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                                  style={{ fontSize: '0.72rem', padding: '1px 5px', borderRadius: '6px', background: 'rgba(56,189,248,0.15)', color: '#38bdf8', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
                                   title="View original post/source"
                                 >
                                   <ExternalLink size={8} /> Post Link
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: '0.72rem', color: sentColor, lineHeight: 1.4 }}>{node.claim}</div>
-                            {node.advice && <div style={{ fontSize: '0.68rem', color: '#c084fc', marginTop: '2px' }}>→ {node.advice}</div>}
+                            <div style={{ fontSize: '0.8rem', color: sentColor, lineHeight: 1.4 }}>{node.claim}</div>
+                            {node.advice && <div style={{ fontSize: '0.75rem', color: '#c084fc', marginTop: '2px' }}>→ {node.advice}</div>}
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', flexShrink: 0 }}>
                             <CredBar score={node.credibility} low={node.credLow} high={node.credHigh} />
@@ -3114,11 +3114,11 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                       {isExpanded && (
                         <div style={{ padding: '8px 11px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.15)' }}>
                           {node.source?.snippet && (
-                            <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '8px', lineHeight: 1.5 }}>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '8px', lineHeight: 1.5 }}>
                               "{node.source.snippet}"
                             </div>
                           )}
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '0.63rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
                             <span>Source: <strong style={{ color: 'var(--text-primary)' }}>{node.source?.sourceType || 'unknown'}</strong></span>
                             {node.source?.date && <span>Written: <strong style={{ color: 'var(--text-primary)' }}>{node.source.date}</strong></span>}
                             {node.source?.authorProfile && <span>Traveler: <strong style={{ color: 'var(--text-primary)' }}>{node.source.authorProfile}</strong></span>}
@@ -3132,14 +3132,14 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                           {Object.keys(node.conditions || {}).length > 0 && (
                             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
                               {Object.entries(node.conditions).map(([k, v]) => v && (
-                                <span key={k} style={{ fontSize: '0.6rem', padding: '1px 6px', borderRadius: '6px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>
+                                <span key={k} style={{ fontSize: '0.75rem', padding: '1px 6px', borderRadius: '6px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>
                                   {k}: {v}
                                 </span>
                               ))}
                             </div>
                           )}
                           <button onClick={() => deleteNode(node.id)}
-                            style={{ fontSize: '0.62rem', padding: '2px 8px', borderRadius: '5px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '5px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <Trash2 size={9} /> Remove
                           </button>
                         </div>
@@ -3168,7 +3168,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                       <>
                         {filteredNodes.map(node => renderNode(node))}
                         {filteredNodes.length === 0 && (
-                          <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.72rem', padding: '1.5rem' }}>No nodes match the current filters.</div>
+                          <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '1.5rem' }}>No nodes match the current filters.</div>
                         )}
                       </>
                     ) : (
@@ -3196,8 +3196,8 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                               >
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                   <IconComponent size={14} style={{ color: '#818cf8' }} />
-                                  <span style={{ fontSize: '0.75rem', fontWeight: '700' }}>{category}</span>
-                                  <span style={{ fontSize: '0.62rem', background: 'rgba(129,140,248,0.15)', color: '#a5b4fc', padding: '1px 5px', borderRadius: '8px', fontWeight: '600' }}>{catNodes.length}</span>
+                                  <span style={{ fontSize: '0.85rem', fontWeight: '700' }}>{category}</span>
+                                  <span style={{ fontSize: '0.75rem', background: 'rgba(129,140,248,0.15)', color: '#a5b4fc', padding: '1px 5px', borderRadius: '8px', fontWeight: '600' }}>{catNodes.length}</span>
                                 </div>
                                 {isSecExpanded ? <ChevronUp size={13} style={{ opacity: 0.5 }} /> : <ChevronDown size={13} style={{ opacity: 0.5 }} />}
                               </button>
@@ -3211,7 +3211,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                           );
                         })}
                         {filteredNodes.length === 0 && (
-                          <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.72rem', padding: '1.5rem' }}>No nodes match the current filters.</div>
+                          <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '1.5rem' }}>No nodes match the current filters.</div>
                         )}
                       </>
                     )}
@@ -3228,7 +3228,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
       {tab === 'visual' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {nodes.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem', fontSize: '0.78rem' }}>
+            <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem', fontSize: '0.85rem' }}>
               <Brain size={28} style={{ opacity: 0.3, marginBottom: '8px', display: 'block', margin: '0 auto 8px' }} />
               🦙 Nothing read yet for this trip. Cities with ready-made knowledge (London, Paris, Rome, Edinburgh, Zurich) load by themselves; for others, fetch it from the web.
               <div><button className="btn-primary" style={{ marginTop: '10px' }} onClick={() => setTab('ingest')}>Fetch knowledge</button></div>
@@ -3239,20 +3239,20 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
 
               {/* Area Sub-tabs */}
               <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.2)', padding: '3px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '8px' }}>
-                <button onClick={() => setAreaFilter('all')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'all' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'all' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'all' ? '700' : '400', transition: 'all 0.15s' }}>
-                  All Insights ({credibleNodes.length})
+                <button onClick={() => setAreaFilter('all')} style={{ flex: 1, fontSize: '0.75rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'all' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'all' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'all' ? '700' : '400', transition: 'all 0.15s' }}>
+                  All statements ({credibleNodes.length})
                 </button>
-                <button onClick={() => setAreaFilter('inside')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'inside' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'inside' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'inside' ? '700' : '400', transition: 'all 0.15s' }}
+                <button onClick={() => setAreaFilter('inside')} style={{ flex: 1, fontSize: '0.75rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'inside' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'inside' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'inside' ? '700' : '400', transition: 'all 0.15s' }}
                   title="Claims about specific named places (museums, restaurants, landmarks)">
                   Named Places ({locationNodeIds.size})
                 </button>
-                <button onClick={() => setAreaFilter('others')} style={{ flex: 1, fontSize: '0.68rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'others' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'others' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'others' ? '700' : '400', transition: 'all 0.15s' }}
+                <button onClick={() => setAreaFilter('others')} style={{ flex: 1, fontSize: '0.75rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: areaFilter === 'others' ? 'rgba(20,184,166,0.15)' : 'transparent', border: 'none', color: areaFilter === 'others' ? '#2dd4bf' : 'var(--text-secondary)', fontWeight: areaFilter === 'others' ? '700' : '400', transition: 'all 0.15s' }}
                   title="General topic/category claims (safety tips, weather, transport overview)">
-                  General Tips ({credibleNodes.length - locationNodeIds.size})
+                  City-wide ({credibleNodes.length - locationNodeIds.size})
                 </button>
               </div>
               {areaFilter !== 'all' && visualMode === 'radar' && (
-                <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', marginTop: '-4px', marginBottom: '4px', paddingLeft: '2px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginTop: '-4px', marginBottom: '4px', paddingLeft: '2px' }}>
                   Radar shows topic coverage of {areaFilter === 'inside' ? 'named-place' : 'general-tip'} claims only
                 </div>
               )}
@@ -3267,7 +3267,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                     { id: 'graph', label: 'Force Graph', icon: GitBranch },
                   ].map(({ id, label, icon: Icon }) => (
                     <button key={id} onClick={() => setVisualMode(id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', padding: '5px 11px', borderRadius: '8px', background: visualMode === id ? 'rgba(139,92,246,0.18)' : 'rgba(0,0,0,0.2)', border: `1px solid ${visualMode === id ? 'rgba(139,92,246,0.5)' : 'rgba(255,255,255,0.08)'}`, color: visualMode === id ? '#c084fc' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: visualMode === id ? '700' : '400', transition: 'all 0.15s' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.75rem', padding: '5px 11px', borderRadius: '8px', background: visualMode === id ? 'rgba(139,92,246,0.18)' : 'rgba(0,0,0,0.2)', border: `1px solid ${visualMode === id ? 'rgba(139,92,246,0.5)' : 'rgba(255,255,255,0.08)'}`, color: visualMode === id ? '#c084fc' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: visualMode === id ? '700' : '400', transition: 'all 0.15s' }}>
                       <Icon size={11} />{label}
                     </button>
                   ))}
@@ -3279,7 +3279,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                     display: 'flex',
                     alignItems: 'center',
                     gap: '5px',
-                    fontSize: '0.68rem',
+                    fontSize: '0.75rem',
                     padding: '5px 11px',
                     borderRadius: '8px',
                     background: mapOverlayActive ? 'rgba(20,184,166,0.18)' : 'rgba(0,0,0,0.2)',
@@ -3301,7 +3301,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                   disabled={wikidataRunning || rawNodes.length === 0}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '5px',
-                    fontSize: '0.68rem', padding: '5px 11px', borderRadius: '8px',
+                    fontSize: '0.75rem', padding: '5px 11px', borderRadius: '8px',
                     background: wikidataRunning ? 'rgba(99,102,241,0.25)' : 'rgba(99,102,241,0.12)',
                     border: '1px solid rgba(99,102,241,0.35)',
                     color: wikidataRunning ? '#a5b4fc' : '#818cf8',
@@ -3320,7 +3320,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
 
               {/* Wikidata status message */}
               {wikidataMsg && (
-                <div style={{ fontSize: '0.65rem', color: wikidataMsg.startsWith('✓') ? '#10b981' : wikidataMsg.startsWith('Error') ? '#ef4444' : '#a5b4fc', padding: '4px 6px', background: 'rgba(99,102,241,0.07)', borderRadius: '6px', marginTop: '-2px' }}>
+                <div style={{ fontSize: '0.75rem', color: wikidataMsg.startsWith('✓') ? '#10b981' : wikidataMsg.startsWith('Error') ? '#ef4444' : '#a5b4fc', padding: '4px 6px', background: 'rgba(99,102,241,0.07)', borderRadius: '6px', marginTop: '-2px' }}>
                   {wikidataMsg}
                 </div>
               )}
@@ -3345,34 +3345,34 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
           <VerifiedConflicts nodes={rawNodes} verified={verified} onSave={saveVerified} />
           {contradictions.length > 0 && (
             <button type="button" onClick={() => setShowToneOnly(v => !v)}
-              style={{ fontSize: '0.66rem', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '6px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+              style={{ fontSize: '0.75rem', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '6px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
               {showToneOnly ? 'Hide' : 'Show'} {contradictions.length} place{contradictions.length > 1 ? 's' : ''} with both positive and negative statements (not checked)
             </button>
           )}
           {!showToneOnly ? null : contradictions.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem', fontSize: '0.78rem' }}>
+            <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem', fontSize: '0.85rem' }}>
               <Check size={24} style={{ color: '#10b981', marginBottom: '8px', display: 'block', margin: '0 auto 8px' }} />
               No contradictions detected across {nodes.length} nodes.
             </div>
           ) : (
             <>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                 {contradictions.length} place{contradictions.length > 1 ? 's have' : ' has'} both positive and negative statements. This is a difference in tone, not necessarily a contradiction, use the check above for that. You can adjudicate here; decisions persist for this session.
               </div>
               {Object.values(resolutions).length > 0 && (
-                <div style={{ fontSize: '0.6rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <div style={{ fontSize: '0.75rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <CheckCircle2 size={10} /> {Object.values(resolutions).length} conflict{Object.values(resolutions).length > 1 ? 's' : ''} resolved
                 </div>
               )}
               {/* Research export row */}
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button onClick={exportConflictData}
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px', borderRadius: '7px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', color: '#fca5a5', cursor: 'pointer', fontSize: '0.65rem', fontWeight: '700', fontFamily: 'inherit' }}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px', borderRadius: '7px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', color: '#fca5a5', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '700', fontFamily: 'inherit' }}
                   title="Download the contested places as JSON">
                   <Download size={11} /> Export conflicts
                 </button>
                 <button onClick={exportKnowledgeGraph}
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px', borderRadius: '7px', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.22)', color: '#c084fc', cursor: 'pointer', fontSize: '0.65rem', fontWeight: '700', fontFamily: 'inherit' }}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px', borderRadius: '7px', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.22)', color: '#c084fc', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '700', fontFamily: 'inherit' }}
                   title="Download the whole knowledge graph as JSON">
                   <Download size={11} /> Export KG
                 </button>
@@ -3392,18 +3392,18 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                     {/* Header */}
                     <div style={{ padding: '10px 13px 0' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-primary)' }}>{c.place}</span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>{c.place}</span>
                         <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
                           {resolution ? (
                             <>
-                              <span style={{ fontSize: '0.6rem', fontWeight: '700', color: '#10b981', background: 'rgba(16,185,129,0.12)', padding: '2px 7px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                              <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#10b981', background: 'rgba(16,185,129,0.12)', padding: '2px 7px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '3px' }}>
                                 <CheckCircle2 size={9} /> {resolution.verdict === 'trust_positive' ? 'Trusted positive' : resolution.verdict === 'trust_negative' ? 'Trusted negative' : 'Context-dependent'}
                               </span>
                               <button onClick={() => resolveConflict(c.place, null)}
-                                style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 3px' }}>Re-open</button>
+                                style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 3px' }}>Re-open</button>
                             </>
                           ) : (
-                            <span style={{ fontSize: '0.65rem', fontWeight: '700', color: verdictColor, background: verdictColor + '18', padding: '2px 8px', borderRadius: '8px' }}>{verdict}</span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: verdictColor, background: verdictColor + '18', padding: '2px 8px', borderRadius: '8px' }}>{verdict}</span>
                           )}
                         </div>
                       </div>
@@ -3413,7 +3413,7 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                         <div style={{ width: `${posRatio * 100}%`, background: '#10b981', transition: 'width 0.3s' }} />
                         <div style={{ flex: 1, background: '#ef4444' }} />
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.58rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
                         <span style={{ color: '#10b981' }}>{c.positive.length} positive · w={posWeight.toFixed(1)}</span>
                         <span style={{ color: '#ef4444' }}>{c.negative.length} negative · w={negWeight.toFixed(1)}</span>
                       </div>
@@ -3426,14 +3426,14 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                         { list: c.negative.slice(0, 3), label: '✗ Negative', color: '#ef4444', bg: 'rgba(239,68,68,0.04)' },
                       ].map(({ list, label, color, bg }, si) => (
                         <div key={label} style={{ background: bg, padding: '8px 10px', borderLeft: si === 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                          <div style={{ fontSize: '0.57rem', color, fontWeight: '700', marginBottom: '6px', letterSpacing: '0.03em' }}>{label}</div>
+                          <div style={{ fontSize: '0.72rem', color, fontWeight: '700', marginBottom: '6px', letterSpacing: '0.03em' }}>{label}</div>
                           {list.map((n, j) => (
                             <div key={j} style={{ marginBottom: '5px' }}>
-                              <div style={{ fontSize: '0.63rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>{n.claim}</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>{n.claim}</div>
                               <div style={{ display: 'flex', gap: '5px', marginTop: '2px', flexWrap: 'wrap' }}>
-                                <span style={{ fontSize: '0.53rem', color: 'rgba(255,255,255,0.28)' }}>{n.source?.date}</span>
+                                <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.28)' }}>{n.source?.date}</span>
                                 <SourceBadge sourceType={n.source?.sourceType} />
-                                <span style={{ fontSize: '0.53rem', color: 'rgba(255,255,255,0.25)' }}>{(n.credibility * 100).toFixed(0)}% cred</span>
+                                <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.25)' }}>{(n.credibility * 100).toFixed(0)}% cred</span>
                               </div>
                             </div>
                           ))}
@@ -3444,17 +3444,17 @@ export default function KnowledgePanel({ tripData, setTripData, triggerPlaceInfo
                     {/* Resolver buttons */}
                     {!resolution && (
                       <div style={{ padding: '8px 10px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '5px' }}>
-                        <div style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.28)', alignSelf: 'center', marginRight: '3px' }}>Adjudicate:</div>
+                        <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.28)', alignSelf: 'center', marginRight: '3px' }}>Adjudicate:</div>
                         <button onClick={() => resolveConflict(c.place, 'trust_positive')}
-                          style={{ flex: 1, padding: '5px 6px', borderRadius: '6px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', cursor: 'pointer', fontSize: '0.6rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
+                          style={{ flex: 1, padding: '5px 6px', borderRadius: '6px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
                           <ThumbsUp size={9} /> Trust positive
                         </button>
                         <button onClick={() => resolveConflict(c.place, 'trust_negative')}
-                          style={{ flex: 1, padding: '5px 6px', borderRadius: '6px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.28)', color: '#fca5a5', cursor: 'pointer', fontSize: '0.6rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
+                          style={{ flex: 1, padding: '5px 6px', borderRadius: '6px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.28)', color: '#fca5a5', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
                           <ThumbsDown size={9} /> Trust negative
                         </button>
                         <button onClick={() => resolveConflict(c.place, 'both_valid')}
-                          style={{ flex: 1, padding: '5px 6px', borderRadius: '6px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.28)', color: '#fbbf24', cursor: 'pointer', fontSize: '0.6rem', fontWeight: '700' }}>
+                          style={{ flex: 1, padding: '5px 6px', borderRadius: '6px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.28)', color: '#fbbf24', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '700' }}>
                           Context-dep.
                         </button>
                       </div>

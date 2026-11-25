@@ -190,25 +190,25 @@ function ClaimCard({ claim, onClose, onNavigate }) {
     <div style={{ position: 'absolute', bottom: '10px', left: '10px', right: '10px', background: 'rgba(9,9,11,0.96)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 15px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '7px', boxShadow: '0 10px 30px rgba(0,0,0,0.7)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
         <div>
-          <button onClick={() => onNavigate(claim.place)} style={{ fontSize: '0.68rem', fontWeight: '700', color: '#38bdf8', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textDecoration: 'underline', textAlign: 'left' }}>{claim.place}</button>
-          <div style={{ fontSize: '0.78rem', fontWeight: '600', color: '#f8fafc', marginTop: '2px', lineHeight: 1.35 }}>{claim.claim}</div>
+          <button onClick={() => onNavigate(claim.place)} style={{ fontSize: '0.75rem', fontWeight: '700', color: '#38bdf8', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textDecoration: 'underline', textAlign: 'left' }}>{claim.place}</button>
+          <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#f8fafc', marginTop: '2px', lineHeight: 1.35 }}>{claim.claim}</div>
         </div>
         <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: '50%', width: '22px', height: '22px', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><X size={12}/></button>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '7px', fontSize: '0.64rem' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '7px', fontSize: '0.75rem' }}>
         <span style={{ padding: '2px 7px', borderRadius: '6px', fontWeight: '700', textTransform: 'uppercase', background: bg, color: sc, border: `1px solid ${bd}` }}>{s}</span>
         {claim.claimType && <span style={{ padding: '2px 7px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)' }}>{claim.claimType}</span>}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span style={{ color: '#94a3b8', fontSize: '0.6rem' }}>Credibility:</span>
+          <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Credibility:</span>
           <div style={{ width: '44px', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
             <div style={{ width: `${(claim.credibility || 0.5) * 100}%`, height: '100%', background: (claim.credibility || 0.5) > 0.7 ? '#10b981' : (claim.credibility || 0.5) > 0.4 ? '#f59e0b' : '#ef4444' }}/>
           </div>
-          <span style={{ fontWeight: '700', fontSize: '0.62rem', color: (claim.credibility || 0.5) > 0.7 ? '#34d399' : '#fbbf24' }}>{Math.round((claim.credibility || 0.5) * 100)}%</span>
+          <span style={{ fontWeight: '700', fontSize: '0.75rem', color: (claim.credibility || 0.5) > 0.7 ? '#34d399' : '#fbbf24' }}>{Math.round((claim.credibility || 0.5) * 100)}%</span>
         </div>
       </div>
-      {claim.advice && <div style={{ background: 'rgba(251,191,36,0.07)', padding: '5px 9px', borderRadius: '7px', fontSize: '0.66rem', color: '#fef08a', lineHeight: 1.35 }}>💡 {claim.advice}</div>}
-      {claim.source?.snippet && <div style={{ fontSize: '0.63rem', color: '#94a3b8', fontStyle: 'italic', lineHeight: 1.35, background: 'rgba(255,255,255,0.02)', padding: '5px 8px', borderRadius: '6px' }}>"{claim.source.snippet}"</div>}
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', color: '#64748b', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '5px' }}>
+      {claim.advice && <div style={{ background: 'rgba(251,191,36,0.07)', padding: '5px 9px', borderRadius: '7px', fontSize: '0.75rem', color: '#fef08a', lineHeight: 1.35 }}>💡 {claim.advice}</div>}
+      {claim.source?.snippet && <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic', lineHeight: 1.35, background: 'rgba(255,255,255,0.02)', padding: '5px 8px', borderRadius: '6px' }}>"{claim.source.snippet}"</div>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '5px' }}>
         <span>Source: {claim.source?.sourceLabel || claim.source?.sourceType || 'unknown'}</span>
         {claim.source?.url && <a href={claim.source.url} target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '2px' }}>Source <ExternalLink size={9}/></a>}
       </div>
@@ -378,13 +378,13 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
   }, [expandedSearch, graphData.nodes]);
 
   const generateTooltip = useCallback((node) => {
-    if (node.type === 'city') return `<div style="padding:6px 10px;background:rgba(8,12,26,.96);border:1.5px solid #c084fc;border-radius:8px;font-family:Inter,sans-serif;font-size:.72rem;color:#fff"><b style="color:#c084fc">Destination Hub</b><br>${node.label}</div>`;
-    if (node.type === 'place') return `<div style="padding:6px 10px;background:rgba(8,12,26,.96);border:1.5px solid ${node.isContested ? '#fb923c' : '#38bdf8'};border-radius:8px;font-family:Inter,sans-serif;font-size:.72rem;color:#fff"><b style="color:${node.isContested ? '#fb923c' : '#38bdf8'}">${node.isContested ? '⚡ Contested · ' : ''}Place · ${node.claimCount || 0} claims</b><br>${node.label}<br><span style="font-size:.6rem;color:#a1a1aa;margin-top:3px;display:block">${node.isExpanded ? 'Click to collapse claims' : 'Click to expand claims'}</span></div>`;
+    if (node.type === 'city') return `<div style="padding:6px 10px;background:rgba(8,12,26,.96);border:1.5px solid #c084fc;border-radius:8px;font-family:Inter,sans-serif;font-size:0.8rem;color:#fff"><b style="color:#c084fc">Destination Hub</b><br>${node.label}</div>`;
+    if (node.type === 'place') return `<div style="padding:6px 10px;background:rgba(8,12,26,.96);border:1.5px solid ${node.isContested ? '#fb923c' : '#38bdf8'};border-radius:8px;font-family:Inter,sans-serif;font-size:0.8rem;color:#fff"><b style="color:${node.isContested ? '#fb923c' : '#38bdf8'}">${node.isContested ? '⚡ Contested · ' : ''}Place · ${node.claimCount || 0} claims</b><br>${node.label}<br><span style="font-size:0.75rem;color:#a1a1aa;margin-top:3px;display:block">${node.isExpanded ? 'Click to collapse claims' : 'Click to expand claims'}</span></div>`;
     if (node.type === 'claim' && node.claim) {
       const c = node.claim;
       const s = c.evaluation?.sentiment || 'neutral';
       const sc = s === 'positive' ? '#6366f1' : s === 'negative' ? '#f97316' : '#a1a1aa';
-      return `<div style="padding:8px 12px;background:rgba(8,12,26,.98);border:1.5px solid ${sc};border-radius:8px;font-family:Inter,sans-serif;font-size:.7rem;color:#fff;max-width:240px;white-space:normal;line-height:1.4"><span style="font-size:.58rem;padding:1px 5px;border-radius:5px;background:${sc}22;color:${sc};font-weight:700;border:1px solid ${sc}30">${s.toUpperCase()}</span><div style="margin-top:4px;font-weight:600">${(c.claim || '').slice(0, 120)}</div>${c.advice ? `<div style="color:#fcd34d;font-size:.62rem;margin-top:3px">💡 ${c.advice}</div>` : ''}<div style="color:#64748b;font-size:.58rem;margin-top:5px;border-top:1px solid rgba(255,255,255,.07);padding-top:4px">Click for full detail</div></div>`;
+      return `<div style="padding:8px 12px;background:rgba(8,12,26,.98);border:1.5px solid ${sc};border-radius:8px;font-family:Inter,sans-serif;font-size:0.8rem;color:#fff;max-width:240px;white-space:normal;line-height:1.4"><span style="font-size:0.72rem;padding:1px 5px;border-radius:5px;background:${sc}22;color:${sc};font-weight:700;border:1px solid ${sc}30">${s.toUpperCase()}</span><div style="margin-top:4px;font-weight:600">${(c.claim || '').slice(0, 120)}</div>${c.advice ? `<div style="color:#fcd34d;font-size:0.75rem;margin-top:3px">💡 ${c.advice}</div>` : ''}<div style="color:#64748b;font-size:0.72rem;margin-top:5px;border-top:1px solid rgba(255,255,255,.07);padding-top:4px">Click for full detail</div></div>`;
     }
     return node.label;
   }, []);
@@ -535,11 +535,11 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
     <div ref={containerRef} style={{ width: '100%', height: '450px', background: '#09090b', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden', position: 'relative' }}>
       {/* Legend */}
       <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, background: 'rgba(0,0,0,0.85)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', pointerEvents: 'none', width: '265px', fontFamily: 'Inter,sans-serif' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#e4e4e7', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#e4e4e7', marginBottom: '4px' }}>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#38bdf8', flexShrink: 0 }}/>
           <strong>Places</strong> (Colored by sentiment)
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#e4e4e7', marginBottom: '6px', whiteSpace: 'nowrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#e4e4e7', marginBottom: '6px', whiteSpace: 'nowrap' }}>
           <div style={{ display: 'flex', gap: '2px', alignItems: 'center', flexShrink: 0 }}>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}/>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444' }}/>
@@ -547,23 +547,23 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
           </div>
           <strong style={{ marginLeft: '2px' }}>Claims:</strong> ✓ Pos / ! Neg / • Neu
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#e4e4e7', marginBottom: '3px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#e4e4e7', marginBottom: '3px' }}>
           <span style={{ width: '14px', height: '2px', background: 'rgba(99,102,241,0.85)', flexShrink: 0 }}/>
           <strong>Indigo Edge:</strong> Positive claim link
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#e4e4e7', marginBottom: '3px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#e4e4e7', marginBottom: '3px' }}>
           <span style={{ width: '14px', height: '2px', background: 'rgba(249,115,22,0.85)', flexShrink: 0 }}/>
           <strong>Orange Edge:</strong> Negative/Caution link
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#e4e4e7', marginBottom: '3px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#e4e4e7', marginBottom: '3px' }}>
           <span style={{ width: '14px', height: '2px', background: 'rgba(255,255,255,0.22)', flexShrink: 0 }}/>
           <strong>Grey Edge:</strong> Neutral/Hub link
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#e4e4e7', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#e4e4e7', marginBottom: '4px' }}>
           <span style={{ width: '14px', height: '2px', background: '#fb7185', flexShrink: 0 }}/>
           <strong>Route Sequence Edge</strong>
         </div>
-        <div style={{ fontSize: '0.52rem', color: '#a1a1aa', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '8px', paddingTop: '6px' }}>
+        <div style={{ fontSize: '0.72rem', color: '#a1a1aa', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '8px', paddingTop: '6px' }}>
           <span style={{ fontWeight: 'bold', color: '#38bdf8' }}>All Claims Mode:</span>
           <div style={{ marginTop: '2px' }}>• OFF: Click place to expand claims</div>
           <div>• ON: Show all claims on graph</div>
@@ -575,26 +575,26 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
         <input
           value={graphSearch} onChange={e => setGraphSearch(e.target.value)}
           placeholder="🔍 Find node…"
-          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '7px', padding: '4px 9px', fontSize: '0.65rem', color: 'rgba(255,255,255,0.75)', outline: 'none', width: '130px', fontFamily: 'Inter,sans-serif' }}
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '7px', padding: '4px 9px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.75)', outline: 'none', width: '130px', fontFamily: 'Inter,sans-serif' }}
         />
         {expandedCount > 0 && !showAllClaims && (
           <button onClick={() => { snapshotPositions(); setExpandedPlaces(new Set()); }} title="Collapse all claims"
-            style={{ background: 'rgba(240,171,252,0.15)', border: '1px solid rgba(240,171,252,0.3)', borderRadius: '6px', color: '#f0abfc', cursor: 'pointer', padding: '4px 8px', fontSize: '0.63rem', fontFamily: 'Inter,sans-serif' }}>
+            style={{ background: 'rgba(240,171,252,0.15)', border: '1px solid rgba(240,171,252,0.3)', borderRadius: '6px', color: '#f0abfc', cursor: 'pointer', padding: '4px 8px', fontSize: '0.75rem', fontFamily: 'Inter,sans-serif' }}>
             ○ Collapse {expandedCount}
           </button>
         )}
         <button onClick={() => { snapshotPositions(); setShowAllClaims(s => !s); }} title={showAllClaims ? 'Hide all claim nodes' : 'Show all claim nodes'}
-          style={{ background: showAllClaims ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.07)', border: `1px solid ${showAllClaims ? 'rgba(99,102,241,0.38)' : 'rgba(255,255,255,0.14)'}`, borderRadius: '6px', color: showAllClaims ? '#818cf8' : 'rgba(255,255,255,0.45)', cursor: 'pointer', padding: '4px 8px', fontSize: '0.63rem', fontFamily: 'Inter,sans-serif' }}>
+          style={{ background: showAllClaims ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.07)', border: `1px solid ${showAllClaims ? 'rgba(99,102,241,0.38)' : 'rgba(255,255,255,0.14)'}`, borderRadius: '6px', color: showAllClaims ? '#818cf8' : 'rgba(255,255,255,0.45)', cursor: 'pointer', padding: '4px 8px', fontSize: '0.75rem', fontFamily: 'Inter,sans-serif' }}>
           {showAllClaims ? '⬤ All claims' : '○ All claims'}
         </button>
         <button onClick={() => { setExpandedDims({ w: window.innerWidth, h: window.innerHeight - 50 }); setExpanded(true); }} title="Expand full screen"
-          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '6px', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.63rem', fontFamily: 'Inter,sans-serif' }}>
+          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '6px', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.75rem', fontFamily: 'Inter,sans-serif' }}>
           <Maximize2 size={11}/> Expand
         </button>
       </div>
 
       {/* Hint */}
-      <div style={{ position: 'absolute', bottom: selectedClaim || selectedPlace ? '135px' : '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 8, pointerEvents: 'none', fontSize: '0.58rem', color: 'rgba(255,255,255,0.18)', fontFamily: 'Inter,sans-serif', whiteSpace: 'nowrap' }}>
+      <div style={{ position: 'absolute', bottom: selectedClaim || selectedPlace ? '135px' : '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 8, pointerEvents: 'none', fontSize: '0.72rem', color: 'rgba(255,255,255,0.18)', fontFamily: 'Inter,sans-serif', whiteSpace: 'nowrap' }}>
         {placeCount} places · {claims.length} claims · click place to expand its claims
       </div>
 
@@ -611,11 +611,11 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
           <div style={{ position: 'absolute', bottom: '10px', left: '10px', right: '10px', background: 'rgba(9,9,11,0.96)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: '12px', padding: '12px 15px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '7px', maxHeight: '200px', boxShadow: '0 10px 30px rgba(0,0,0,0.7)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#38bdf8' }}>{placeNode.label}</span>
-                <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', marginLeft: '8px' }}>{placeNode.claimCount} claims · {expandedPlaces.has(placeNode.id) ? 'expanded' : 'collapsed'}</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#38bdf8' }}>{placeNode.label}</span>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginLeft: '8px' }}>{placeNode.claimCount} claims · {expandedPlaces.has(placeNode.id) ? 'expanded' : 'collapsed'}</span>
               </div>
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                <button onClick={() => resolvePlaceNav(placeNode.label)} style={{ background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.3)', borderRadius: '6px', color: '#38bdf8', cursor: 'pointer', padding: '3px 9px', fontSize: '0.62rem', fontFamily: 'Inter,sans-serif' }}>
+                <button onClick={() => resolvePlaceNav(placeNode.label)} style={{ background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.3)', borderRadius: '6px', color: '#38bdf8', cursor: 'pointer', padding: '3px 9px', fontSize: '0.75rem', fontFamily: 'Inter,sans-serif' }}>
                   Navigate →
                 </button>
                 <button onClick={() => setSelectedPlace(null)} style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: '50%', width: '20px', height: '20px', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={11}/></button>
@@ -625,9 +625,9 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
               {placeClaims.slice(0, 4).map((c, i) => {
                 const s = c.evaluation?.sentiment;
                 const col = s === 'positive' ? '#34d399' : s === 'negative' ? '#f87171' : '#94a3b8';
-                return <span key={i} style={{ fontSize: '0.6rem', color: col, background: `${col}12`, border: `1px solid ${col}25`, borderRadius: '5px', padding: '2px 7px', lineHeight: 1.4 }}>{(c.claim || '').slice(0, 60)}</span>;
+                return <span key={i} style={{ fontSize: '0.75rem', color: col, background: `${col}12`, border: `1px solid ${col}25`, borderRadius: '5px', padding: '2px 7px', lineHeight: 1.4 }}>{(c.claim || '').slice(0, 60)}</span>;
               })}
-              {placeClaims.length > 4 && <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)' }}>+{placeClaims.length - 4} more</span>}
+              {placeClaims.length > 4 && <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)' }}>+{placeClaims.length - 4} more</span>}
             </div>
           </div>
         );
@@ -638,30 +638,30 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderBottom: '1px solid #e4e4e7', background: '#ffffff', flexShrink: 0 }}>
-            <span style={{ fontSize: '0.78rem', color: '#475569', fontFamily: 'Inter,sans-serif' }}>
+            <span style={{ fontSize: '0.85rem', color: '#475569', fontFamily: 'Inter,sans-serif' }}>
               Force Graph · <strong style={{ color: '#0ea5e9' }}>{placeCount}</strong> places · <strong style={{ color: '#6366f1' }}>{claims.length}</strong> claims, {city}
             </span>
             <input value={expandedSearch} onChange={e => setExpandedSearch(e.target.value)}
               placeholder="🔍 Find node…"
-              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '7px', padding: '4px 10px', fontSize: '0.68rem', color: '#1e293b', outline: 'none', width: '180px', fontFamily: 'Inter,sans-serif' }}/>
+              style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '7px', padding: '4px 10px', fontSize: '0.75rem', color: '#1e293b', outline: 'none', width: '180px', fontFamily: 'Inter,sans-serif' }}/>
             <button onClick={() => setShowAllClaims(s => !s)}
-              style={{ background: showAllClaims ? 'rgba(99,102,241,0.12)' : '#f1f5f9', border: `1px solid ${showAllClaims ? '#818cf8' : '#cbd5e1'}`, borderRadius: '6px', color: showAllClaims ? '#4f46e5' : '#475569', cursor: 'pointer', padding: '4px 10px', fontSize: '0.65rem', fontFamily: 'Inter,sans-serif' }}>
+              style={{ background: showAllClaims ? 'rgba(99,102,241,0.12)' : '#f1f5f9', border: `1px solid ${showAllClaims ? '#818cf8' : '#cbd5e1'}`, borderRadius: '6px', color: showAllClaims ? '#4f46e5' : '#475569', cursor: 'pointer', padding: '4px 10px', fontSize: '0.75rem', fontFamily: 'Inter,sans-serif' }}>
               {showAllClaims ? '⬤ All claims on' : '○ All claims off'}
             </button>
             <div style={{ flex: 1 }}/>
-            <span style={{ fontSize: '0.62rem', color: '#64748b', fontFamily: 'Inter,sans-serif' }}>Scroll=zoom · Drag=pan · Click place=expand · Esc to close</span>
-            <button onClick={() => setExpanded(false)} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#475569', cursor: 'pointer', padding: '4px 12px', fontSize: '0.7rem', fontFamily: 'Inter,sans-serif' }}>✕ Close</button>
+            <span style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'Inter,sans-serif' }}>Scroll=zoom · Drag=pan · Click place=expand · Esc to close</span>
+            <button onClick={() => setExpanded(false)} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#475569', cursor: 'pointer', padding: '4px 12px', fontSize: '0.8rem', fontFamily: 'Inter,sans-serif' }}>✕ Close</button>
           </div>
           
           {/* Main Visualizer Area */}
           <div style={{ flex: 1, background: '#ffffff', position: 'relative' }}>
             {/* Light Theme Legend */}
             <div style={{ position: 'absolute', top: '15px', left: '15px', zIndex: 10, background: 'rgba(255,255,255,0.92)', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', pointerEvents: 'none', width: '265px', fontFamily: 'Inter,sans-serif' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#334155', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#334155', marginBottom: '4px' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#38bdf8', flexShrink: 0 }}/>
                 <strong>Places</strong> (Colored by sentiment)
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#334155', marginBottom: '6px', whiteSpace: 'nowrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#334155', marginBottom: '6px', whiteSpace: 'nowrap' }}>
                 <div style={{ display: 'flex', gap: '2px', alignItems: 'center', flexShrink: 0 }}>
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}/>
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444' }}/>
@@ -669,23 +669,23 @@ export default function KnowledgeGraphView({ claims = [], city = 'Destination', 
                 </div>
                 <strong style={{ marginLeft: '2px' }}>Claims:</strong> ✓ Pos / ! Neg / • Neu
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#334155', marginBottom: '3px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#334155', marginBottom: '3px' }}>
                 <span style={{ width: '14px', height: '2px', background: 'rgba(99,102,241,0.85)', flexShrink: 0 }}/>
                 <strong>Indigo Edge:</strong> Positive claim link
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#334155', marginBottom: '3px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#334155', marginBottom: '3px' }}>
                 <span style={{ width: '14px', height: '2px', background: 'rgba(249,115,22,0.85)', flexShrink: 0 }}/>
                 <strong>Orange Edge:</strong> Negative/Caution link
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#334155', marginBottom: '3px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#334155', marginBottom: '3px' }}>
                 <span style={{ width: '14px', height: '2px', background: 'rgba(15, 23, 42, 0.22)', flexShrink: 0 }}/>
                 <strong>Grey Edge:</strong> Neutral/Hub link
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.62rem', color: '#334155', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#334155', marginBottom: '4px' }}>
                 <span style={{ width: '14px', height: '2px', background: '#fb7185', flexShrink: 0 }}/>
                 <strong>Route Sequence Edge</strong>
               </div>
-              <div style={{ fontSize: '0.55rem', color: '#64748b', borderTop: '1px solid #e2e8f0', marginTop: '8px', paddingTop: '6px' }}>
+              <div style={{ fontSize: '0.72rem', color: '#64748b', borderTop: '1px solid #e2e8f0', marginTop: '8px', paddingTop: '6px' }}>
                 <span style={{ fontWeight: 'bold', color: '#0ea5e9' }}>All Claims Mode:</span>
                 <div style={{ marginTop: '2px' }}>• OFF: Click place to expand claims</div>
                 <div>• ON: Show all claims on graph</div>

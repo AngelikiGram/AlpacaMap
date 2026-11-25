@@ -14,14 +14,14 @@ export const TripInsights=({tripData,setActiveTab})=>{
   const pt=tripData.packing.reduce((s,l)=>s+l.items.length,0);
   const pd=tripData.packing.reduce((s,l)=>s+l.items.filter(i=>i.checked).length,0);
   if(pt>0&&pd<pt) insights.push({Icon:Package,text:`Packing ${Math.round(pd/pt*100)}% complete`,tab:'packing'});
-  if(insights.length===0)return<div style={{fontSize:'0.8rem',color:'var(--success)',marginBottom:'0.75rem',fontWeight:'500'}}>All good, trip is on track.</div>;
+  if(insights.length===0)return<div style={{fontSize:'0.9rem',color:'var(--success)',marginBottom:'0.75rem',fontWeight:'500'}}>All good, trip is on track.</div>;
   return(
     <div className="insights-widget">
       <div className="section-label" style={{marginBottom:'0.4rem'}}>Insights</div>
       {insights.map((ins,i)=>(
         <div key={i} className="insight-item" onClick={()=>setActiveTab(ins.tab)}>
           <ins.Icon size={13} color="var(--accent-primary)" style={{flexShrink:0}}/>
-          <span style={{flex:1,fontSize:'0.78rem',color:'var(--text-secondary)'}}>{ins.text}</span>
+          <span style={{flex:1,fontSize:'0.85rem',color:'var(--text-secondary)'}}>{ins.text}</span>
           <ChevronRight size={11} color="var(--text-secondary)"/>
         </div>
       ))}

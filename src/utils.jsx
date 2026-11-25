@@ -471,7 +471,7 @@ export const TABS=[
   {id:'calendar',   label:'Itinerary',  Icon:CalendarIcon, desc:'Your days, stops and times'},
   {id:'routespace', label:'Routes',     Icon:Compass,      desc:'Slide between route “universes”: culture ↔ food, iconic ↔ hidden, calm ↔ lively'},
   {id:'knowledge',  label:'Knowledge',  Icon:Brain,        desc:'What guides and travellers say, and where they disagree'},
-  {id:'debates',    label:'Debates',    Icon:Scale,        desc:'Sources disagree? Swipe through disputed tips and decide'},
+  {id:'debates',    label:'Debates',    Icon:Scale,        desc:'Compare statements where sources disagree, and judge them'},
   {id:'analytics',  label:'Insights',   Icon:Activity,     desc:'Charts about your places and the collected knowledge'},
   {id:'analyze',    label:'Overview',   Icon:ClipboardList,desc:'Summary of saved places, budget and packing per city'},
   {id:'budget',     label:'Budget',     Icon:DollarSign,   desc:'Track expenses against your total'},

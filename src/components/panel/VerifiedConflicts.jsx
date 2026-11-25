@@ -7,12 +7,12 @@ import { readTravellerProfile, pairRelevance } from '../../knowledge/relevance';
 const SRC = { wikivoyage: 'Wikivoyage', wikitravel: 'Wikitravel', wikipedia: 'Wikipedia', reddit: 'Reddit', stackexchange: 'StackExchange' };
 
 function Statement({ node, tag }) {
-  if (!node) return <div style={{ fontSize: '0.66rem', color: 'var(--text-secondary)' }}>(statement removed)</div>;
+  if (!node) return <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>(statement removed)</div>;
   return (
-    <div style={{ fontSize: '0.68rem', lineHeight: 1.45 }}>
+    <div style={{ fontSize: '0.75rem', lineHeight: 1.45 }}>
       <span style={{ fontWeight: 700, color: 'var(--text-secondary)', marginRight: 4 }}>{tag}</span>
       {node.claim}
-      <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', marginTop: 2 }}>
+      <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: 2 }}>
         {node.source?.url ? <a href={node.source.url} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>{SRC[node.source?.sourceType] || node.source?.sourceType}</a> : (SRC[node.source?.sourceType] || node.source?.sourceType)}
         {node.source?.publishedAt ? ` · ${node.source.publishedAt}` : ''}
       </div>
@@ -25,7 +25,7 @@ function PairCard({ pair, byId }) {
     <div style={{ display: 'grid', gap: 6, padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
       <Statement node={byId.get(pair.aId)} tag="A" />
       <Statement node={byId.get(pair.bId)} tag="B" />
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', fontSize: '0.58rem', color: 'var(--text-secondary)' }}>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
         {pair.condition && <span style={{ color: '#fbbf24', fontWeight: 600 }}><Clock size={9} style={{ verticalAlign: '-1px' }} /> {pair.condition.text}</span>}
         <span title="Probability the model assigns to 'these two statements contradict each other'">model: {Math.round((pair.scores?.contradiction || 0) * 100)}% contradiction</span>
         {pair.aspects?.length > 0 && <span>about: {pair.aspects.join(', ')}</span>}
@@ -48,27 +48,27 @@ function PlaceGroup({ title, color, places, kind, byId, profile }) {
   if (!places.length) return null;
   return (
     <div>
-      <div style={{ fontSize: '0.7rem', fontWeight: 700, color, margin: '4px 0 6px' }}>{title} ({places.length})</div>
+      <div style={{ fontSize: '0.8rem', fontWeight: 700, color, margin: '4px 0 6px' }}>{title} ({places.length})</div>
       {ranked.map((pl) => {
         const list = pl[kind];
         const expanded = open === pl.place;
         return (
           <div key={pl.place} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 10px', marginBottom: 6, background: 'rgba(0,0,0,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>
                 {pl.place}
                 {pl.relevance.score >= 0.4 && (
-                  <span title="Based on your traveller profile in the Planner" style={{ marginLeft: 6, fontSize: '0.58rem', fontWeight: 700, color: '#60a5fa', border: '1px solid #60a5fa55', borderRadius: 8, padding: '0 5px' }}>
+                  <span title="Based on your traveller profile in the Planner" style={{ marginLeft: 6, fontSize: '0.72rem', fontWeight: 700, color: '#60a5fa', border: '1px solid #60a5fa55', borderRadius: 8, padding: '0 5px' }}>
                     Matters for you: {pl.relevance.reasons.join(', ')}
                   </span>
                 )}
               </span>
-              <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{list.length} pair{list.length > 1 ? 's' : ''}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{list.length} pair{list.length > 1 ? 's' : ''}</span>
             </div>
             {(expanded ? list : list.slice(0, 1)).map((p) => <PairCard key={p.aId + p.bId} pair={p} byId={byId} />)}
             {list.length > 1 && (
               <button type="button" onClick={() => setOpen(expanded ? null : pl.place)}
-                style={{ marginTop: 4, fontSize: '0.6rem', background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', padding: 0 }}>
+                style={{ marginTop: 4, fontSize: '0.75rem', background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', padding: 0 }}>
                 {expanded ? 'Show less' : `Show all ${list.length}`}
               </button>
             )}
@@ -128,9 +128,9 @@ export default function VerifiedConflicts({ nodes, verified, onSave }) {
     <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <ShieldCheck size={15} style={{ color: '#10b981' }} />
-        <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>Do the sources really disagree?</span>
+        <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>Do the sources really disagree?</span>
       </div>
-      <div style={{ fontSize: '0.66rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
         A positive and a negative statement about the same place are not necessarily a contradiction
         ("amazing museum" vs "awful queue"). This check compares statements from different sources pair by pair
         with a language model that runs in your browser, and explains disagreements that only depend on
@@ -139,7 +139,7 @@ export default function VerifiedConflicts({ nodes, verified, onSave }) {
       </div>
 
       {verified && !running && (
-        <div style={{ fontSize: '0.64rem', color: 'var(--text-secondary)' }}>
+        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
           Checked {verified.pairsChecked} pairs on {new Date(verified.checkedAt).toLocaleDateString()}:{' '}
           <b style={{ color: '#f87171' }}>{summary.contradictionPlaces}</b> place{summary.contradictionPlaces === 1 ? '' : 's'} with possible contradictions,{' '}
           <b style={{ color: '#fbbf24' }}>{summary.dependsPlaces}</b> that depend on conditions
@@ -150,22 +150,22 @@ export default function VerifiedConflicts({ nodes, verified, onSave }) {
       )}
 
       {running ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.7rem' }} role="status">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8rem' }} role="status">
           <Loader2 size={13} style={{ animation: 'spinAnim 1s linear infinite' }} /> {status}
         </div>
       ) : (
         <button type="button" onClick={run} disabled={!nodes.length}
-          style={{ padding: '7px', borderRadius: 8, border: '1px solid rgba(16,185,129,0.35)', background: 'rgba(16,185,129,0.12)', color: '#34d399', fontWeight: 700, fontSize: '0.72rem', cursor: nodes.length ? 'pointer' : 'not-allowed' }}>
+          style={{ padding: '7px', borderRadius: 8, border: '1px solid rgba(16,185,129,0.35)', background: 'rgba(16,185,129,0.12)', color: '#34d399', fontWeight: 700, fontSize: '0.8rem', cursor: nodes.length ? 'pointer' : 'not-allowed' }}>
           {verified ? 'Run the check again' : 'Check for possible contradictions'}
         </button>
       )}
-      {error && <div style={{ fontSize: '0.64rem', color: '#f87171' }}><AlertTriangle size={11} style={{ verticalAlign: '-2px' }} /> {error}</div>}
+      {error && <div style={{ fontSize: '0.75rem', color: '#f87171' }}><AlertTriangle size={11} style={{ verticalAlign: '-2px' }} /> {error}</div>}
 
       {verified && !running && (
         <>
           <PlaceGroup title="Possible contradictions (automatic check)" color="#f87171" places={summary.places.filter((p) => p.contradictions.length)} kind="contradictions" byId={byId} profile={profile} />
           <PlaceGroup title="Both can be true, depends on conditions" color="#fbbf24" places={summary.places.filter((p) => p.depends.length)} kind="depends" byId={byId} profile={profile} />
-          {summary.places.length === 0 && <div style={{ fontSize: '0.68rem', color: '#34d399' }}>The automatic check found no contradictions between the sources.</div>}
+          {summary.places.length === 0 && <div style={{ fontSize: '0.75rem', color: '#34d399' }}>The automatic check found no contradictions between the sources.</div>}
         </>
       )}
     </div>

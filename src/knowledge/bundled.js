@@ -9,6 +9,15 @@ export const BUNDLED_KNOWLEDGE = { edinburgh: 'edinburgh', london: 'london', par
 // Cities with a bundled OpenStreetMap extract (public/preprocessed/osm_<slug>.json)
 export const BUNDLED_OSM = ['edinburgh', 'kyoto', 'london', 'new_york', 'paris', 'prague', 'rome', 'sydney', 'tokyo', 'zurich'];
 
+// The cities with ready-made knowledge, as offered in the destination switcher
+export const READY_CITIES = [
+  { key: 'london', name: 'London, United Kingdom', coords: [51.5074, -0.1278] },
+  { key: 'paris', name: 'Paris, France', coords: [48.8566, 2.3522] },
+  { key: 'rome', name: 'Rome, Italy', coords: [41.9028, 12.4964] },
+  { key: 'edinburgh', name: 'Edinburgh, United Kingdom', coords: [55.9533, -3.1883] },
+  { key: 'zurich', name: 'Zurich, Switzerland', coords: [47.3769, 8.5417] },
+];
+
 const SOURCE_LABELS = { wikivoyage: 'Wikivoyage', wikitravel: 'Wikitravel', wikipedia: 'Wikipedia', reddit: 'Reddit', stackexchange: 'StackExchange Travel' };
 
 /** "Greater London, England" → "london" (or null when nothing is bundled). */

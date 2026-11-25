@@ -18,12 +18,12 @@ export default function EvidenceBadge({ evidence, hideSolid = true }) {
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
         title={`${lv.label}, ${evidence.statements} statements from ${evidence.sources.length} source${evidence.sources.length === 1 ? '' : 's'}`}
         aria-expanded={open}
-        style={{ fontSize: '0.6rem', fontWeight: 700, color: lv.color, border: `1px solid ${lv.color}55`, background: `${lv.color}14`, borderRadius: 8, padding: '1px 6px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+        style={{ fontSize: '0.75rem', fontWeight: 700, color: lv.color, border: `1px solid ${lv.color}55`, background: `${lv.color}14`, borderRadius: 8, padding: '1px 6px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
         {lv.label}
       </button>
       {open && (
         <span role="dialog" onClick={(e) => e.stopPropagation()}
-          style={{ position: 'absolute', zIndex: 50, top: '120%', right: 0, width: 260, maxWidth: '80vw', background: 'rgba(8,12,26,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 10px', fontSize: '0.66rem', lineHeight: 1.45, color: 'var(--text-primary)', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', textAlign: 'left' }}>
+          style={{ position: 'absolute', zIndex: 50, top: '120%', right: 0, width: 260, maxWidth: '80vw', background: 'rgba(8,12,26,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 10px', fontSize: '0.75rem', lineHeight: 1.45, color: 'var(--text-primary)', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', textAlign: 'left' }}>
           <b>{evidence.place}</b>
           <span style={{ display: 'block', color: 'var(--text-secondary)', margin: '2px 0 6px' }}>
             {evidence.statements} statements · {evidence.sources.map((s) => SRC[s] || s).join(', ')}
@@ -37,7 +37,7 @@ export default function EvidenceBadge({ evidence, hideSolid = true }) {
           ) : evidence.level === 'thin' ? (
             <span>Only a few statements or a single source mention this place, treat the information with care.</span>
           ) : (
-            <span>Sources have mixed opinions ({evidence.pos} positive, {evidence.neg} negative). Run Knowledge → Conflicts to check whether they really contradict.</span>
+            <span>Sources have mixed opinions ({evidence.pos} positive, {evidence.neg} negative). Run Knowledge → Contradiction check to check whether they really contradict.</span>
           )}
         </span>
       )}

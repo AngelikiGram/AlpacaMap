@@ -105,7 +105,7 @@ export default function ExtractionProgress({ fetching, extracting, fetchStatus, 
                   {done ? <CheckCircle2 size={12} color="#10b981"/> : <s.Icon size={12}/>}
                 </div>
                 <span style={{
-                  fontSize: '0.5rem', whiteSpace: 'nowrap', fontWeight: active ? '700' : '400',
+                  fontSize: '0.72rem', whiteSpace: 'nowrap', fontWeight: active ? '700' : '400',
                   color: done ? '#10b981' : active ? '#c084fc' : 'rgba(255,255,255,0.22)',
                   transition: 'color 0.3s',
                 }}>
@@ -127,15 +127,15 @@ export default function ExtractionProgress({ fetching, extracting, fetchStatus, 
       {/* Progress bar + timer */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '0.62rem', color: '#a78bfa', fontWeight: '600', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: '0.75rem', color: '#a78bfa', fontWeight: '600', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {statusText || (fetching ? 'Fetching sources…' : 'Processing…')}
           </span>
           <div style={{ display: 'flex', gap: '7px', flexShrink: 0 }}>
-            <span style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.38)', fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.38)', fontVariantNumeric: 'tabular-nums' }}>
               ⏱ {fmt(elapsed)}
             </span>
             {eta > 3 && (
-              <span style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.22)' }}>
+              <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.22)' }}>
                 ~{fmt(eta)} left
               </span>
             )}
@@ -150,7 +150,7 @@ export default function ExtractionProgress({ fetching, extracting, fetchStatus, 
           }} />
         </div>
         {stage === 'deep' && deepTotal > 0 && (
-          <div style={{ fontSize: '0.57rem', color: 'rgba(255,255,255,0.3)', textAlign: 'right' }}>
+          <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', textAlign: 'right' }}>
             {deepN}/{deepTotal} POIs researched
           </div>
         )}
@@ -169,7 +169,7 @@ export default function ExtractionProgress({ fetching, extracting, fetchStatus, 
             return (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: '4px',
-                padding: '3px 8px', borderRadius: '7px', fontSize: '0.6rem',
+                padding: '3px 8px', borderRadius: '7px', fontSize: '0.75rem',
                 background: done ? 'rgba(16,185,129,0.09)' : isErr ? 'rgba(239,68,68,0.09)' : 'rgba(255,255,255,0.04)',
                 border: `1px solid ${done ? 'rgba(16,185,129,0.25)' : isErr ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)'}`,
                 transition: 'all 0.2s',
@@ -202,7 +202,7 @@ export default function ExtractionProgress({ fetching, extracting, fetchStatus, 
           }}>
             {displayCount.toLocaleString()}
           </span>
-          <span style={{ fontSize: '0.57rem', color: 'rgba(255,255,255,0.28)', marginTop: '2px' }}>
+          <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.28)', marginTop: '2px' }}>
             claims extracted
           </span>
         </div>

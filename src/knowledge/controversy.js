@@ -2,7 +2,7 @@
 // the dispute block in place popups and the Debate cards.
 //
 // Two kinds of disagreement:
-//  • verified  – the in-browser NLI check (Knowledge → Conflicts) found a real contradiction
+//  • verified  – the in-browser NLI check (Knowledge → Contradiction check) found a real contradiction
 //                or a condition-dependent pair (evidence.level 'disputed' / 'conditional');
 //  • unchecked – statements from different sources about the same aspect sound opposite
 //                (one positive, one negative). Shown as "Sources sound different" until checked.
@@ -151,7 +151,7 @@ export function buildTruthLens(points, index, { minStatements = 2 } = {}) {
     // unless it is a saved place or a well-known one (has a Wikidata entry)
     const nameWords = normalizeName(p.name).replace(/^the /, '').split(' ').filter(Boolean);
     if (nameWords.length < 2 && !p.saved) {
-      const filed = (index.items || []).some((it) => it.place === normalizeName(p.name));
+      const filed = index.byPlace ? index.byPlace.has(normalizeName(p.name)) : (index.items || []).some((it) => it.place === normalizeName(p.name));
       if (!filed) continue;
     }
     const e = strictEvidence(p.name, index);

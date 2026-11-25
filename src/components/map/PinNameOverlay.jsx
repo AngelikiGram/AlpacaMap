@@ -44,7 +44,7 @@ export function PinNameOverlay({pendingPin,onConfirm,onCancel}){
       <div className="pin-name-caret"/>
       <div className="pin-name-label">{pendingPin.mode==='city'?'Add destination':'Name this place'}</div>
       {pendingPin.address && (
-        <div style={{fontSize:'0.68rem',color:'var(--text-secondary)',marginBottom:'0.45rem',maxWidth:'240px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',display:'flex',alignItems:'center',gap:'3px'}} title={pendingPin.address}>
+        <div style={{fontSize:'0.75rem',color:'var(--text-secondary)',marginBottom:'0.45rem',maxWidth:'240px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',display:'flex',alignItems:'center',gap:'3px'}} title={pendingPin.address}>
           <MapPin size={11}/> {pendingPin.address}
         </div>
       )}
@@ -54,7 +54,7 @@ export function PinNameOverlay({pendingPin,onConfirm,onCancel}){
           placeholder={pendingPin.mode==='city'?'City or place name…':'Place name…'}
           className="pin-name-input"
         />
-        <button className="btn-primary" style={{padding:'0.35rem 0.6rem',fontSize:'0.8rem'}} onClick={()=>onConfirm(name)}>Save</button>
+        <button className="btn-primary" style={{padding:'0.35rem 0.6rem',fontSize:'0.9rem'}} onClick={()=>onConfirm(name)}>Save</button>
         <button className="btn-icon" style={{padding:'0.35rem'}} onClick={onCancel}><X size={13}/></button>
       </div>
     </div>,

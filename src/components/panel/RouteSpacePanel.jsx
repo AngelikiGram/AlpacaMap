@@ -131,7 +131,7 @@ function RhythmLegend({ stopsArrays }) {
   return (
     <div style={{ display:'flex', flexWrap:'wrap', gap:'3px 10px', marginTop:'5px', marginBottom:'2px' }}>
       {[...typeSeen.values()].map(({ color, label }) => (
-        <span key={label} style={{ display:'flex', alignItems:'center', gap:'4px', fontSize:'0.59rem', color:'var(--text-secondary)' }}>
+        <span key={label} style={{ display:'flex', alignItems:'center', gap:'4px', fontSize:'0.72rem', color:'var(--text-secondary)' }}>
           <span style={{ width:8, height:8, borderRadius:'2px', background:color, display:'inline-block', flexShrink:0 }}/>
           {label}
         </span>
@@ -1483,7 +1483,7 @@ export function RouteSpacePanel({
       <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-secondary)' }}>
         <HelpCircle size={32} style={{ color: 'var(--accent-primary)', marginBottom: '1rem', opacity: 0.8 }} />
         <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No Destination Loaded</h4>
-        <p style={{ fontSize: '0.8rem', lineHeight: 1.6, maxWidth: '280px', margin: '0 auto' }}>
+        <p style={{ fontSize: '0.9rem', lineHeight: 1.6, maxWidth: '280px', margin: '0 auto' }}>
           Routes are built from the places of a city. Open <strong>Explore</strong>, pick a city in your trip and let it load its places, then come back here.
         </p>
         {onOpenTab && <button className="btn-primary" style={{ marginTop: '1rem' }} onClick={() => onOpenTab('locations')}>Open Explore</button>}
@@ -1496,12 +1496,12 @@ export function RouteSpacePanel({
       
       {/* Header */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'0.88rem', fontWeight:'700', color:'var(--text-primary)' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'1rem', fontWeight:'700', color:'var(--text-primary)' }}>
           <Compass size={15} className="spin" style={{ color:'var(--accent-primary)' }}/> Route Multiverse
-          {candidates.length > 0 && <span style={{ fontSize:'0.65rem', color:'var(--text-secondary)', fontWeight:'400', marginLeft:'4px' }}>{candidates.length} routes · {clusters.length} clusters</span>}
+          {candidates.length > 0 && <span style={{ fontSize:'0.75rem', color:'var(--text-secondary)', fontWeight:'400', marginLeft:'4px' }}>{candidates.length} routes · {clusters.length} clusters</span>}
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:'5px' }}>
-          <button className="btn-primary" onClick={() => setIsFullscreen(true)} style={{ fontSize:'0.64rem', padding:'3px 8px', borderRadius:'6px', display:'flex', alignItems:'center', gap:'3px', background:'rgba(139,92,246,0.18)', border:'1px solid rgba(139,92,246,0.3)', color:'#c4b5fd', cursor:'pointer' }}>
+          <button className="btn-primary" onClick={() => setIsFullscreen(true)} style={{ fontSize:'0.75rem', padding:'3px 8px', borderRadius:'6px', display:'flex', alignItems:'center', gap:'3px', background:'rgba(139,92,246,0.18)', border:'1px solid rgba(139,92,246,0.3)', color:'#c4b5fd', cursor:'pointer' }}>
             ⛶ Expand
           </button>
           <button className="btn-icon" onClick={() => setShowHelp(h => !h)} style={{ padding:'3px' }}>
@@ -1510,7 +1510,7 @@ export function RouteSpacePanel({
         </div>
       </div>
       {showHelp && (
-        <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'10px', padding:'10px 12px', fontSize:'0.71rem', color:'var(--text-secondary)', lineHeight:1.5 }}>
+        <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'10px', padding:'10px 12px', fontSize:'0.8rem', color:'var(--text-secondary)', lineHeight:1.5 }}>
           Generate routes → dots appear in the map below, grouped by experience type. <strong style={{color:'var(--text-primary)'}}>Click two dots</strong> to set A and B. Drag the <strong style={{color:'#c084fc'}}>morph slider</strong> to blend between them. The colored rhythm strip shows the day's stop sequence, each color = a place type.
         </div>
       )}
@@ -1558,18 +1558,18 @@ export function RouteSpacePanel({
 
         {/* Header row: title + stops range */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <div style={{ fontSize:'0.66rem', fontWeight:'700', color:'#c084fc', textTransform:'uppercase', letterSpacing:'0.07em', display:'flex', alignItems:'center', gap:'5px' }}>
+          <div style={{ fontSize:'0.75rem', fontWeight:'700', color:'#c084fc', textTransform:'uppercase', letterSpacing:'0.07em', display:'flex', alignItems:'center', gap:'5px' }}>
             <Sparkles size={11}/> Route Recipe
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'0.66rem', color:'var(--text-secondary)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'0.75rem', color:'var(--text-secondary)' }}>
             <span>Stops:</span>
             <input type="number" min="2" max="10" value={minStops}
               onChange={e => setMinStops(Math.max(2, Math.min(Number(e.target.value), maxStops)))}
-              style={{ width:'38px', textAlign:'center', fontSize:'0.72rem', padding:'3px 4px', background:'rgba(30,20,60,0.8)', border:'1px solid rgba(139,92,246,0.4)', borderRadius:'5px', color:'#e2e8f0', fontWeight:'600' }}/>
+              style={{ width:'38px', textAlign:'center', fontSize:'0.8rem', padding:'3px 4px', background:'rgba(30,20,60,0.8)', border:'1px solid rgba(139,92,246,0.4)', borderRadius:'5px', color:'#e2e8f0', fontWeight:'600' }}/>
             <span style={{ opacity:0.5 }}>-</span>
             <input type="number" min="2" max="10" value={maxStops}
               onChange={e => setMaxStops(Math.max(minStops, Math.min(10, Number(e.target.value))))}
-              style={{ width:'38px', textAlign:'center', fontSize:'0.72rem', padding:'3px 4px', background:'rgba(30,20,60,0.8)', border:'1px solid rgba(139,92,246,0.4)', borderRadius:'5px', color:'#e2e8f0', fontWeight:'600' }}/>
+              style={{ width:'38px', textAlign:'center', fontSize:'0.8rem', padding:'3px 4px', background:'rgba(30,20,60,0.8)', border:'1px solid rgba(139,92,246,0.4)', borderRadius:'5px', color:'#e2e8f0', fontWeight:'600' }}/>
           </div>
         </div>
 
@@ -1580,7 +1580,7 @@ export function RouteSpacePanel({
             value={themeText}
             onChange={e => setThemeText(e.target.value)}
             placeholder="Describe your trip theme (e.g. gothic walk, hidden cafes)…"
-            style={{ fontSize:'0.82rem', padding:'0.5rem 2rem 0.5rem 0.8rem', width:'100%', borderRadius:'8px', border:'1px solid rgba(139,92,246,0.35)', background:'rgba(0,0,0,0.25)', color:'var(--text-primary)' }}
+            style={{ fontSize:'0.9rem', padding:'0.5rem 2rem 0.5rem 0.8rem', width:'100%', borderRadius:'8px', border:'1px solid rgba(139,92,246,0.35)', background:'rgba(0,0,0,0.25)', color:'var(--text-primary)' }}
             onKeyDown={e => e.key === 'Enter' && generateRouteSpace()}
           />
           <Search size={13} style={{ position:'absolute', right:'10px', top:'50%', transform:'translateY(-50%)', opacity:0.35 }}/>
@@ -1591,7 +1591,7 @@ export function RouteSpacePanel({
           <>
             <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
               <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.06)' }}/>
-              <span style={{ fontSize:'0.57rem', color:'var(--text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', whiteSpace:'nowrap' }}>per-route constraints</span>
+              <span style={{ fontSize:'0.72rem', color:'var(--text-secondary)', textTransform:'uppercase', letterSpacing:'0.05em', whiteSpace:'nowrap' }}>per-route constraints</span>
               <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.06)' }}/>
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:'5px', maxHeight:'180px', overflowY:'auto', paddingRight:'4px' }}>
@@ -1601,9 +1601,9 @@ export function RouteSpacePanel({
                 const val = categoryReqs[catVal] || 0;
                 return (
                   <div key={catVal} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'rgba(0,0,0,0.18)', padding:'7px 10px', borderRadius:'7px', border:'1px solid rgba(255,255,255,0.05)', flexShrink:0 }}>
-                    <span style={{ fontSize:'0.72rem', color:'var(--text-primary)', minWidth:'64px' }}>{label}</span>
+                    <span style={{ fontSize:'0.8rem', color:'var(--text-primary)', minWidth:'64px' }}>{label}</span>
                     <div style={{ display:'flex', alignItems:'center', gap:'8px', marginLeft:'10px' }}>
-                      <span style={{ fontSize:'0.63rem', color: val === 0 ? 'rgba(255,255,255,0.28)' : '#a5b4fc', minWidth:'32px', textAlign:'right', fontWeight: val > 0 ? '700' : '400' }}>
+                      <span style={{ fontSize:'0.75rem', color: val === 0 ? 'rgba(255,255,255,0.28)' : '#a5b4fc', minWidth:'32px', textAlign:'right', fontWeight: val > 0 ? '700' : '400' }}>
                         {val === 0 ? 'Auto' : val}
                       </span>
                       <div style={{ display:'flex', alignItems:'center', gap:'3px' }}>
@@ -1617,7 +1617,7 @@ export function RouteSpacePanel({
                             border: val === n ? '1.5px solid #8b5cf6' : '1px solid rgba(255,255,255,0.1)',
                             background: val === n ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.04)',
                             color: val === n ? '#c084fc' : 'rgba(255,255,255,0.35)',
-                            fontSize:'0.65rem', fontWeight: val === n ? '800' : '400',
+                            fontSize:'0.75rem', fontWeight: val === n ? '800' : '400',
                             transition:'all 0.12s', lineHeight:1,
                           }}>
                             {n === 0 ? '-' : n}
@@ -1631,7 +1631,7 @@ export function RouteSpacePanel({
             </div>
           </>
         ) : (
-          <div style={{ fontSize:'0.65rem', color:'var(--text-secondary)', fontStyle:'italic', textAlign:'center', padding:'2px 0' }}>
+          <div style={{ fontSize:'0.75rem', color:'var(--text-secondary)', fontStyle:'italic', textAlign:'center', padding:'2px 0' }}>
             No categories available.
           </div>
         )}
@@ -1642,19 +1642,19 @@ export function RouteSpacePanel({
           if (!themeText && activeConstraints.length === 0) return null;
           return (
             <div style={{ display:'flex', flexWrap:'wrap', gap:'4px', padding:'6px 8px', background:'rgba(0,0,0,0.22)', borderRadius:'8px', border:'1px solid rgba(255,255,255,0.05)' }}>
-              <span style={{ fontSize:'0.56rem', color:'var(--text-secondary)', width:'100%', marginBottom:'2px', textTransform:'uppercase', letterSpacing:'0.05em' }}>Generating with:</span>
+              <span style={{ fontSize:'0.72rem', color:'var(--text-secondary)', width:'100%', marginBottom:'2px', textTransform:'uppercase', letterSpacing:'0.05em' }}>Generating with:</span>
               {themeText && (
-                <span style={{ fontSize:'0.62rem', padding:'2px 8px', borderRadius:'10px', background:'rgba(139,92,246,0.18)', border:'1px solid rgba(139,92,246,0.3)', color:'#c084fc' }}>
+                <span style={{ fontSize:'0.75rem', padding:'2px 8px', borderRadius:'10px', background:'rgba(139,92,246,0.18)', border:'1px solid rgba(139,92,246,0.3)', color:'#c084fc' }}>
                   "{themeText.length > 28 ? themeText.slice(0, 28) + '…' : themeText}"
                 </span>
               )}
-              <span style={{ fontSize:'0.62rem', padding:'2px 8px', borderRadius:'10px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'var(--text-secondary)' }}>
+              <span style={{ fontSize:'0.75rem', padding:'2px 8px', borderRadius:'10px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'var(--text-secondary)' }}>
                 {minStops}–{maxStops} stops
               </span>
               {activeConstraints.map(c => {
                 const catInfo = INTEREST_CATEGORIES.find(x => x.value === c);
                 return (
-                  <span key={c} style={{ fontSize:'0.62rem', padding:'2px 8px', borderRadius:'10px', background:'rgba(99,102,241,0.18)', border:'1px solid rgba(99,102,241,0.3)', color:'#a5b4fc' }}>
+                  <span key={c} style={{ fontSize:'0.75rem', padding:'2px 8px', borderRadius:'10px', background:'rgba(99,102,241,0.18)', border:'1px solid rgba(99,102,241,0.3)', color:'#a5b4fc' }}>
                     {categoryReqs[c]}× {catInfo?.label || c}
                   </span>
                 );
@@ -1665,7 +1665,7 @@ export function RouteSpacePanel({
 
         {/* Generate button */}
         <button className="btn-primary" onClick={generateRouteSpace}
-          style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'6px', padding:'0.6rem 1rem', width:'100%', fontSize:'0.82rem', fontWeight:'700', background:'linear-gradient(135deg,#7c3aed,#4f46e5)', borderRadius:'9px' }}>
+          style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'6px', padding:'0.6rem 1rem', width:'100%', fontSize:'0.9rem', fontWeight:'700', background:'linear-gradient(135deg,#7c3aed,#4f46e5)', borderRadius:'9px' }}>
           <Sparkles size={14}/> Generate Routes
         </button>
       </div>
@@ -1680,7 +1680,7 @@ export function RouteSpacePanel({
             <div style={{ display:'flex', borderRadius:'8px', border:'1px solid rgba(255,255,255,0.1)', overflow:'hidden' }}>
               {[['routes','Routes'],['places','Places']].map(([m, label]) => (
                 <button key={m} onClick={() => setViewMode(m)}
-                  style={{ fontSize:'0.62rem', padding:'2px 8px', background: viewMode===m ? 'rgba(255,255,255,0.12)' : 'transparent', color: viewMode===m ? 'var(--text-primary)' : 'var(--text-secondary)', border:'none', cursor:'pointer', fontWeight: viewMode===m ? '700' : '400' }}>
+                  style={{ fontSize:'0.75rem', padding:'2px 8px', background: viewMode===m ? 'rgba(255,255,255,0.12)' : 'transparent', color: viewMode===m ? 'var(--text-primary)' : 'var(--text-secondary)', border:'none', cursor:'pointer', fontWeight: viewMode===m ? '700' : '400' }}>
                   {label}
                 </button>
               ))}
@@ -1690,7 +1690,7 @@ export function RouteSpacePanel({
           {viewMode === 'routes' && (
             <div>
               <select value={radiusMode} onChange={e => setRadiusMode(e.target.value)}
-                style={{ background:'rgba(8,12,26,0.85)', color:'var(--text-primary)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'6px', fontSize:'0.64rem', padding:'2px 6px', cursor:'pointer', fontFamily:'inherit', outline:'none' }}>
+                style={{ background:'rgba(8,12,26,0.85)', color:'var(--text-primary)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'6px', fontSize:'0.75rem', padding:'2px 6px', cursor:'pointer', fontFamily:'inherit', outline:'none' }}>
                 <option value="walk">Axis: Distance</option>
                 <option value="budget">Axis: Budget</option>
                 <option value="theme">Axis: Theme</option>
@@ -1902,16 +1902,16 @@ export function RouteSpacePanel({
           {/* Floating Tooltip, Routes mode */}
           {viewMode === 'routes' && hoveredRoute && (
             <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(8,12,26,0.95)', border: `1px solid ${CLUSTER_PALETTE[hoveredRoute.cluster % CLUSTER_PALETTE.length]}70`, borderRadius: '10px', padding: '8px 10px', width: '190px', pointerEvents: 'none', boxShadow: '0 6px 20px rgba(0,0,0,0.5)', zIndex: 10 }}>
-              <div style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>
                 {hoveredRoute.name}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 6px', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 6px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                 <div>Stops: <strong style={{ color: 'var(--text-primary)' }}>{hoveredRoute.stopCount}</strong></div>
                 <div>Dist: <strong style={{ color: 'var(--text-primary)' }}>{hoveredRoute.totalDistance.toFixed(1)} km</strong></div>
                 <div>Cost: <strong style={{ color: 'var(--text-primary)' }}>€{hoveredRoute.cost}</strong></div>
                 <div>Nov: <strong style={{ color: 'var(--text-primary)' }}>{Math.round(hoveredRoute.novelty * 100)}%</strong></div>
               </div>
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '5px', paddingTop: '4px', fontSize: '0.58rem', color: CLUSTER_PALETTE[hoveredRoute.cluster % CLUSTER_PALETTE.length], fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '5px', paddingTop: '4px', fontSize: '0.72rem', color: CLUSTER_PALETTE[hoveredRoute.cluster % CLUSTER_PALETTE.length], fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Click → set A or B · previews route
               </div>
             </div>
@@ -1919,19 +1919,19 @@ export function RouteSpacePanel({
           {/* Places hint text, outside SVG */}
           {viewMode === 'places' && (
             <div style={{ position:'absolute', bottom:'6px', left:0, right:0, pointerEvents:'none' }}>
-              <div style={{ fontSize:'0.58rem', color:'rgba(255,255,255,0.28)', textAlign:'center' }}>Places shown in their real geographic positions · dot size = quality</div>
+              <div style={{ fontSize:'0.72rem', color:'rgba(255,255,255,0.28)', textAlign:'center' }}>Places shown in their real geographic positions · dot size = quality</div>
             </div>
           )}
           {/* Floating Tooltip, Places mode */}
           {viewMode === 'places' && hoveredPlace && (
             <div style={{ position:'absolute', top:'10px', right:'10px', background:'rgba(8,12,26,0.95)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'10px', padding:'8px 10px', width:'175px', pointerEvents:'none', boxShadow:'0 6px 20px rgba(0,0,0,0.5)', zIndex:10 }}>
-              <div style={{ fontSize:'0.74rem', fontWeight:'700', color:'var(--text-primary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:'3px' }}>
+              <div style={{ fontSize:'0.8rem', fontWeight:'700', color:'var(--text-primary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:'3px' }}>
                 {hoveredPlace.name}
               </div>
-              <div style={{ fontSize:'0.65rem', color:'var(--text-secondary)' }}>
+              <div style={{ fontSize:'0.75rem', color:'var(--text-secondary)' }}>
                 {hoveredPlace.type || 'Sight'}{hoveredPlace.isSaved ? ' · saved' : ''}
               </div>
-              <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', marginTop:'4px', paddingTop:'4px', fontSize:'0.58rem', color:'var(--accent-primary)', fontWeight:'bold', textTransform:'uppercase', letterSpacing:'0.04em' }}>
+              <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', marginTop:'4px', paddingTop:'4px', fontSize:'0.72rem', color:'var(--accent-primary)', fontWeight:'bold', textTransform:'uppercase', letterSpacing:'0.04em' }}>
                 Click for details
               </div>
             </div>
@@ -1945,7 +1945,7 @@ export function RouteSpacePanel({
           {clusters.map(cls => (
             <button key={cls.id}
               onClick={() => setClusterPopup(clusterPopup === cls.id ? null : cls.id)}
-              style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'0.65rem', padding:'3px 8px', borderRadius:'12px', background: clusterPopup === cls.id ? cls.color+'35' : cls.color+'18', border:`1px solid ${clusterPopup === cls.id ? cls.color+'80' : cls.color+'40'}`, color:'var(--text-primary)', cursor:'pointer', fontWeight:'500', transition:'all 0.15s' }}>
+              style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'0.75rem', padding:'3px 8px', borderRadius:'12px', background: clusterPopup === cls.id ? cls.color+'35' : cls.color+'18', border:`1px solid ${clusterPopup === cls.id ? cls.color+'80' : cls.color+'40'}`, color:'var(--text-primary)', cursor:'pointer', fontWeight:'500', transition:'all 0.15s' }}>
               <span style={{ width:6, height:6, borderRadius:'50%', background:cls.color, display:'inline-block', flexShrink:0 }}/>
               {cls.label}
               <span style={{ color:cls.color, fontWeight:'700', opacity:0.7 }}>{cls.membersCount}</span>
@@ -1963,8 +1963,8 @@ export function RouteSpacePanel({
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
                   <span style={{ width:8, height:8, borderRadius:'50%', background:cls.color, display:'inline-block' }}/>
-                  <span style={{ fontSize:'0.74rem', fontWeight:'700', color:'var(--text-primary)' }}>{cls.label}</span>
-                  <span style={{ fontSize:'0.64rem', color:'var(--text-secondary)' }}>{members.length} routes, click any row to preview, then set as A or B</span>
+                  <span style={{ fontSize:'0.8rem', fontWeight:'700', color:'var(--text-primary)' }}>{cls.label}</span>
+                  <span style={{ fontSize:'0.75rem', color:'var(--text-secondary)' }}>{members.length} routes, click any row to preview, then set as A or B</span>
                 </div>
                 <button className="btn-icon" style={{ padding:'2px' }} onClick={() => setClusterPopup(null)}><X size={11}/></button>
               </div>
@@ -1975,10 +1975,10 @@ export function RouteSpacePanel({
                     <div key={m.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 8px', borderRadius:'8px', background: isActive ? 'rgba(139,92,246,0.1)' : 'rgba(255,255,255,0.02)', border:`1px solid ${isActive ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.04)'}`, cursor:'pointer' }}
                       onClick={() => setRouteSpaceRoute(m)}>
                       <div style={{ flex:1, minWidth:0, marginRight:'8px' }}>
-                        <div style={{ fontSize:'0.72rem', fontWeight:'600', color: isActive ? 'var(--accent-light)' : 'var(--text-primary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                        <div style={{ fontSize:'0.8rem', fontWeight:'600', color: isActive ? 'var(--accent-light)' : 'var(--text-primary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                           {m.name}
                         </div>
-                        <div style={{ fontSize:'0.6rem', color:'var(--text-secondary)', marginTop:'1px', marginBottom:'3px' }}>
+                        <div style={{ fontSize:'0.75rem', color:'var(--text-secondary)', marginTop:'1px', marginBottom:'3px' }}>
                           {m.stopCount} stops · {m.totalDistance.toFixed(1)}km · €{m.cost}
                         </div>
                         <JourneyRhythm stops={m.stops} height={5}/>
@@ -1992,7 +1992,7 @@ export function RouteSpacePanel({
         })()}
 
         <div style={{ marginTop: '14px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px' }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
             Route collections ({brushedIds.size > 0 ? `${filteredCandidates.length} / ${candidates.length} selected` : `${candidates.length} options`})
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -2009,14 +2009,14 @@ export function RouteSpacePanel({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                       <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: cls.color }} />
                       <div style={{ minWidth: 0 }}>
-                        <span style={{ fontSize: '0.76rem', fontWeight: '600', color: 'var(--text-primary)' }}>{cls.label}</span>
-                        <span style={{ display: 'block', fontSize: '0.62rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)' }}>{cls.label}</span>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {cls.desc}
                         </span>
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                      <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                         <strong>{filteredMembers.length}</strong>{brushedIds.size > 0 ? ` / ${cls.membersCount}` : ''} options
                       </span>
                       <ChevronRight size={13} style={{ transform: activeClusterTab === cls.id ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s', opacity: 0.5 }} />
@@ -2025,7 +2025,7 @@ export function RouteSpacePanel({
 
                   {activeClusterTab === cls.id && (
                     <div style={{ padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.04)', background: 'rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem', color: 'var(--text-secondary)', paddingBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', paddingBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                         <span>Average stats:</span>
                         <span>Stops: <strong>{cls.avgStops.toFixed(1)}</strong> · Dist: <strong>{cls.avgDistance.toFixed(1)} km</strong> · Cost: <strong>€{Math.round(cls.avgCost)}</strong></span>
                       </div>
@@ -2051,15 +2051,15 @@ export function RouteSpacePanel({
                             onClick={() => setRouteSpaceRoute(m)}
                           >
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1, minWidth: 0 }}>
-                              <span style={{ fontSize: '0.72rem', fontWeight: '600', color: isActive ? 'var(--accent-light)' : 'var(--text-primary)', lineHeight: '1.3', wordBreak: 'break-word' }}>
+                              <span style={{ fontSize: '0.8rem', fontWeight: '600', color: isActive ? 'var(--accent-light)' : 'var(--text-primary)', lineHeight: '1.3', wordBreak: 'break-word' }}>
                                 {m.name}
                                 {isMedoid && (
-                                  <span style={{ fontSize: '0.58rem', color: '#fbbf24', marginLeft: '6px', background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', padding: '0 4px', borderRadius: '4px', display: 'inline-block', fontWeight: 'bold' }}>
+                                  <span style={{ fontSize: '0.72rem', color: '#fbbf24', marginLeft: '6px', background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', padding: '0 4px', borderRadius: '4px', display: 'inline-block', fontWeight: 'bold' }}>
                                     ★ Recommended
                                   </span>
                                 )}
                               </span>
-                              <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                                 {m.stopCount} stops · {m.totalDistance.toFixed(1)} km · €{m.cost}
                               </span>
                             </div>
@@ -2083,12 +2083,12 @@ export function RouteSpacePanel({
         <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(139,92,246,0.2)', borderRadius:'14px', padding:'12px 14px' }}>
           {/* Header, makes clear THIS is what "Add to Active Route ◈" modifies */}
           <div style={{ display:'flex', alignItems:'center', gap:'5px', marginBottom:'4px' }}>
-            <span style={{ fontSize:'0.6rem', fontWeight:'700', color:'#c084fc', textTransform:'uppercase', letterSpacing:'0.06em' }}>◈ Active Route</span>
-            <span style={{ fontSize:'0.6rem', color:'rgba(255,255,255,0.25)' }}>what "Add to Active Route" edits</span>
+            <span style={{ fontSize:'0.75rem', fontWeight:'700', color:'#c084fc', textTransform:'uppercase', letterSpacing:'0.06em' }}>◈ Active Route</span>
+            <span style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.25)' }}>what "Add to Active Route" edits</span>
           </div>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
-            <span style={{ fontSize:'0.75rem', fontWeight:'700', color:'var(--text-primary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1, minWidth:0 }}>{routeSpaceRoute.name}</span>
-            <div style={{ display:'flex', gap:'8px', fontSize:'0.65rem', color:'var(--text-secondary)', flexShrink:0, marginLeft:'8px', alignItems:'center' }}>
+            <span style={{ fontSize:'0.85rem', fontWeight:'700', color:'var(--text-primary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1, minWidth:0 }}>{routeSpaceRoute.name}</span>
+            <div style={{ display:'flex', gap:'8px', fontSize:'0.75rem', color:'var(--text-secondary)', flexShrink:0, marginLeft:'8px', alignItems:'center' }}>
               <span>{routeSpaceRoute.stopCount} stops</span>
               <span>{routeSpaceRoute.totalDistance.toFixed(1)} km</span>
               <span>€{routeSpaceRoute.cost}</span>
@@ -2096,7 +2096,7 @@ export function RouteSpacePanel({
                 <button
                   onClick={() => setShowRouteOnMap(v => !v)}
                   title={showRouteOnMap ? 'Hide route on map' : 'Show route on map'}
-                  style={{ padding:'2px 7px', borderRadius:'6px', border:'1px solid rgba(255,255,255,0.12)', background: showRouteOnMap ? 'rgba(192,132,252,0.18)' : 'rgba(255,255,255,0.05)', color: showRouteOnMap ? '#c084fc' : 'rgba(255,255,255,0.3)', fontSize:'0.6rem', cursor:'pointer', fontWeight:'600', letterSpacing:'0.03em', lineHeight:1 }}>
+                  style={{ padding:'2px 7px', borderRadius:'6px', border:'1px solid rgba(255,255,255,0.12)', background: showRouteOnMap ? 'rgba(192,132,252,0.18)' : 'rgba(255,255,255,0.05)', color: showRouteOnMap ? '#c084fc' : 'rgba(255,255,255,0.3)', fontSize:'0.75rem', cursor:'pointer', fontWeight:'600', letterSpacing:'0.03em', lineHeight:1 }}>
                   {showRouteOnMap ? '● on map' : '○ hidden'}
                 </button>
               )}
@@ -2106,7 +2106,7 @@ export function RouteSpacePanel({
           <div style={{ display:'flex', borderRadius:'8px', border:'1px solid rgba(255,255,255,0.08)', overflow:'hidden', marginBottom:'10px' }}>
             {[['overview','Overview'],['stops','Stops']].map(([tab, label]) => (
               <button key={tab} onClick={() => setActiveRouteTab(tab)}
-                style={{ flex:1, fontSize:'0.64rem', padding:'5px 0', background: activeRouteTab===tab ? 'rgba(255,255,255,0.1)' : 'transparent', color: activeRouteTab===tab ? 'var(--text-primary)' : 'var(--text-secondary)', border:'none', cursor:'pointer', fontWeight: activeRouteTab===tab ? '700' : '400' }}>
+                style={{ flex:1, fontSize:'0.75rem', padding:'5px 0', background: activeRouteTab===tab ? 'rgba(255,255,255,0.1)' : 'transparent', color: activeRouteTab===tab ? 'var(--text-primary)' : 'var(--text-secondary)', border:'none', cursor:'pointer', fontWeight: activeRouteTab===tab ? '700' : '400' }}>
                 {label}
               </button>
             ))}
@@ -2126,14 +2126,14 @@ export function RouteSpacePanel({
                 { name:'Cost',        val: Math.min(10,(routeSpaceRoute.cost/120)*10), color:'#f97316', desc:'Estimated spend (entries + food)' },
               ].map(m => (
                 <div key={m.name} style={{ padding:'5px 6px', background:'rgba(0,0,0,0.15)', borderRadius:'6px', border:'1px solid rgba(255,255,255,0.04)' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.62rem', marginBottom:'3px' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.75rem', marginBottom:'3px' }}>
                     <span style={{ color:'var(--text-primary)', fontWeight:'600' }}>{m.name}</span>
                     <strong style={{ color:m.color }}>{m.val.toFixed(1)}</strong>
                   </div>
                   <div style={{ background:'rgba(255,255,255,0.07)', borderRadius:'3px', height:'4px', overflow:'hidden', marginBottom:'3px' }}>
                     <div style={{ width:`${m.val*10}%`, height:'100%', background:m.color, borderRadius:'3px' }}/>
                   </div>
-                  <div style={{ fontSize:'0.55rem', color:'var(--text-secondary)', lineHeight:1.3 }}>{m.desc}</div>
+                  <div style={{ fontSize:'0.72rem', color:'var(--text-secondary)', lineHeight:1.3 }}>{m.desc}</div>
                 </div>
               ))}
             </div>
@@ -2143,9 +2143,9 @@ export function RouteSpacePanel({
           {activeRouteTab === 'stops' && (
           <div>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px' }}>
-              <span style={{ fontSize:'0.64rem', fontWeight:'700', color:'var(--text-secondary)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Route Genome</span>
+              <span style={{ fontSize:'0.75rem', fontWeight:'700', color:'var(--text-secondary)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Route Genome</span>
               <button onClick={() => setShowGenome(g => !g)}
-                style={{ fontSize:'0.6rem', padding:'2px 6px', borderRadius:'6px', background: showGenome ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)', border:`1px solid ${showGenome ? '#6366f1' : 'rgba(255,255,255,0.1)'}`, color: showGenome ? '#a5b4fc' : 'var(--text-secondary)', cursor:'pointer' }}>
+                style={{ fontSize:'0.75rem', padding:'2px 6px', borderRadius:'6px', background: showGenome ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)', border:`1px solid ${showGenome ? '#6366f1' : 'rgba(255,255,255,0.1)'}`, color: showGenome ? '#a5b4fc' : 'var(--text-secondary)', cursor:'pointer' }}>
                 🧬 Gene labels
               </button>
             </div>
@@ -2158,7 +2158,7 @@ export function RouteSpacePanel({
                 ['b', 'Route B', !!selectedRouteB],
               ].map(([key, label, enabled]) => (
                 <button key={key} onClick={() => enabled && setGenomeView(key)} disabled={!enabled}
-                  style={{ flex:1, fontSize:'0.6rem', padding:'4px 0', background: genomeView===key ? 'rgba(255,255,255,0.1)' : 'transparent', color: !enabled ? 'rgba(255,255,255,0.2)' : genomeView===key ? 'var(--text-primary)' : 'var(--text-secondary)', border:'none', cursor: enabled ? 'pointer' : 'default', fontWeight: genomeView===key ? '700' : '400' }}>
+                  style={{ flex:1, fontSize:'0.75rem', padding:'4px 0', background: genomeView===key ? 'rgba(255,255,255,0.1)' : 'transparent', color: !enabled ? 'rgba(255,255,255,0.2)' : genomeView===key ? 'var(--text-primary)' : 'var(--text-secondary)', border:'none', cursor: enabled ? 'pointer' : 'default', fontWeight: genomeView===key ? '700' : '400' }}>
                   {label}
                 </button>
               ))}
@@ -2178,7 +2178,7 @@ export function RouteSpacePanel({
 
                     {/* Numeric Stop Pin */}
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', background: color, color: '#ffffff', fontSize: '0.65rem', fontWeight: 'bold' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', background: color, color: '#ffffff', fontSize: '0.75rem', fontWeight: 'bold' }}>
                         {sIdx + 1}
                       </div>
                     </div>
@@ -2187,12 +2187,12 @@ export function RouteSpacePanel({
                     <div style={{ flex: 1, paddingBottom: '12px', minWidth: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div 
-                          style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                           onClick={() => triggerPlaceInfo(stop)}
                         >
                           {stop.name}
                         </div>
-                        <div style={{ display: 'flex', gap: '5px', alignItems: 'center', fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                        <div style={{ display: 'flex', gap: '5px', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
                           <span style={{ color }}>{icon}</span> {stop.type || 'Sight'}
                           {stop.distanceKm > 0 && <span>· {stop.distanceKm.toFixed(2)} km</span>}
                         </div>
@@ -2201,7 +2201,7 @@ export function RouteSpacePanel({
                           return genes.length > 0 ? (
                             <div style={{ display:'flex', gap:'4px', marginTop:'4px', flexWrap:'wrap' }}>
                               {genes.map((g, gi) => (
-                                <span key={gi} style={{ fontSize:'0.57rem', fontWeight:'700', color:g.color, background:g.color+'15', border:`1px solid ${g.color}35`, borderRadius:'6px', padding:'1px 6px', letterSpacing:'0.04em', textTransform:'uppercase' }}>
+                                <span key={gi} style={{ fontSize:'0.72rem', fontWeight:'700', color:g.color, background:g.color+'15', border:`1px solid ${g.color}35`, borderRadius:'6px', padding:'1px 6px', letterSpacing:'0.04em', textTransform:'uppercase' }}>
                                   {g.label}
                                 </span>
                               ))}
@@ -2266,13 +2266,13 @@ export function RouteSpacePanel({
                         .sort((a, b) => a.d - b.d)
                         .slice(0, 5);
                       if (alts.length === 0) return (
-                        <div style={{ marginLeft: '32px', marginBottom: '10px', fontSize: '0.65rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        <div style={{ marginLeft: '32px', marginBottom: '10px', fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                           No nearby alternatives of the same type in your pool.
                         </div>
                       );
                       return (
                         <div style={{ marginLeft: '32px', marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <div style={{ fontSize: '0.58rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
+                          <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
                             Swap with nearby {bucket}
                           </div>
                           {alts.map(({ p, d }) => {
@@ -2280,12 +2280,12 @@ export function RouteSpacePanel({
                             return (
                               <div key={p.id || p.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '6px', padding: '4px 8px' }}>
                                 <span style={{ color: altColor, flexShrink: 0 }}>{altIcon}</span>
-                                <span style={{ flex: 1, fontSize: '0.72rem', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-                                <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', flexShrink: 0 }}>{d.toFixed(1)} km</span>
-                                {p.isSaved && <span style={{ fontSize: '0.55rem', color: '#facc15', flexShrink: 0 }}>★</span>}
+                                <span style={{ flex: 1, fontSize: '0.8rem', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', flexShrink: 0 }}>{d.toFixed(1)} km</span>
+                                {p.isSaved && <span style={{ fontSize: '0.72rem', color: '#facc15', flexShrink: 0 }}>★</span>}
                                 <button
                                   onClick={() => swapStop(sIdx, p)}
-                                  style={{ flexShrink: 0, fontSize: '0.6rem', padding: '2px 7px', borderRadius: '5px', background: 'rgba(99,102,241,0.25)', border: '1px solid rgba(99,102,241,0.4)', color: '#a5b4fc', cursor: 'pointer', fontWeight: '700' }}
+                                  style={{ flexShrink: 0, fontSize: '0.75rem', padding: '2px 7px', borderRadius: '5px', background: 'rgba(99,102,241,0.25)', border: '1px solid rgba(99,102,241,0.4)', color: '#a5b4fc', cursor: 'pointer', fontWeight: '700' }}
                                 >
                                   Swap
                                 </button>
@@ -2309,7 +2309,7 @@ export function RouteSpacePanel({
             const availablePlaces = placesPool.filter(p => !currentNames.has(p.name.toLowerCase()));
             return (
               <div style={{ marginTop: '8px', marginBottom: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '8px 10px' }}>
-                <div style={{ fontSize: '0.66rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '6px' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '6px' }}>
                   Customize: Add Your Own Place
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -2322,14 +2322,14 @@ export function RouteSpacePanel({
                         if (place) addStopToActiveRoute(place);
                         setPlaceSelectValue('');
                       }}
-                      style={{ width:'100%', background:'rgba(8,12,26,0.85)', color:'var(--text-primary)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'6px', fontSize:'0.74rem', padding:'4px 8px', cursor:'pointer' }}>
+                      style={{ width:'100%', background:'rgba(8,12,26,0.85)', color:'var(--text-primary)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'6px', fontSize:'0.8rem', padding:'4px 8px', cursor:'pointer' }}>
                       <option value="">Select a saved place or recommendation to insert...</option>
                       {availablePlaces.map(p => (
                         <option key={p.id} value={p.id}>{p.name} ({p.type || 'Sight'})</option>
                       ))}
                     </select>
                   ) : (
-                    <div style={{ fontSize:'0.68rem', color:'var(--text-secondary)', fontStyle:'italic', padding:'2px 0' }}>
+                    <div style={{ fontSize:'0.75rem', color:'var(--text-secondary)', fontStyle:'italic', padding:'2px 0' }}>
                       All saved places and recommendations are added.
                     </div>
                   )}
@@ -2338,14 +2338,14 @@ export function RouteSpacePanel({
                       value={manualSearchQuery}
                       onChange={e => setManualSearchQuery(e.target.value)}
                       onKeyDown={async e => { if (e.key === 'Enter') { e.preventDefault(); await handleManualPlaceSearch(); } }}
-                      style={{ flex:1, fontSize:'0.74rem', padding:'4px 8px', background:'rgba(8,12,26,0.6)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'6px', color:'var(--text-primary)' }}/>
+                      style={{ flex:1, fontSize:'0.8rem', padding:'4px 8px', background:'rgba(8,12,26,0.6)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'6px', color:'var(--text-primary)' }}/>
                     <button className="btn-primary" onClick={handleManualPlaceSearch} disabled={isSearchingManual}
-                      style={{ fontSize:'0.72rem', padding:'4px 10px', display:'flex', alignItems:'center', gap:'4px', borderRadius:'6px', whiteSpace:'nowrap', boxShadow:'none' }}>
+                      style={{ fontSize:'0.8rem', padding:'4px 10px', display:'flex', alignItems:'center', gap:'4px', borderRadius:'6px', whiteSpace:'nowrap', boxShadow:'none' }}>
                       {isSearchingManual ? <Loader2 size={11} className="spin"/> : <Plus size={11}/>} Find & Add
                     </button>
                   </div>
                 </div>
-                <div style={{ fontSize:'0.6rem', color:'var(--text-secondary)', marginTop:'6px', fontStyle:'italic' }}>
+                <div style={{ fontSize:'0.75rem', color:'var(--text-secondary)', marginTop:'6px', fontStyle:'italic' }}>
                   Tip: Click any place on the map and tap "Add to Active Mutation ◈" to insert it into the current route. This adds to the Active Mutation, not to Route A or B.
                 </div>
               </div>
@@ -2353,11 +2353,11 @@ export function RouteSpacePanel({
           })()}
           {appliedSuccess ? (
             <div style={{ display:'flex', gap:'6px', alignItems:'center' }}>
-              <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'6px', padding:'0.45rem 1rem', borderRadius:'8px', background:'rgba(16,185,129,0.15)', border:'1px solid rgba(16,185,129,0.3)', color:'#34d399', fontSize:'0.8rem', fontWeight:'600' }}>
+              <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'6px', padding:'0.45rem 1rem', borderRadius:'8px', background:'rgba(16,185,129,0.15)', border:'1px solid rgba(16,185,129,0.3)', color:'#34d399', fontSize:'0.9rem', fontWeight:'600' }}>
                 <Check size={14}/> Added as Day {tripData.itinerary.length}
               </div>
               {onSwitchToCalendar && (
-                <button onClick={onSwitchToCalendar} style={{ flexShrink:0, padding:'0.45rem 0.8rem', borderRadius:'8px', background:'rgba(59,130,246,0.2)', border:'1px solid rgba(59,130,246,0.35)', color:'#93c5fd', fontSize:'0.75rem', fontWeight:'600', cursor:'pointer', display:'flex', alignItems:'center', gap:'4px' }}>
+                <button onClick={onSwitchToCalendar} style={{ flexShrink:0, padding:'0.45rem 0.8rem', borderRadius:'8px', background:'rgba(59,130,246,0.2)', border:'1px solid rgba(59,130,246,0.35)', color:'#93c5fd', fontSize:'0.85rem', fontWeight:'600', cursor:'pointer', display:'flex', alignItems:'center', gap:'4px' }}>
                   Open Planner <ArrowRight size={12}/>
                 </button>
               )}
@@ -2377,8 +2377,8 @@ export function RouteSpacePanel({
         <button onClick={() => setShowMutationStudio(s => !s)}
           style={{ width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 12px', background:'transparent', border:'none', cursor:'pointer', color:'var(--text-primary)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:'7px' }}>
-            <span style={{ fontSize:'0.72rem', fontWeight:'700' }}>Route Navigator</span>
-            <span style={{ fontSize:'0.6rem', color:'var(--text-secondary)' }}>drag sliders · matching routes glow in constellation</span>
+            <span style={{ fontSize:'0.8rem', fontWeight:'700' }}>Route Navigator</span>
+            <span style={{ fontSize:'0.75rem', color:'var(--text-secondary)' }}>drag sliders · matching routes glow in constellation</span>
           </div>
           <ChevronDown size={13} style={{ transform: showMutationStudio ? 'rotate(180deg)' : 'none', transition:'transform 0.15s', opacity:0.5, flexShrink:0 }}/>
         </button>
@@ -2386,12 +2386,12 @@ export function RouteSpacePanel({
               {showMutationStudio && (
                 <div style={{ padding:'10px 12px 12px', borderTop:'1px solid rgba(255,255,255,0.05)', background:'rgba(0,0,0,0.1)' }}>
                   {spatialFilter.length > 0 && (
-                    <div style={{ fontSize:'0.62rem', color:'#fbbf24', marginBottom:'8px', display:'flex', alignItems:'center', gap:'5px' }}>
+                    <div style={{ fontSize:'0.75rem', color:'#fbbf24', marginBottom:'8px', display:'flex', alignItems:'center', gap:'5px' }}>
                       <span>◉</span> Filtering by drawn area on map
                     </div>
                   )}
 
-                  <div style={{ fontSize:'0.6rem', fontWeight:'700', color:'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:'6px' }}>Route character</div>
+                  <div style={{ fontSize:'0.75rem', fontWeight:'700', color:'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:'6px' }}>Route character</div>
                   {[
                     { key:'local',   left:'Well-known spots', right:'Hidden gems',    color:'#10b981', label:'Local vs. popular'    },
                     { key:'compact', left:'Wide area',        right:'Short walks',     color:'#3b82f6', label:'Walking distance'      },
@@ -2400,9 +2400,9 @@ export function RouteSpacePanel({
                   ].map(({ key, left, right, color, label }) => (
                     <div key={key} style={{ marginBottom:'10px' }}>
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:'2px' }}>
-                        <span style={{ fontSize:'0.58rem', color:'rgba(255,255,255,0.3)' }}>{left}</span>
-                        <span style={{ fontSize:'0.63rem', fontWeight:'700', color }}>{label} <span style={{ fontWeight:'400', opacity:0.55 }}>{navSliders[key]}%</span></span>
-                        <span style={{ fontSize:'0.58rem', color:'rgba(255,255,255,0.3)' }}>{right}</span>
+                        <span style={{ fontSize:'0.72rem', color:'rgba(255,255,255,0.3)' }}>{left}</span>
+                        <span style={{ fontSize:'0.75rem', fontWeight:'700', color }}>{label} <span style={{ fontWeight:'400', opacity:0.55 }}>{navSliders[key]}%</span></span>
+                        <span style={{ fontSize:'0.72rem', color:'rgba(255,255,255,0.3)' }}>{right}</span>
                       </div>
                       <input type="range" min="0" max="100" value={navSliders[key]}
                         onChange={e => setNavSliders(prev => ({ ...prev, [key]: Number(e.target.value) }))}
@@ -2410,7 +2410,7 @@ export function RouteSpacePanel({
                     </div>
                   ))}
 
-                  <div style={{ fontSize:'0.6rem', fontWeight:'700', color:'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:'6px', marginTop:'4px' }}>Place type mix</div>
+                  <div style={{ fontSize:'0.75rem', fontWeight:'700', color:'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:'6px', marginTop:'4px' }}>Place type mix</div>
                   {[
                     { key:'museums',  left:'No museums',     right:'Museum-heavy',  color:'#dc2626', label:'Museums & culture'  },
                     { key:'food',     left:'No food',         right:'Food-heavy',    color:'#f59e0b', label:'Food & cafes'       },
@@ -2419,9 +2419,9 @@ export function RouteSpacePanel({
                   ].map(({ key, left, right, color, label }) => (
                     <div key={key} style={{ marginBottom:'10px' }}>
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:'2px' }}>
-                        <span style={{ fontSize:'0.58rem', color:'rgba(255,255,255,0.3)' }}>{left}</span>
-                        <span style={{ fontSize:'0.63rem', fontWeight:'700', color }}>{label} <span style={{ fontWeight:'400', opacity:0.55 }}>{typeSliders[key]}%</span></span>
-                        <span style={{ fontSize:'0.58rem', color:'rgba(255,255,255,0.3)' }}>{right}</span>
+                        <span style={{ fontSize:'0.72rem', color:'rgba(255,255,255,0.3)' }}>{left}</span>
+                        <span style={{ fontSize:'0.75rem', fontWeight:'700', color }}>{label} <span style={{ fontWeight:'400', opacity:0.55 }}>{typeSliders[key]}%</span></span>
+                        <span style={{ fontSize:'0.72rem', color:'rgba(255,255,255,0.3)' }}>{right}</span>
                       </div>
                       <input type="range" min="0" max="100" value={typeSliders[key]}
                         onChange={e => setTypeSliders(prev => ({ ...prev, [key]: Number(e.target.value) }))}
@@ -2431,7 +2431,7 @@ export function RouteSpacePanel({
 
                   {sliderTopMatches.length > 0 && (
                     <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:'8px' }}>
-                      <div style={{ fontSize:'0.62rem', color:'var(--text-secondary)', marginBottom:'5px' }}>
+                      <div style={{ fontSize:'0.75rem', color:'var(--text-secondary)', marginBottom:'5px' }}>
                         Top matches <span style={{ color:'#fbbf24' }}>◉</span> highlighted in constellation, switch to <strong>Routes</strong> tab to see them
                       </div>
                       <div style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
@@ -2441,14 +2441,14 @@ export function RouteSpacePanel({
                           return (
                             <div key={m.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 8px', borderRadius:'7px', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(251,191,36,0.15)' }}>
                               <div style={{ flex:1, minWidth:0, cursor:'pointer' }} onClick={() => setRouteSpaceRoute(m)}>
-                                <div style={{ fontSize:'0.68rem', color:'var(--text-primary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.name}</div>
-                                <div style={{ fontSize:'0.59rem', color:'var(--text-secondary)', marginTop:'1px' }}>{m.stopCount} stops · {m.totalDistance.toFixed(1)}km · €{m.cost}</div>
+                                <div style={{ fontSize:'0.75rem', color:'var(--text-primary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.name}</div>
+                                <div style={{ fontSize:'0.72rem', color:'var(--text-secondary)', marginTop:'1px' }}>{m.stopCount} stops · {m.totalDistance.toFixed(1)}km · €{m.cost}</div>
                               </div>
                               <div style={{ display:'flex', gap:'3px', marginLeft:'6px' }}>
                                 <button onClick={() => { setRouteSpaceRoute(m); setSelectedRouteA(m); setReplacingSlot('B'); }}
-                                  style={{ fontSize:'0.6rem', padding:'2px 6px', borderRadius:'4px', background: isA ? '#3b82f6' : 'rgba(255,255,255,0.04)', color: isA ? '#fff' : 'var(--text-secondary)', border:`1px solid ${isA ? '#3b82f6' : 'rgba(255,255,255,0.08)'}`, cursor:'pointer', fontWeight:'700' }}>A</button>
+                                  style={{ fontSize:'0.75rem', padding:'2px 6px', borderRadius:'4px', background: isA ? '#3b82f6' : 'rgba(255,255,255,0.04)', color: isA ? '#fff' : 'var(--text-secondary)', border:`1px solid ${isA ? '#3b82f6' : 'rgba(255,255,255,0.08)'}`, cursor:'pointer', fontWeight:'700' }}>A</button>
                                 <button onClick={() => { setRouteSpaceRoute(m); setSelectedRouteB(m); setReplacingSlot('A'); }}
-                                  style={{ fontSize:'0.6rem', padding:'2px 6px', borderRadius:'4px', background: isB ? '#10b981' : 'rgba(255,255,255,0.04)', color: isB ? '#fff' : 'var(--text-secondary)', border:`1px solid ${isB ? '#10b981' : 'rgba(255,255,255,0.08)'}`, cursor:'pointer', fontWeight:'700' }}>B</button>
+                                  style={{ fontSize:'0.75rem', padding:'2px 6px', borderRadius:'4px', background: isB ? '#10b981' : 'rgba(255,255,255,0.04)', color: isB ? '#fff' : 'var(--text-secondary)', border:`1px solid ${isB ? '#10b981' : 'rgba(255,255,255,0.08)'}`, cursor:'pointer', fontWeight:'700' }}>B</button>
                               </div>
                             </div>
                           );
@@ -2475,7 +2475,7 @@ export function RouteSpacePanel({
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Compass size={22} style={{ color: '#6366f1' }}/>
               <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>Route Multiverse</span>
-              <span style={{ fontSize: '0.75rem', background: '#e0e7ff', color: '#4338ca', padding: '3px 8px', borderRadius: '12px', fontWeight: '600' }}>
+              <span style={{ fontSize: '0.85rem', background: '#e0e7ff', color: '#4338ca', padding: '3px 8px', borderRadius: '12px', fontWeight: '600' }}>
                 {candidates.length} routes · {clusters.length} clusters
               </span>
             </div>
@@ -2484,7 +2484,7 @@ export function RouteSpacePanel({
               style={{
                 background: '#f1f5f9', border: 'none', borderRadius: '6px',
                 color: '#64748b', cursor: 'pointer', padding: '6px 16px',
-                fontSize: '0.82rem', fontWeight: '700', transition: 'background 0.2s'
+                fontSize: '0.9rem', fontWeight: '700', transition: 'background 0.2s'
               }}
               onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
               onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}
@@ -2498,38 +2498,38 @@ export function RouteSpacePanel({
             
             {/* Column 1: Configs & Recipe (White background themed style) */}
             <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto' }}>
-              <div style={{ fontSize: '0.78rem', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Route Recipe</div>
+              <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Route Recipe</div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: '600', color: '#475569' }}>Theme Prompt:</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#475569' }}>Theme Prompt:</span>
                 <input
                   type="text" value={themeText} onChange={e => setThemeText(e.target.value)}
                   placeholder="Trip theme (e.g. gothic walk, hidden cafes)…"
-                  style={{ fontSize: '0.8rem', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a' }}
+                  style={{ fontSize: '0.9rem', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a' }}
                 />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: '600', color: '#475569' }}>Stops count range:</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#475569' }}>Stops count range:</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <input type="number" min="2" max="10" value={minStops}
                     onChange={e => setMinStops(Math.max(2, Math.min(Number(e.target.value), maxStops)))}
-                    style={{ width: '54px', textAlign: 'center', fontSize: '0.75rem', padding: '4px 6px', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: '700', color: '#0f172a', background: '#ffffff' }}/>
+                    style={{ width: '54px', textAlign: 'center', fontSize: '0.85rem', padding: '4px 6px', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: '700', color: '#0f172a', background: '#ffffff' }}/>
                   <span style={{ opacity: 0.5 }}>-</span>
                   <input type="number" min="2" max="10" value={maxStops}
                     onChange={e => setMaxStops(Math.max(minStops, Math.min(10, Number(e.target.value))))}
-                    style={{ width: '54px', textAlign: 'center', fontSize: '0.75rem', padding: '4px 6px', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: '700', color: '#0f172a', background: '#ffffff' }}/>
+                    style={{ width: '54px', textAlign: 'center', fontSize: '0.85rem', padding: '4px 6px', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: '700', color: '#0f172a', background: '#ffffff' }}/>
                 </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: '600', color: '#475569' }}>Category constraints:</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#475569' }}>Category constraints:</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }}>
                   {INTEREST_CATEGORIES.map(cat => {
                     const val = categoryReqs[cat.value] || 0;
                     return (
                       <div key={cat.value} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '4px 8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                        <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#334155' }}>{cat.label}</span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#334155' }}>{cat.label}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <button 
                             onClick={() => setCategoryReqs(prev => {
@@ -2537,9 +2537,9 @@ export function RouteSpacePanel({
                               localStorage.setItem('routespace_cat_reqs', JSON.stringify(next));
                               return next;
                             })}
-                            style={{ width: '18px', height: '18px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '0.72rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+                            style={{ width: '18px', height: '18px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
                           
-                          <span style={{ fontSize: '0.68rem', fontWeight: '850', color: val > 0 ? '#4f46e5' : '#94a3b8', minWidth: '52px', textAlign: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '850', color: val > 0 ? '#4f46e5' : '#94a3b8', minWidth: '52px', textAlign: 'center' }}>
                             {val === 0 ? 'Any' : val === 5 ? '5+ stops' : `${val} stop${val > 1 ? 's' : ''}`}
                           </span>
 
@@ -2549,7 +2549,7 @@ export function RouteSpacePanel({
                               localStorage.setItem('routespace_cat_reqs', JSON.stringify(next));
                               return next;
                             })}
-                            style={{ width: '18px', height: '18px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '0.72rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                            style={{ width: '18px', height: '18px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                         </div>
                       </div>
                     );
@@ -2559,7 +2559,7 @@ export function RouteSpacePanel({
 
               {/* Sliders in full layout */}
               <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', marginTop: '4px' }}>
-                <div style={{ fontSize: '0.78rem', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Route Character Sliders</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Route Character Sliders</div>
                 {[
                   { key: 'local', left: 'Popular', right: 'Hidden Gems', color: '#10b981', label: 'Local vs. Popular' },
                   { key: 'compact', left: 'Wide Area', right: 'Short Walks', color: '#3b82f6', label: 'Walking Distance' },
@@ -2567,7 +2567,7 @@ export function RouteSpacePanel({
                   { key: 'social', left: 'No Food', right: 'Food Stops', color: '#f97316', label: 'Social Stops' },
                 ].map(({ key, left, right, color, label }) => (
                   <div key={key} style={{ marginBottom: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.64rem', color: '#64748b', marginBottom: '2px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginBottom: '2px' }}>
                       <span>{left}</span>
                       <strong style={{ color }}>{label} ({navSliders[key]}%)</strong>
                       <span>{right}</span>
@@ -2601,7 +2601,7 @@ export function RouteSpacePanel({
                   border: 'none',
                   borderRadius: '8px',
                   padding: '10px',
-                  fontSize: '0.8rem',
+                  fontSize: '0.9rem',
                   fontWeight: '700',
                   cursor: isGenerating ? 'not-allowed' : 'pointer',
                   textAlign: 'center',
@@ -2629,11 +2629,11 @@ export function RouteSpacePanel({
             {/* Column 2: Large Map/Constellation View (White background themed style) */}
             <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', background: '#f8fafc', padding: '16px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexShrink: 0 }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#0f172a' }}>Experience Constellation</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: '800', color: '#0f172a' }}>Experience Constellation</span>
                 <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '8px', padding: '2px' }}>
                   {[['routes', 'Routes Space'], ['places', 'Geographic Places']].map(([m, label]) => (
                     <button key={m} onClick={() => setViewMode(m)}
-                      style={{ fontSize: '0.65rem', padding: '4px 12px', border: 'none', borderRadius: '6px', background: viewMode === m ? '#ffffff' : 'transparent', color: viewMode === m ? '#0f172a' : '#64748b', fontWeight: '600', cursor: 'pointer' }}>
+                      style={{ fontSize: '0.75rem', padding: '4px 12px', border: 'none', borderRadius: '6px', background: viewMode === m ? '#ffffff' : 'transparent', color: viewMode === m ? '#0f172a' : '#64748b', fontWeight: '600', cursor: 'pointer' }}>
                       {label}
                     </button>
                   ))}
@@ -2833,7 +2833,7 @@ export function RouteSpacePanel({
                 {/* Floating Clear Selection Pill & Sparse Focus Toggle */}
                 {brushedIds.size > 0 && (
                   <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 25, display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <button onClick={() => { setBrushedIds(new Set()); setSparseFocusActive(false); }} style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '20px', color: '#991b1b', fontSize: '0.68rem', fontWeight: '700', padding: '4px 12px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <button onClick={() => { setBrushedIds(new Set()); setSparseFocusActive(false); }} style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '20px', color: '#991b1b', fontSize: '0.75rem', fontWeight: '700', padding: '4px 12px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       Clear Brush Selection ({brushedIds.size}) ✕
                     </button>
                     <button onClick={() => setSparseFocusActive(!sparseFocusActive)} 
@@ -2842,7 +2842,7 @@ export function RouteSpacePanel({
                         border: sparseFocusActive ? 'none' : '1px solid #cbd5e1', 
                         borderRadius: '20px', 
                         color: sparseFocusActive ? '#ffffff' : '#475569', 
-                        fontSize: '0.68rem', 
+                        fontSize: '0.75rem', 
                         fontWeight: '700', 
                         padding: '4px 14px', 
                         cursor: 'pointer', 
@@ -2857,34 +2857,34 @@ export function RouteSpacePanel({
 
                 {/* Floating zoom control buttons */}
                 <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.92)', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '3px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', zIndex: 20 }}>
-                  <button onClick={() => setBrushActive(!brushActive)} title="Toggle Selection Brush Mode (or Shift+Drag)" style={{ border: 'none', background: brushActive ? '#6366f1' : 'none', color: brushActive ? '#ffffff' : '#475569', fontWeight: '800', fontSize: '0.68rem', padding: '0 8px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '5px', transition: 'all 0.15s' }}>
+                  <button onClick={() => setBrushActive(!brushActive)} title="Toggle Selection Brush Mode (or Shift+Drag)" style={{ border: 'none', background: brushActive ? '#6366f1' : 'none', color: brushActive ? '#ffffff' : '#475569', fontWeight: '800', fontSize: '0.75rem', padding: '0 8px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '5px', transition: 'all 0.15s' }}>
                     Brush
                   </button>
-                  <button onClick={() => setZoom(z => Math.min(8, z * 1.25))} title="Zoom In" style={{ border: 'none', background: 'none', color: '#0f172a', fontWeight: 'bold', fontSize: '0.9rem', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>+</button>
-                  <button onClick={() => setZoom(z => Math.max(0.5, z * 0.8))} title="Zoom Out" style={{ border: 'none', background: 'none', color: '#0f172a', fontWeight: 'bold', fontSize: '0.9rem', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>-</button>
-                  <button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); setBrushedIds(new Set()); }} title="Reset View & Selection" style={{ border: 'none', background: 'none', color: '#64748b', fontWeight: 'bold', fontSize: '0.78rem', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>⟲</button>
+                  <button onClick={() => setZoom(z => Math.min(8, z * 1.25))} title="Zoom In" style={{ border: 'none', background: 'none', color: '#0f172a', fontWeight: 'bold', fontSize: '1rem', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>+</button>
+                  <button onClick={() => setZoom(z => Math.max(0.5, z * 0.8))} title="Zoom Out" style={{ border: 'none', background: 'none', color: '#0f172a', fontWeight: 'bold', fontSize: '1rem', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>-</button>
+                  <button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); setBrushedIds(new Set()); }} title="Reset View & Selection" style={{ border: 'none', background: 'none', color: '#64748b', fontWeight: 'bold', fontSize: '0.85rem', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>⟲</button>
                 </div>
 
                 {/* Hover tooltip for places mode */}
                 {viewMode === 'places' && hoveredPlace && (
                   <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.97)', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '9px 12px', width: '190px', pointerEvents: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', zIndex: 10 }}>
-                    <div style={{ fontSize: '0.73rem', fontWeight: '800', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '3px' }}>{hoveredPlace.name}</div>
-                    <div style={{ fontSize: '0.65rem', color: '#64748b' }}>{hoveredPlace.type || 'Sight'}</div>
-                    <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '5px', paddingTop: '4px', fontSize: '0.6rem', color: '#4f46e5', fontWeight: '700' }}>Click to view details</div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: '800', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '3px' }}>{hoveredPlace.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{hoveredPlace.type || 'Sight'}</div>
+                    <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '5px', paddingTop: '4px', fontSize: '0.75rem', color: '#4f46e5', fontWeight: '700' }}>Click to view details</div>
                   </div>
                 )}
 
                 {/* Hover tooltip for routes mode */}
                 {viewMode === 'routes' && hoveredRoute && !routeSpaceRoute && (
                   <div style={{ position:'absolute', top:'10px', right:'10px', background:'rgba(255,255,255,0.97)', border:`1px solid ${CLUSTER_PALETTE[hoveredRoute.cluster % CLUSTER_PALETTE.length]}60`, borderRadius:'10px', padding:'9px 12px', width:'190px', pointerEvents:'none', boxShadow:'0 4px 16px rgba(0,0,0,0.1)', zIndex:10 }}>
-                    <div style={{ fontSize:'0.73rem', fontWeight:'800', color:'#0f172a', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:'3px' }}>{hoveredRoute.name}</div>
-                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'2px 8px', fontSize:'0.63rem', color:'#64748b' }}>
+                    <div style={{ fontSize:'0.8rem', fontWeight:'800', color:'#0f172a', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:'3px' }}>{hoveredRoute.name}</div>
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'2px 8px', fontSize:'0.75rem', color:'#64748b' }}>
                       <div>Stops <strong style={{color:'#0f172a'}}>{hoveredRoute.stopCount}</strong></div>
                       <div>Dist <strong style={{color:'#0f172a'}}>{hoveredRoute.totalDistance.toFixed(1)} km</strong></div>
                       <div>Cost <strong style={{color:'#0f172a'}}>€{hoveredRoute.cost}</strong></div>
                       <div>Local <strong style={{color:'#0f172a'}}>{Math.round(hoveredRoute.novelty*100)}%</strong></div>
                     </div>
-                    <div style={{ marginTop:'5px', fontSize:'0.6rem', color: CLUSTER_PALETTE[hoveredRoute.cluster % CLUSTER_PALETTE.length], fontWeight:'700' }}>
+                    <div style={{ marginTop:'5px', fontSize:'0.75rem', color: CLUSTER_PALETTE[hoveredRoute.cluster % CLUSTER_PALETTE.length], fontWeight:'700' }}>
                       {clusters.find(cl => cl.id === hoveredRoute.cluster)?.label}
                     </div>
                   </div>
@@ -2893,8 +2893,8 @@ export function RouteSpacePanel({
                 {/* Floating selected route chip */}
                 {viewMode === 'routes' && routeSpaceRoute && (
                   <div style={{ position: 'absolute', bottom: '10px', left: '10px', background: 'rgba(255,255,255,0.95)', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '7px 12px', maxWidth: '200px', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', zIndex: 15 }}>
-                    <div style={{ fontSize: '0.72rem', fontWeight: '800', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{routeSpaceRoute.name}</div>
-                    <div style={{ fontSize: '0.62rem', color: '#64748b', marginTop: '2px' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: '800', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{routeSpaceRoute.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>
                       {routeSpaceRoute.stopCount} stops · {routeSpaceRoute.totalDistance.toFixed(1)} km · €{routeSpaceRoute.cost}
                     </div>
                   </div>
@@ -2906,22 +2906,22 @@ export function RouteSpacePanel({
                 {viewMode === 'routes' ? (
                   <>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.66rem', fontWeight: '800', color: '#475569', textTransform: 'uppercase', marginRight: '4px' }}>Clusters:</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#475569', textTransform: 'uppercase', marginRight: '4px' }}>Clusters:</span>
                       {clusters.map(cl => (
-                        <div key={cl.id} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', color: '#0f172a', fontWeight: '600' }}>
+                        <div key={cl.id} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.75rem', color: '#0f172a', fontWeight: '600' }}>
                           <span style={{ width: 8, height: 8, borderRadius: '50%', background: cl.color, display: 'inline-block' }}/>
                           {cl.label}
                         </div>
                       ))}
                     </div>
-                    <div style={{ fontSize: '0.65rem', color: '#64748b', textAlign: 'right', maxWidth: '300px', lineHeight: '1.3' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', textAlign: 'right', maxWidth: '300px', lineHeight: '1.3' }}>
                       <strong>Projection:</strong> projecting all generated itineraries. <strong>Horizontal:</strong> popular vs. off-the-beaten-path. <strong>Vertical:</strong> walking distance scale.
                     </div>
                   </>
                 ) : (
                   <>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.66rem', fontWeight: '800', color: '#475569', textTransform: 'uppercase', marginRight: '4px' }}>Legend:</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#475569', textTransform: 'uppercase', marginRight: '4px' }}>Legend:</span>
                       {[
                         { label: 'Food', color: '#f59e0b' },
                         { label: 'Cafes', color: '#d97706' },
@@ -2952,7 +2952,7 @@ export function RouteSpacePanel({
                               return next;
                             })}
                             style={{
-                              display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem',
+                              display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.75rem',
                               color: '#0f172a', fontWeight: '700', cursor: isDisabled ? 'not-allowed' : 'pointer',
                               background: isActive ? cat.color + '22' : 'transparent',
                               border: isActive ? `1.5px solid ${cat.color}` : '1.5px solid transparent',
@@ -2968,7 +2968,7 @@ export function RouteSpacePanel({
                         );
                       })}
                     </div>
-                    <div style={{ fontSize: '0.65rem', color: '#64748b', textAlign: 'right', maxWidth: '300px', lineHeight: '1.3' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', textAlign: 'right', maxWidth: '300px', lineHeight: '1.3' }}>
                       <strong>Geographic view:</strong> Places are mapped onto their actual coordinates on the city grid, with dot size representing place quality.
                     </div>
                   </>
@@ -2983,7 +2983,7 @@ export function RouteSpacePanel({
                     if (members.length === 0) return null;
                     return (
                       <div key={cl.id}>
-                        <div style={{ fontSize: '0.65rem', fontWeight: '700', color: cl.color, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: '700', color: cl.color, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                           <span style={{ width: 8, height: 8, borderRadius: '50%', background: cl.color, display: 'inline-block' }}/>
                           {cl.label}
                         </div>
@@ -2994,8 +2994,8 @@ export function RouteSpacePanel({
                               <button key={c.id} onClick={() => setRouteSpaceRoute(c)}
                                 style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', borderRadius: '7px', border: isActive ? `1.5px solid ${cl.color}` : '1px solid #e2e8f0', background: isActive ? cl.color + '12' : '#ffffff', cursor: 'pointer', textAlign: 'left' }}>
                                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: cl.color, flexShrink: 0 }}/>
-                                <span style={{ fontSize: '0.72rem', fontWeight: isActive ? '700' : '500', color: '#0f172a', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
-                                <span style={{ fontSize: '0.62rem', color: '#94a3b8', flexShrink: 0 }}>{c.stopCount} stops · {c.totalDistance.toFixed(1)}km</span>
+                                <span style={{ fontSize: '0.8rem', fontWeight: isActive ? '700' : '500', color: '#0f172a', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                                <span style={{ fontSize: '0.75rem', color: '#94a3b8', flexShrink: 0 }}>{c.stopCount} stops · {c.totalDistance.toFixed(1)}km</span>
                               </button>
                             );
                           })}
@@ -3012,7 +3012,7 @@ export function RouteSpacePanel({
               {viewMode === 'places' && brushedPlaces.length > 0 ? (
                 <>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Brushed Places ({brushedPlaces.length})</span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Brushed Places ({brushedPlaces.length})</span>
                     <button 
                       onClick={() => {
                         const sorted = [...brushedPlaces].sort((a, b) => b.coords[0] - a.coords[0]);
@@ -3026,7 +3026,7 @@ export function RouteSpacePanel({
                         border: 'none',
                         borderRadius: '20px',
                         padding: '6px 14px',
-                        fontSize: '0.66rem',
+                        fontSize: '0.75rem',
                         fontWeight: '750',
                         cursor: 'pointer',
                         boxShadow: '0 2px 4px rgba(99, 102, 241, 0.25)',
@@ -3053,12 +3053,12 @@ export function RouteSpacePanel({
                         return (
                           <div key={p.name || idx}>
                             <div style={{ display: 'flex', gap: '8px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 10px', alignItems: 'center' }}>
-                              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '50%', background: color, color: '#ffffff', fontSize: '0.6rem', fontWeight: '800', flexShrink: 0 }}>
+                              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '50%', background: color, color: '#ffffff', fontSize: '0.75rem', fontWeight: '800', flexShrink: 0 }}>
                                 {idx + 1}
                               </span>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                                <div style={{ fontSize: '0.62rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
+                                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                                <div style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
                                   <span style={{ color }}>{icon}</span> {p.type || 'Sight'}
                                 </div>
                               </div>
@@ -3066,7 +3066,7 @@ export function RouteSpacePanel({
                             
                             {/* Consecutive distance indicator */}
                             {nextPlace && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '4px 0 4px 18px', fontSize: '0.62rem', color: '#6366f1', fontWeight: '600' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '4px 0 4px 18px', fontSize: '0.75rem', color: '#6366f1', fontWeight: '600' }}>
                                 <span style={{ borderLeft: '1.5px dashed #818cf8', height: '12px', display: 'inline-block' }}/>
                                 <span>↕ {nextDist.toFixed(2)} km to next</span>
                               </div>
@@ -3083,11 +3083,11 @@ export function RouteSpacePanel({
                     <>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.06em' }}>◈ Active Route</span>
+                          <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.06em' }}>◈ Active Route</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
-                          <span style={{ fontSize: '0.82rem', fontWeight: '800', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{routeSpaceRoute.name}</span>
-                          <span style={{ fontSize: '0.64rem', color: '#64748b', whiteSpace: 'nowrap' }}>{routeSpaceRoute.stopCount} stops · {routeSpaceRoute.totalDistance.toFixed(1)} km</span>
+                          <span style={{ fontSize: '0.9rem', fontWeight: '800', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{routeSpaceRoute.name}</span>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', whiteSpace: 'nowrap' }}>{routeSpaceRoute.stopCount} stops · {routeSpaceRoute.totalDistance.toFixed(1)} km</span>
                         </div>
                       </div>
 
@@ -3105,14 +3105,14 @@ export function RouteSpacePanel({
                             { name: 'Cost', val: Math.min(10, (routeSpaceRoute.cost / 120) * 10), color: '#f97316', desc: 'Estimated spend (entries + food)' },
                           ].map(m => (
                             <div key={m.name} style={{ padding: '4px 6px', background: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.62rem', marginBottom: '2px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '2px' }}>
                                 <span style={{ color: '#334155', fontWeight: '750' }}>{m.name}</span>
                                 <strong style={{ color: m.color }}>{m.val.toFixed(1)}</strong>
                               </div>
                               <div style={{ background: '#f1f5f9', borderRadius: '3px', height: '3px', overflow: 'hidden', marginBottom: '2px' }}>
                                 <div style={{ width: `${m.val * 10}%`, height: '100%', background: m.color, borderRadius: '3px' }}/>
                               </div>
-                              <div style={{ fontSize: '0.54rem', color: '#64748b', lineHeight: 1.2 }}>{m.desc}</div>
+                              <div style={{ fontSize: '0.72rem', color: '#64748b', lineHeight: 1.2 }}>{m.desc}</div>
                             </div>
                           ))}
                         </div>
@@ -3120,17 +3120,17 @@ export function RouteSpacePanel({
 
                       {/* Stops list section */}
                       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', borderTop: '1px solid #e2e8f0', paddingTop: '10px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div style={{ fontSize: '0.7rem', fontWeight: '750', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Stops Timeline</div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: '750', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Stops Timeline</div>
                         {routeSpaceRoute.stops.map((stop, sIdx) => {
                           const { icon, color } = getTypeDetails(stop.type);
                           return (
                             <div key={stop.id || sIdx} style={{ display: 'flex', gap: '6px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', alignItems: 'center' }}>
-                              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '50%', background: color, color: '#ffffff', fontSize: '0.6rem', fontWeight: '700', flexShrink: 0 }}>
+                              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '50%', background: color, color: '#ffffff', fontSize: '0.75rem', fontWeight: '700', flexShrink: 0 }}>
                                 {sIdx + 1}
                               </span>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stop.name}</div>
-                                <div style={{ fontSize: '0.58rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
+                                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stop.name}</div>
+                                <div style={{ fontSize: '0.72rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
                                   <span style={{ color }}>{icon}</span> {stop.type} {stop.distanceKm > 0 && `· ${stop.distanceKm.toFixed(1)}km`}
                                 </div>
                               </div>
@@ -3143,15 +3143,15 @@ export function RouteSpacePanel({
                       </div>
 
                       <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#475569' }}>Add Place to Custom Route:</div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569' }}>Add Place to Custom Route:</div>
                         <div style={{ display: 'flex', gap: '6px' }}>
                           <input type="text" placeholder="Search & add by name..."
                             value={manualSearchQuery}
                             onChange={e => setManualSearchQuery(e.target.value)}
                             onKeyDown={async e => { if (e.key === 'Enter') { e.preventDefault(); await handleManualPlaceSearch(); } }}
-                            style={{ flex: 1, fontSize: '0.74rem', padding: '6px 10px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a' }}/>
+                            style={{ flex: 1, fontSize: '0.8rem', padding: '6px 10px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a' }}/>
                           <button onClick={handleManualPlaceSearch} disabled={isSearchingManual}
-                            style={{ background: '#4f46e5', color: '#ffffff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.72rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            style={{ background: '#4f46e5', color: '#ffffff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             {isSearchingManual ? <Loader2 size={11} className="spin"/> : <Plus size={12}/>} Add
                           </button>
                         </div>
@@ -3159,19 +3159,19 @@ export function RouteSpacePanel({
 
                       <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', marginTop: 'auto' }}>
                         {appliedSuccess ? (
-                          <div style={{ background: '#ecfdf5', border: '1px solid #059669', color: '#059669', borderRadius: '8px', padding: '8px', fontSize: '0.8rem', fontWeight: '700', textAlign: 'center' }}>
+                          <div style={{ background: '#ecfdf5', border: '1px solid #059669', color: '#059669', borderRadius: '8px', padding: '8px', fontSize: '0.9rem', fontWeight: '700', textAlign: 'center' }}>
                             ✓ Applied to Planner Itinerary!
                           </div>
                         ) : (
                           <button onClick={applyMorphedRouteToTrip}
-                            style={{ width: '100%', background: '#10b981', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                            style={{ width: '100%', background: '#10b981', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                             <Check size={14}/> Apply to My Itinerary
                           </button>
                         )}
                       </div>
                     </>
                   ) : (
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>
                       Select or generate a route to view its details.
                     </div>
                   )}

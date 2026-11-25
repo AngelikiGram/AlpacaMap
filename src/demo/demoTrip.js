@@ -39,7 +39,7 @@ export function makeDemoTrip(today = new Date()) {
   }));
   const ev = (id, time, key, type = 'activity') => ({ id, time, title: P[key].name, type });
   return {
-    title: 'Demo · London long weekend',
+    title: 'Example: London long weekend',
     demo: DEMO_FLAG,
     locations: [{ id: 91, name: 'London, United Kingdom', coords: [51.5074, -0.1278], zoomLevel: 13, places, recommendations: [] }],
     routes: [],

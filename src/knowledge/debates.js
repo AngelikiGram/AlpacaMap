@@ -57,7 +57,10 @@ function toCard(a, b, extra) {
   // Show the positive statement first so the two sides read as "yes … / but …"
   const [x, y] = a.evaluation?.sentiment === 'negative' && b.evaluation?.sentiment === 'positive' ? [b, a] : [a, b];
   const aspects = extra.aspects?.length ? extra.aspects : aspectsOf(x.claim).filter((k) => aspectsOf(y.claim).includes(k));
+  // Which condition each side refers to (e.g. season: summer / winter), in the order shown
+  const cond = explainByConditions(x, y);
   return {
+    conditionSides: cond ? { label: cond.label, a: cond.a, b: cond.b } : null,
     key: pairKey(x.id, y.id), place: x.place, topic: topicOf(x.place), city: x.city || null,
     onMap: !String(x.place || '').includes(' · '),   // false = city-wide topic, no position on the map
     a: { id: x.id, text: plainText(x.claim, 240), source: x.source?.sourceType, sentiment: x.evaluation?.sentiment },

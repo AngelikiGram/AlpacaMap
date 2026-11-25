@@ -910,7 +910,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
 
     return (
       <button className={`chip ${isActive ? 'active' : ''}`}
-        style={{ fontSize:'0.75rem', background:bg, border:border, color:color, padding:'4px 9px', display:'flex', alignItems:'center', gap:'5px', cursor:'pointer', borderRadius:'6px' }}
+        style={{ fontSize:'0.85rem', background:bg, border:border, color:color, padding:'4px 9px', display:'flex', alignItems:'center', gap:'5px', cursor:'pointer', borderRadius:'6px' }}
         onClick={() => onSelect(value)}>
         {icon && <span style={{ display:'flex', alignItems:'center', opacity: isActive ? 1 : 0.7 }}>{icon}</span>}
         {label}
@@ -928,7 +928,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
       color: textColor,
       border: border,
       borderRadius: '6px',
-      fontSize: '0.82rem',
+      fontSize: '0.9rem',
       padding: '0.35rem 0.5rem',
       outline: 'none',
       width: '100%',
@@ -939,13 +939,13 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
       <>
         {/* AI model: in the browser (WebLLM) or local Ollama */}
         <div style={{ marginBottom:'1rem' }}>
-          <div style={{ fontSize:'0.65rem', color:subColor, fontWeight:'700', letterSpacing:'0.07em', marginBottom:'5px' }}>AI MODEL</div>
+          <div style={{ fontSize:'0.75rem', color:subColor, fontWeight:'700', letterSpacing:'0.07em', marginBottom:'5px' }}>AI MODEL</div>
           <div role="radiogroup" aria-label="Where the AI runs" style={{ display:'flex', gap:'5px', marginBottom:'7px' }}>
             {[['browser','In your browser'],['ollama','Ollama (local server)']].map(([id,label]) => (
               <button key={id} type="button" role="radio" aria-checked={aiProvider===id}
                 className={`chip ${aiProvider===id?'active':''}`}
                 onClick={() => { setAiProvider(id); localStorage.setItem('ai_provider', id); }}
-                style={{ fontSize:'0.68rem', padding:'3px 10px' }}>{label}</button>
+                style={{ fontSize:'0.75rem', padding:'3px 10px' }}>{label}</button>
             ))}
           </div>
           {aiProvider === 'browser' ? (
@@ -954,7 +954,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
                 onChange={e => { setBrowserModel(e.target.value); localStorage.setItem('browser_model', e.target.value); }}>
                 {BROWSER_MODELS.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
               </select>
-              <div style={{ fontSize:'0.63rem', lineHeight:1.5, color: hasWebGPU() ? subColor : 'var(--warning)' }}>
+              <div style={{ fontSize:'0.75rem', lineHeight:1.5, color: hasWebGPU() ? subColor : 'var(--warning)' }}>
                 {!hasWebGPU()
                   ? '⚠ This browser has no WebGPU, so the AI model cannot run here. Use a recent Chrome or Edge on a computer with a graphics card, or choose Ollama. 🦙 Tip: the one-box planner on the home screen (“3 days in Rome, love food”) works without any AI.'
                   : browserLoad
@@ -967,8 +967,8 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
           ) : (
             <>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'4px' }}>
-            <span style={{ fontSize:'0.65rem', color:subColor, fontWeight:'700', letterSpacing:'0.07em' }}>OLLAMA</span>
-            <button className="btn-icon" style={{ fontSize:'0.65rem', padding:'1px 6px', display:'flex', alignItems:'center', gap:'3px', border: isLight ? '1px solid #cbd5e1' : undefined, color: isLight ? '#475569' : undefined, background: isLight ? '#f1f5f9' : undefined }}
+            <span style={{ fontSize:'0.75rem', color:subColor, fontWeight:'700', letterSpacing:'0.07em' }}>OLLAMA</span>
+            <button className="btn-icon" style={{ fontSize:'0.75rem', padding:'1px 6px', display:'flex', alignItems:'center', gap:'3px', border: isLight ? '1px solid #cbd5e1' : undefined, color: isLight ? '#475569' : undefined, background: isLight ? '#f1f5f9' : undefined }}
               onClick={() => setShowOllamaConfig(s=>!s)}>
               <Settings size={10}/>{showOllamaConfig ? 'done' : 'config'}
             </button>
@@ -976,25 +976,25 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
           {showOllamaConfig ? (
             <div style={{ display:'flex', flexDirection:'column', gap:'7px' }}>
               <div>
-                <div style={{ fontSize:'0.6rem', color:subColor, marginBottom:'3px', fontWeight:'600' }}>ENDPOINT</div>
+                <div style={{ fontSize:'0.75rem', color:subColor, marginBottom:'3px', fontWeight:'600' }}>ENDPOINT</div>
                 <input type="text" value={ollamaEndpoint}
                   onChange={e => { setOllamaEndpoint(e.target.value); localStorage.setItem('ollama_endpoint', e.target.value); }}
                   placeholder="http://localhost:11434" style={inputStyle}/>
               </div>
               <div>
-                <div style={{ fontSize:'0.6rem', color:subColor, marginBottom:'3px', fontWeight:'600' }}>MODEL</div>
+                <div style={{ fontSize:'0.75rem', color:subColor, marginBottom:'3px', fontWeight:'600' }}>MODEL</div>
                 <input type="text" value={ollamaModel} list="ollama-models"
                   onChange={e => { setOllamaModel(e.target.value); localStorage.setItem('ollama_model', e.target.value); }}
                   placeholder="llama3.1" style={inputStyle}/>
                 <datalist id="ollama-models">{ollamaState.models.map(m => <option key={m} value={m}/>)}</datalist>
               </div>
-              <div style={{ fontSize:'0.61rem', color:subColor, lineHeight:1.55, padding:'5px 8px', background: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.03)', borderRadius:'6px' }}>
+              <div style={{ fontSize:'0.75rem', color:subColor, lineHeight:1.55, padding:'5px 8px', background: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.03)', borderRadius:'6px' }}>
                 Run <code style={{ background: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.1)', padding:'1px 5px', borderRadius:'3px' }}>ollama serve</code> locally, then pull a model:<br/>
                 <code style={{ background: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.1)', padding:'1px 5px', borderRadius:'3px' }}>ollama pull llama3.1</code>
               </div>
             </div>
           ) : (
-            <div style={{ fontSize:'0.65rem', lineHeight:1.5, color: ollamaState.status === 'ok' && (ollamaState.models.length === 0 || ollamaState.models.some(m => m === ollamaModel || m.startsWith(ollamaModel + ':'))) ? 'var(--success)' : ollamaState.status === 'checking' ? subColor : 'var(--warning)' }}>
+            <div style={{ fontSize:'0.75rem', lineHeight:1.5, color: ollamaState.status === 'ok' && (ollamaState.models.length === 0 || ollamaState.models.some(m => m === ollamaModel || m.startsWith(ollamaModel + ':'))) ? 'var(--success)' : ollamaState.status === 'checking' ? subColor : 'var(--warning)' }}>
               {ollamaState.status === 'none' && '⚠ No endpoint set, click config'}
               {ollamaState.status === 'checking' && <>Checking {ollamaEndpoint}…</>}
               {ollamaState.status === 'ok' && (ollamaState.models.length === 0 || ollamaState.models.some(m => m === ollamaModel || m.startsWith(ollamaModel + ':'))
@@ -1004,7 +1004,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
                 ⚠ Ollama is not reachable at {ollamaEndpoint}. AI features need Ollama running on this computer
                 {!/localhost|127\.0\.0\.1/.test(location.hostname) && <> and started with <code>OLLAMA_ORIGINS={location.origin}</code></>}.
                 {hasWebGPU() && (
-                  <button type="button" className="chip" style={{ display:'block', marginTop:'5px', fontSize:'0.66rem', padding:'2px 9px' }}
+                  <button type="button" className="chip" style={{ display:'block', marginTop:'5px', fontSize:'0.75rem', padding:'2px 9px' }}
                     onClick={() => { setAiProvider('browser'); localStorage.setItem('ai_provider', 'browser'); }}>
                     Use the in-browser model instead
                   </button>
@@ -1021,14 +1021,14 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
           {!isLight && (
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'0.6rem' }}>
               <div className="section-label" style={{ margin:0 }}>Traveler profile</div>
-              <button className="btn-icon" style={{ fontSize:'0.65rem', padding:'2px 8px', display:'flex', alignItems:'center', gap:'4px' }}
+              <button className="btn-icon" style={{ fontSize:'0.75rem', padding:'2px 8px', display:'flex', alignItems:'center', gap:'4px' }}
                 onClick={() => setIsFullscreen(true)}>
                 <Sparkles size={11}/> Fullscreen Explorer
               </button>
             </div>
           )}
           <div style={{ marginBottom:'8px' }}>
-            <div style={{ fontSize:'0.72rem', color:subColor, marginBottom:'4px', fontWeight:'600' }}>WHO'S GOING</div>
+            <div style={{ fontSize:'0.8rem', color:subColor, marginBottom:'4px', fontWeight:'600' }}>WHO'S GOING</div>
             <div style={{ display:'flex', gap:'4px', flexWrap:'wrap' }}>
               {[
                 ['solo','Solo',<User size={12}/>],
@@ -1044,7 +1044,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
             </div>
           </div>
           <div style={{ marginBottom:'8px' }}>
-            <div style={{ fontSize:'0.72rem', color:subColor, marginBottom:'4px', fontWeight:'600' }}>PACE</div>
+            <div style={{ fontSize:'0.8rem', color:subColor, marginBottom:'4px', fontWeight:'600' }}>PACE</div>
             <div style={{ display:'flex', gap:'4px' }}>
               {[
                 ['relaxed','Relaxed',<Coffee size={12}/>],
@@ -1056,7 +1056,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
             </div>
           </div>
           <div style={{ marginBottom:'8px' }}>
-            <div style={{ fontSize:'0.72rem', color:subColor, marginBottom:'4px', fontWeight:'600' }}>TRIP STYLE</div>
+            <div style={{ fontSize:'0.8rem', color:subColor, marginBottom:'4px', fontWeight:'600' }}>TRIP STYLE</div>
             <div style={{ display:'flex', gap:'4px', flexWrap:'wrap' }}>
               {[
                 ['cultural','Cultural',<Landmark size={12}/>],
@@ -1079,11 +1079,11 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
           </div>
           <div style={{ display:'flex', gap:'8px' }}>
             <div style={{ flex:1 }}>
-              <div style={{ fontSize:'0.72rem', color:subColor, marginBottom:'4px', fontWeight:'600' }}>DAYS</div>
+              <div style={{ fontSize:'0.8rem', color:subColor, marginBottom:'4px', fontWeight:'600' }}>DAYS</div>
               <input type="number" min="1" max="21" value={numDays} onChange={e=>setNumDays(Math.max(1,Math.min(21,Number(e.target.value))))} style={inputStyle}/>
             </div>
             <div style={{ flex:2 }}>
-              <div style={{ fontSize:'0.72rem', color:subColor, marginBottom:'4px', fontWeight:'600' }}>BUDGET (€ total, optional)</div>
+              <div style={{ fontSize:'0.8rem', color:subColor, marginBottom:'4px', fontWeight:'600' }}>BUDGET (€ total, optional)</div>
               <input type="number" placeholder="e.g. 1500" value={budgetInput} onChange={e=>setBudgetInput(e.target.value)} style={inputStyle}/>
             </div>
           </div>
@@ -1092,7 +1092,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
         {/* Unified describe / refine field */}
         <div style={{ marginBottom:'0.85rem' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'4px' }}>
-            <div style={{ fontSize:'0.72rem', color:subColor, fontWeight:'600' }}>
+            <div style={{ fontSize:'0.8rem', color:subColor, fontWeight:'600' }}>
               {plan ? 'DESCRIBE A CHANGE OR A WHOLE NEW TRIP' : 'DESCRIBE YOUR TRIP (optional, makes the plan much better)'}
             </div>
             {getCoolPromptSuggestion() && (
@@ -1101,7 +1101,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
                   setDesc(promptSuggestion);
                   setPromptSuggestion(generateRandomPrompt(tripStyle));
                 }}
-                style={{ fontSize:'0.68rem', background: isLight ? 'rgba(99,102,241,0.08)' : 'rgba(99,102,241,0.15)', border:'1px solid rgba(99,102,241,0.3)', color: isLight ? '#4f46e5' : '#a5b4fc', borderRadius:'20px', padding:'3px 8px', cursor:'pointer', fontWeight:'700', outline:'none', transition:'all 0.2s' }}
+                style={{ fontSize:'0.75rem', background: isLight ? 'rgba(99,102,241,0.08)' : 'rgba(99,102,241,0.15)', border:'1px solid rgba(99,102,241,0.3)', color: isLight ? '#4f46e5' : '#a5b4fc', borderRadius:'20px', padding:'3px 8px', cursor:'pointer', fontWeight:'700', outline:'none', transition:'all 0.2s' }}
               >
                 ✨ Fill cool prompt
               </button>
@@ -1111,7 +1111,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
             placeholder={plan
               ? 'e.g. "swap Day 2 for more outdoor activities" · "make it more budget-friendly" · or a completely new trip description'
               : 'e.g. "We\'re a couple who love art but hate tourist crowds. Great coffee is non-negotiable."'}
-            style={{ ...inputStyle, resize:'vertical', fontSize:'0.76rem', lineHeight:1.55 }}
+            style={{ ...inputStyle, resize:'vertical', fontSize:'0.85rem', lineHeight:1.55 }}
             disabled={loading}/>
           {/* Places count + generate places row, always visible */}
           <div style={{ display:'flex', gap:'6px', marginTop:'5px', alignItems:'center' }}>
@@ -1119,11 +1119,11 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
               <MapPin size={10} color={subColor}/>
               <input type="number" min={3} max={50} value={placeCount}
                 onChange={e=>setPlaceCount(Number(e.target.value))}
-                style={{ width:'34px', background:'transparent', border:'none', color: textColor, fontSize:'0.73rem', outline:'none', textAlign:'center', padding:0 }}/>
-              <span style={{ fontSize:'0.62rem', color:subColor, whiteSpace:'nowrap' }}>places</span>
+                style={{ width:'34px', background:'transparent', border:'none', color: textColor, fontSize:'0.8rem', outline:'none', textAlign:'center', padding:0 }}/>
+              <span style={{ fontSize:'0.75rem', color:subColor, whiteSpace:'nowrap' }}>places</span>
             </div>
             <button className="btn-icon"
-              style={{ flex:1, fontSize:'0.73rem', padding:'0.45rem 0.6rem', border:'1px solid rgba(6,182,212,0.4)', borderRadius:'7px', color: isLight ? '#0891b2' : '#06b6d4', display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', background: isLight ? 'rgba(6,182,212,0.06)' : 'transparent', fontWeight:'600', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}
+              style={{ flex:1, fontSize:'0.8rem', padding:'0.45rem 0.6rem', border:'1px solid rgba(6,182,212,0.4)', borderRadius:'7px', color: isLight ? '#0891b2' : '#06b6d4', display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', background: isLight ? 'rgba(6,182,212,0.06)' : 'transparent', fontWeight:'600', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}
               onClick={generatePlaces} disabled={placesLoading||loading}>
               {placesLoading ? <Loader2 size={11} className="spin"/> : <ListChecks size={11}/>}
               {placesLoading
@@ -1133,11 +1133,11 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
           </div>
           {plan && (
             <div style={{ display:'flex', gap:'6px', marginTop:'5px' }}>
-              <button className="btn-primary" style={{ flex:1, fontSize:'0.75rem', padding:'0.35rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'5px', background: isLight ? '#6366f1' : undefined }}
+              <button className="btn-primary" style={{ flex:1, fontSize:'0.85rem', padding:'0.35rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'5px', background: isLight ? '#6366f1' : undefined }}
                 onClick={()=>generatePlan('refine')} disabled={loading||!desc.trim()}>
                 <Pencil size={12}/> Refine current plan
               </button>
-              <button className="btn-icon" style={{ flex:1, fontSize:'0.75rem', padding:'0.35rem', border: border, borderRadius:'8px', display:'flex', alignItems:'center', justifyContent:'center', gap:'5px', color: isLight ? '#475569' : undefined, background: isLight ? '#f1f5f9' : undefined }}
+              <button className="btn-icon" style={{ flex:1, fontSize:'0.85rem', padding:'0.35rem', border: border, borderRadius:'8px', display:'flex', alignItems:'center', justifyContent:'center', gap:'5px', color: isLight ? '#475569' : undefined, background: isLight ? '#f1f5f9' : undefined }}
                 onClick={()=>generatePlan('new')} disabled={loading}>
                 <RotateCcw size={12}/> Generate new plan
               </button>
@@ -1163,16 +1163,16 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px', flexShrink: 0 }}>
-          <div style={{ fontSize:'0.9rem', fontWeight:'700', color:'#06b6d4', display:'flex', alignItems:'center', gap:'6px' }}>
+          <div style={{ fontSize:'1rem', fontWeight:'700', color:'#06b6d4', display:'flex', alignItems:'center', gap:'6px' }}>
             <ListChecks size={15}/> Suggested Places to Visit
           </div>
           <div style={{ display:'flex', gap:'8px', alignItems:'center' }}>
             <button
               onClick={toggleSelectAll}
-              style={{ fontSize:'0.72rem', padding:'4px 10px', borderRadius:'6px', border:'1px solid rgba(6,182,212,0.4)', background: allSelected ? 'rgba(6,182,212,0.15)' : 'transparent', color:'#06b6d4', cursor:'pointer', fontWeight:600, whiteSpace:'nowrap' }}>
+              style={{ fontSize:'0.8rem', padding:'4px 10px', borderRadius:'6px', border:'1px solid rgba(6,182,212,0.4)', background: allSelected ? 'rgba(6,182,212,0.15)' : 'transparent', color:'#06b6d4', cursor:'pointer', fontWeight:600, whiteSpace:'nowrap' }}>
               {allSelected ? 'Deselect all' : 'Select all'}
             </button>
-            <button className="btn-primary" style={{ fontSize:'0.75rem', padding:'4px 12px', background:'#06b6d4', display:'flex', alignItems:'center', gap:'4px' }}
+            <button className="btn-primary" style={{ fontSize:'0.85rem', padding:'4px 12px', background:'#06b6d4', display:'flex', alignItems:'center', gap:'4px' }}
               onClick={addSelectedPlacesToMap} disabled={selectedCount === 0}>
               <Plus size={12}/> Add selected to map ({selectedCount})
             </button>
@@ -1183,7 +1183,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
         </div>
         <div style={{ display:'flex', flexDirection:'column', gap:'8px', overflowY:'auto', flex: 1, paddingRight: '4px' }}>
           {placesList.length === 0 && (
-            <div style={{ padding:'20px', textAlign:'center', color: subColor, fontSize:'0.82rem' }}>No places returned by AI. Try refining your description and searching again.</div>
+            <div style={{ padding:'20px', textAlign:'center', color: subColor, fontSize:'0.9rem' }}>No places returned by AI. Try refining your description and searching again.</div>
           )}
           {placesList.map((p, i) => {
             const isSelected = !!p.selected;
@@ -1209,15 +1209,15 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
                   style={{ marginTop:'4px', cursor:'pointer', accentColor:'#06b6d4', flexShrink:0, width:'14px', height:'14px' }}/>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                    <span style={{ fontWeight:'700', fontSize:'0.85rem', color: textColor }}>
+                    <span style={{ fontWeight:'700', fontSize:'0.9rem', color: textColor }}>
                       {p.name}
-                      {p.added && <span style={{ fontSize:'0.65rem', color:'#10b981', marginLeft:'5px', fontWeight:'normal' }}>added</span>}
+                      {p.added && <span style={{ fontSize:'0.75rem', color:'#10b981', marginLeft:'5px', fontWeight:'normal' }}>added</span>}
                     </span>
-                    <span style={{ fontSize:'0.65rem', background: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.06)', color: subColor, padding:'1px 5px', borderRadius:'4px', textTransform:'uppercase' }}>{p.type || 'attraction'}</span>
+                    <span style={{ fontSize:'0.75rem', background: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.06)', color: subColor, padding:'1px 5px', borderRadius:'4px', textTransform:'uppercase' }}>{p.type || 'attraction'}</span>
                   </div>
-                  <div style={{ fontSize:'0.74rem', color: subColor, marginTop:'3px', lineHeight:1.4 }}>{p.description}</div>
+                  <div style={{ fontSize:'0.8rem', color: subColor, marginTop:'3px', lineHeight:1.4 }}>{p.description}</div>
                   {p.previewCoords && (
-                    <div style={{ fontSize:'0.65rem', color:'#06b6d4', marginTop:'4px', display:'flex', alignItems:'center', gap:'3px' }}>
+                    <div style={{ fontSize:'0.75rem', color:'#06b6d4', marginTop:'4px', display:'flex', alignItems:'center', gap:'3px' }}>
                       <MapPin size={10}/> View on map
                     </div>
                   )}
@@ -1241,10 +1241,10 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
         {/* Failsafe for unparsed raw JSON */}
         {(!plan.days || plan.days.length === 0) && plan._raw && (
           <div style={{ marginBottom:'1rem', padding:'0.75rem', background:'rgba(239,68,68,0.1)', borderRadius:'10px', border:'1px solid rgba(239,68,68,0.2)' }}>
-            <div style={{ fontSize:'0.7rem', color:'var(--danger)', fontWeight:'700', marginBottom:'5px' }}>
+            <div style={{ fontSize:'0.8rem', color:'var(--danger)', fontWeight:'700', marginBottom:'5px' }}>
               Model generated data, but it didn't match the expected structure:
             </div>
-            <pre style={{ fontSize:'0.6rem', color:subColor, whiteSpace:'pre-wrap', maxHeight:'200px', overflowY:'auto' }}>
+            <pre style={{ fontSize:'0.75rem', color:subColor, whiteSpace:'pre-wrap', maxHeight:'200px', overflowY:'auto' }}>
               {plan._raw}
             </pre>
           </div>
@@ -1252,16 +1252,16 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
 
         {/* Summary */}
         <div style={{ marginBottom:'0.75rem', padding:'0.75rem', background: isLight ? '#eff6ff' : 'rgba(59,130,246,0.08)', borderRadius:'10px', border: isLight ? '1px solid #bfdbfe' : '1px solid rgba(59,130,246,0.18)' }}>
-          <div style={{ fontSize:'0.78rem', fontWeight:'700', color: isLight ? '#2563eb' : 'var(--accent-primary)', marginBottom:'6px', lineHeight:1.45 }}>{plan.tripSummary}</div>
+          <div style={{ fontSize:'0.85rem', fontWeight:'700', color: isLight ? '#2563eb' : 'var(--accent-primary)', marginBottom:'6px', lineHeight:1.45 }}>{plan.tripSummary}</div>
           {plan.travelerProfile && (
             <>
               <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'4px' }}>
                 {Object.entries(plan.travelerProfile).filter(([k])=>k!=='personalityNote').map(([k,v]) => (
-                  <span key={k} style={{ fontSize:'0.6rem', background: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)', color: subColor, padding:'2px 7px', borderRadius:'8px', textTransform:'capitalize' }}>{v}</span>
+                  <span key={k} style={{ fontSize:'0.75rem', background: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)', color: subColor, padding:'2px 7px', borderRadius:'8px', textTransform:'capitalize' }}>{v}</span>
                 ))}
               </div>
               {plan.travelerProfile.personalityNote && (
-                <div style={{ fontSize:'0.65rem', color:subColor, fontStyle:'italic' }}>{plan.travelerProfile.personalityNote}</div>
+                <div style={{ fontSize:'0.75rem', color:subColor, fontStyle:'italic' }}>{plan.travelerProfile.personalityNote}</div>
               )}
             </>
           )}
@@ -1273,7 +1273,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
             {plan.days.map((day,i)=>(
               <button key={i} onClick={()=>setActiveDay(i)}
                 style={{
-                  flexShrink:0, padding:'6px 14px', borderRadius:'20px', fontSize:'0.72rem', fontWeight:'700', border:'none', cursor:'pointer',
+                  flexShrink:0, padding:'6px 14px', borderRadius:'20px', fontSize:'0.8rem', fontWeight:'700', border:'none', cursor:'pointer',
                   background: activeDay===i ? day.color : isLight ? '#f1f5f9' : 'rgba(255,255,255,0.06)',
                   color: activeDay===i ? 'white' : subColor,
                   boxShadow: activeDay===i ? `0 0 10px ${day.color}60` : 'none', transition:'all 0.2s'
@@ -1292,8 +1292,8 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
           return (
             <div style={{ marginBottom:'1rem' }}>
               <div style={{ padding:'10px 14px', borderRadius:'10px 10px 0 0', background:day.color }}>
-                <div style={{ fontSize:'0.85rem', fontWeight:'700', color:'white' }}>{day.theme||`Day ${day.dayNumber||activeDay+1}`}</div>
-                {day.weatherNote && <div style={{ fontSize:'0.68rem', color:'rgba(255,255,255,0.85)', marginTop:'2px' }}>{day.weatherNote}</div>}
+                <div style={{ fontSize:'0.9rem', fontWeight:'700', color:'white' }}>{day.theme||`Day ${day.dayNumber||activeDay+1}`}</div>
+                {day.weatherNote && <div style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.85)', marginTop:'2px' }}>{day.weatherNote}</div>}
               </div>
 
               <div style={{ border:`1px solid ${day.color}35`, borderTop:'none', borderRadius:'0 0 10px 10px', overflow:'hidden', background: isLight ? '#ffffff' : 'transparent' }}>
@@ -1302,19 +1302,19 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
                   if (isEditing) return (
                     <div key={j} style={{ padding:'10px 14px', borderBottom:`1px solid ${border}`, background: isLight ? '#f8fafc' : 'rgba(255,255,255,0.04)' }}>
                       <div style={{ display:'flex', gap:'5px', marginBottom:'5px' }}>
-                        <input value={editDraft.time||''} onChange={e=>setEditDraft(d=>({...d,time:e.target.value}))} style={{ width:'62px', fontSize:'0.74rem', padding:'3px 6px', border: isLight ? '1px solid #cbd5e1' : undefined }} placeholder="09:00"/>
-                        <input value={editDraft.name||''} onChange={e=>setEditDraft(d=>({...d,name:e.target.value}))} style={{ flex:1, fontSize:'0.74rem', padding:'3px 6px', border: isLight ? '1px solid #cbd5e1' : undefined }} placeholder="Stop name"/>
+                        <input value={editDraft.time||''} onChange={e=>setEditDraft(d=>({...d,time:e.target.value}))} style={{ width:'62px', fontSize:'0.8rem', padding:'3px 6px', border: isLight ? '1px solid #cbd5e1' : undefined }} placeholder="09:00"/>
+                        <input value={editDraft.name||''} onChange={e=>setEditDraft(d=>({...d,name:e.target.value}))} style={{ flex:1, fontSize:'0.8rem', padding:'3px 6px', border: isLight ? '1px solid #cbd5e1' : undefined }} placeholder="Stop name"/>
                       </div>
                       <div style={{ display:'flex', gap:'5px', marginBottom:'5px' }}>
-                        <input value={editDraft.duration||''} onChange={e=>setEditDraft(d=>({...d,duration:e.target.value}))} style={{ flex:1, fontSize:'0.74rem', padding:'3px 6px', border: isLight ? '1px solid #cbd5e1' : undefined }} placeholder="Duration (e.g. 1.5 hrs)"/>
-                        <input type="number" value={editDraft.budgetEst||''} onChange={e=>setEditDraft(d=>({...d,budgetEst:Number(e.target.value)}))} style={{ width:'70px', fontSize:'0.74rem', padding:'3px 6px', border: isLight ? '1px solid #cbd5e1' : undefined }} placeholder="€ cost"/>
+                        <input value={editDraft.duration||''} onChange={e=>setEditDraft(d=>({...d,duration:e.target.value}))} style={{ flex:1, fontSize:'0.8rem', padding:'3px 6px', border: isLight ? '1px solid #cbd5e1' : undefined }} placeholder="Duration (e.g. 1.5 hrs)"/>
+                        <input type="number" value={editDraft.budgetEst||''} onChange={e=>setEditDraft(d=>({...d,budgetEst:Number(e.target.value)}))} style={{ width:'70px', fontSize:'0.8rem', padding:'3px 6px', border: isLight ? '1px solid #cbd5e1' : undefined }} placeholder="€ cost"/>
                       </div>
-                      <textarea value={editDraft.notes||''} onChange={e=>setEditDraft(d=>({...d,notes:e.target.value}))} rows={2} style={{ width:'100%', fontSize:'0.71rem', padding:'3px 6px', marginBottom:'5px', resize:'vertical', boxSizing:'border-box', border: isLight ? '1px solid #cbd5e1' : undefined }} placeholder="Notes for this traveler…"/>
+                      <textarea value={editDraft.notes||''} onChange={e=>setEditDraft(d=>({...d,notes:e.target.value}))} rows={2} style={{ width:'100%', fontSize:'0.8rem', padding:'3px 6px', marginBottom:'5px', resize:'vertical', boxSizing:'border-box', border: isLight ? '1px solid #cbd5e1' : undefined }} placeholder="Notes for this traveler…"/>
                       <div style={{ display:'flex', gap:'5px', alignItems:'center', flexWrap:'wrap' }}>
-                        <button className="btn-primary" style={{ fontSize:'0.71rem', padding:'2px 8px', display:'flex', alignItems:'center', gap:'3px' }} onClick={()=>{ updateStop(di, j, editDraft); setEditingStop(null); }}><Check size={11}/> Save</button>
-                        <button className="btn-icon" style={{ fontSize:'0.71rem', padding:'2px 7px', border: isLight ? '1px solid #cbd5e1' : undefined }} onClick={()=>setEditingStop(null)}>Cancel</button>
+                        <button className="btn-primary" style={{ fontSize:'0.8rem', padding:'2px 8px', display:'flex', alignItems:'center', gap:'3px' }} onClick={()=>{ updateStop(di, j, editDraft); setEditingStop(null); }}><Check size={11}/> Save</button>
+                        <button className="btn-icon" style={{ fontSize:'0.8rem', padding:'2px 7px', border: isLight ? '1px solid #cbd5e1' : undefined }} onClick={()=>setEditingStop(null)}>Cancel</button>
                         {plan.days.length > 1 && (
-                          <select style={{ fontSize:'0.7rem', padding:'2px 5px', background: isLight ? '#ffffff' : 'var(--bg-secondary)', border: isLight ? '1px solid #cbd5e1' : '1px solid rgba(255,255,255,0.1)', borderRadius:'5px', color: textColor, cursor:'pointer' }} defaultValue="" onChange={e=>{ if(e.target.value!=='') moveStop(di, j, Number(e.target.value)); }}>
+                          <select style={{ fontSize:'0.8rem', padding:'2px 5px', background: isLight ? '#ffffff' : 'var(--bg-secondary)', border: isLight ? '1px solid #cbd5e1' : '1px solid rgba(255,255,255,0.1)', borderRadius:'5px', color: textColor, cursor:'pointer' }} defaultValue="" onChange={e=>{ if(e.target.value!=='') moveStop(di, j, Number(e.target.value)); }}>
                             <option value="">Move to day…</option>
                             {plan.days.map((_,idx)=>idx!==di&&<option key={idx} value={idx}>Day {idx+1}</option>)}
                           </select>
@@ -1331,26 +1331,26 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
                         <GripVertical size={13}/>
                       </div>
                       <div style={{ flexShrink:0, width:'42px', textAlign:'center', marginLeft:'-8px' }}>
-                        <div style={{ fontSize:'0.7rem', fontWeight:'700', color:day.color }}>{stop.time}</div>
-                        <div style={{ fontSize:'0.58rem', color:subColor, marginTop:'1px' }}>{stop.duration}</div>
+                        <div style={{ fontSize:'0.8rem', fontWeight:'700', color:day.color }}>{stop.time}</div>
+                        <div style={{ fontSize:'0.72rem', color:subColor, marginTop:'1px' }}>{stop.duration}</div>
                       </div>
                       <div style={{ flex:1, minWidth:0 }}>
-                        <div style={{ fontWeight:'600', fontSize:'0.82rem', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color: textColor, cursor:'pointer' }}
+                        <div style={{ fontWeight:'600', fontSize:'0.9rem', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color: textColor, cursor:'pointer' }}
                           onClick={()=>{ setEditingStop({dayIndex:di,stopIndex:j}); setEditDraft({...stop}); }}>{stop.name}</div>
-                        {stop.notes && <div style={{ fontSize:'0.67rem', color:subColor, lineHeight:1.4, marginTop:'2px', marginBottom:'5px' }}>{stop.notes}</div>}
+                        {stop.notes && <div style={{ fontSize:'0.75rem', color:subColor, lineHeight:1.4, marginTop:'2px', marginBottom:'5px' }}>{stop.notes}</div>}
                         <div style={{ display:'flex', gap:'5px', flexWrap:'wrap' }}>
-                          {stop.budgetEst>0&&<span style={{ fontSize:'0.6rem', background:'rgba(16,185,129,0.14)', color:'#10b981', padding:'1px 6px', borderRadius:'6px' }}>€{stop.budgetEst}</span>}
-                          {stop.transport&&<span style={{ fontSize:'0.6rem', background: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.07)', color:subColor, padding:'1px 6px', borderRadius:'6px' }}>{stop.transport}{stop.transportTime?' · '+stop.transportTime:''}</span>}
+                          {stop.budgetEst>0&&<span style={{ fontSize:'0.75rem', background:'rgba(16,185,129,0.14)', color:'#10b981', padding:'1px 6px', borderRadius:'6px' }}>€{stop.budgetEst}</span>}
+                          {stop.transport&&<span style={{ fontSize:'0.75rem', background: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.07)', color:subColor, padding:'1px 6px', borderRadius:'6px' }}>{stop.transport}{stop.transportTime?' · '+stop.transportTime:''}</span>}
                         </div>
                       </div>
                       <div style={{ flexShrink:0, display:'flex', flexDirection:'column', alignItems:'center', gap:'2px' }}>
-                        <div style={{ width:'22px', height:'22px', borderRadius:'50%', background:day.color, color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.65rem', fontWeight:'700', opacity:0.85 }}>{j+1}</div>
+                        <div style={{ width:'22px', height:'22px', borderRadius:'50%', background:day.color, color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.75rem', fontWeight:'700', opacity:0.85 }}>{j+1}</div>
                         <button className="btn-icon" style={{ padding:'1px', opacity:0.6, background:'transparent', border:'none' }} onClick={()=>{ setEditingStop({dayIndex:di,stopIndex:j}); setEditDraft({...stop}); }} title="Edit stop"><Pencil size={10}/></button>
                       </div>
                     </div>
                   );
                 })}
-                <button onClick={()=>addStop(di)} style={{ width:'100%', padding:'8px', background:'transparent', border:'none', borderTop: `1px dashed ${border}`, cursor:'pointer', color:subColor, fontSize:'0.72rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'4px' }}>
+                <button onClick={()=>addStop(di)} style={{ width:'100%', padding:'8px', background:'transparent', border:'none', borderTop: `1px dashed ${border}`, cursor:'pointer', color:subColor, fontSize:'0.8rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'4px' }}>
                   <Plus size={11}/> Add stop to Day {di+1}
                 </button>
               </div>
@@ -1361,16 +1361,16 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
         {/* Budget */}
         {plan.budget?.total>0&&(
           <div style={{ marginBottom:'0.75rem', padding:'0.75rem', background:'rgba(16,185,129,0.07)', borderRadius:'10px', border:'1px solid rgba(16,185,129,0.15)', marginTop:'10px' }}>
-            <div style={{ fontSize:'0.75rem', fontWeight:'700', color:'#10b981', marginBottom:'8px', display:'flex', alignItems:'center', gap:'5px' }}><CreditCard size={12}/> Budget breakdown</div>
+            <div style={{ fontSize:'0.85rem', fontWeight:'700', color:'#10b981', marginBottom:'8px', display:'flex', alignItems:'center', gap:'5px' }}><CreditCard size={12}/> Budget breakdown</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'4px 16px' }}>
               {['accommodation','food','activities','transport','extras'].filter(k=>(plan.budget[k]||0)>0).map(k=>(
-                <div key={k} style={{ display:'flex', justifyContent:'space-between', fontSize:'0.72rem' }}>
+                <div key={k} style={{ display:'flex', justifyContent:'space-between', fontSize:'0.8rem' }}>
                   <span style={{ color:subColor, textTransform:'capitalize' }}>{k}</span>
                   <span style={{ fontWeight:'600' }}>€{plan.budget[k]}</span>
                 </div>
               ))}
             </div>
-            <div style={{ marginTop:'8px', paddingTop:'8px', borderTop:`1px solid ${border}`, display:'flex', justifyContent:'space-between', fontSize:'0.8rem', fontWeight:'700' }}>
+            <div style={{ marginTop:'8px', paddingTop:'8px', borderTop:`1px solid ${border}`, display:'flex', justifyContent:'space-between', fontSize:'0.9rem', fontWeight:'700' }}>
               <span>Total</span><span style={{ color:'#10b981' }}>€{plan.budget.total}</span>
             </div>
           </div>
@@ -1379,10 +1379,10 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
         {/* Research Metrics */}
         {plan.researchMetrics && (
           <div style={{ marginBottom:'1rem', marginTop:'10px' }}>
-            <div style={{ fontSize:'0.7rem', fontWeight:'600', color:subColor, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px' }}>Research metrics</div>
+            <div style={{ fontSize:'0.8rem', fontWeight:'600', color:subColor, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px' }}>Research metrics</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'5px 12px', background: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.04)', padding:'8px 12px', borderRadius:'8px' }}>
               {Object.entries(plan.researchMetrics).map(([k,v])=>(
-                <div key={k} style={{ display:'flex', justifyContent:'space-between', fontSize:'0.65rem' }}>
+                <div key={k} style={{ display:'flex', justifyContent:'space-between', fontSize:'0.75rem' }}>
                   <span style={{ color:subColor }}>{k.replace(/([A-Z])/g,' $1').trim()}</span>
                   <span style={{ fontWeight:'600', color:'#8b5cf6' }}>{String(v)}</span>
                 </div>
@@ -1393,7 +1393,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
 
         {/* Actions */}
         <div style={{ display:'flex', gap:'8px', marginBottom:'1rem', marginTop:'10px' }}>
-          <button className="btn-primary" style={{ flex:1, fontSize:'0.82rem', padding:'0.6rem', fontWeight:'700', background: isLight ? '#6366f1' : undefined }} onClick={applyToTrip} disabled={applyDone}>
+          <button className="btn-primary" style={{ flex:1, fontSize:'0.9rem', padding:'0.6rem', fontWeight:'700', background: isLight ? '#6366f1' : undefined }} onClick={applyToTrip} disabled={applyDone}>
             {applyDone ? <><Check size={14}/> Applied to trip!</> : <><Plus size={14}/> Apply to itinerary, packing & budget</>}
           </button>
           <button className="btn-icon" title="Clear plan" style={{ border: `1px solid ${border}`, borderRadius:'8px', padding:'0.6rem', background: isLight ? '#ffffff' : undefined }}
@@ -1409,19 +1409,19 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
     <div style={{ padding:'0 0.1rem' }}>
       {renderFormFields(false)}
       {loading && (
-        <div style={{ width:'100%', marginBottom:'0.75rem', padding:'0.5rem', background:'rgba(139,92,246,0.1)', borderRadius:'8px', fontSize:'0.82rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'7px', color:'#a78bfa' }}>
+        <div style={{ width:'100%', marginBottom:'0.75rem', padding:'0.5rem', background:'rgba(139,92,246,0.1)', borderRadius:'8px', fontSize:'0.9rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'7px', color:'#a78bfa' }}>
           <Loader2 size={14} className="spin"/> {streamChars > 0 ? `Writing… ${streamChars} chars (${elapsedSecs}s)` : `Thinking… ${elapsedSecs}s`}
         </div>
       )}
       {err && (
-        <div style={{ fontSize:'0.74rem', color:'var(--danger)', marginBottom:'0.75rem', padding:'0.5rem 0.75rem', background:'rgba(239,68,68,0.1)', borderRadius:'8px', border:'1px solid rgba(239,68,68,0.2)' }}>
+        <div style={{ fontSize:'0.8rem', color:'var(--danger)', marginBottom:'0.75rem', padding:'0.5rem 0.75rem', background:'rgba(239,68,68,0.1)', borderRadius:'8px', border:'1px solid rgba(239,68,68,0.2)' }}>
           {err}
         </div>
       )}
       {placesMode && placesList && renderPlacesList(false)}
       {plan && renderPlanDetails(false)}
       {!plan && !loading && (
-        <div style={{ textAlign:'center', padding:'1.5rem 1rem', color:'var(--text-secondary)', fontSize:'0.75rem', lineHeight:1.6, marginTop:'0.5rem' }}>
+        <div style={{ textAlign:'center', padding:'1.5rem 1rem', color:'var(--text-secondary)', fontSize:'0.85rem', lineHeight:1.6, marginTop:'0.5rem' }}>
           <BrainCircuit size={36} style={{ marginBottom:'0.5rem', color:'var(--text-secondary)', opacity:0.5 }}/>
           <strong style={{ display:'block', marginBottom:'0.4rem', color:'var(--text-primary)' }}>AlpacaMap AI Planner</strong>
           Set your profile, optionally describe your trip in plain language, then generate a personalized day-by-day itinerary, grounded in real local data, with budget, packing, and map routes.
@@ -1462,7 +1462,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <BrainCircuit size={22} style={{ color: '#6366f1' }}/>
                 <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em' }}>AlpacaMap AI Planner</span>
-                <span style={{ fontSize: '0.75rem', background: '#e0e7ff', color: '#4338ca', padding: '3px 8px', borderRadius: '12px', fontWeight: '600' }}>
+                <span style={{ fontSize: '0.85rem', background: '#e0e7ff', color: '#4338ca', padding: '3px 8px', borderRadius: '12px', fontWeight: '600' }}>
                   {activeCity?.name?.split(',')[0] || tripData.locations[0]?.name?.split(',')[0] || 'Destination'} Explorer
                 </span>
               </div>
@@ -1471,7 +1471,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
                 style={{
                   background: '#f1f5f9', border: 'none', borderRadius: '8px',
                   color: '#475569', cursor: 'pointer', padding: '6px 16px',
-                  fontSize: '0.82rem', fontWeight: '700', transition: 'background 0.2s'
+                  fontSize: '0.9rem', fontWeight: '700', transition: 'background 0.2s'
                 }}
                 onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
                 onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}
@@ -1484,7 +1484,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
             <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: '24px', padding: '24px', flex: 1, minHeight: 0, background: '#f8fafc' }}>
               {/* Left Column: Form Settings */}
               <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#0f172a', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Traveler settings</div>
+                <div style={{ fontSize: '1rem', fontWeight: '800', color: '#0f172a', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Traveler settings</div>
                 {renderFormFields(true)}
               </div>
 
@@ -1493,14 +1493,14 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
                 {loading && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '12px' }}>
                     <Loader2 size={36} className="spin" style={{ color: '#6366f1' }}/>
-                    <div style={{ fontSize: '0.9rem', color: '#475569', fontWeight: '600' }}>
+                    <div style={{ fontSize: '1rem', color: '#475569', fontWeight: '600' }}>
                       {streamChars > 0 ? `Assembling plan... (${streamChars} characters generated)` : 'Thinking and retrieving local places...'}
                     </div>
                   </div>
                 )}
 
                 {err && !loading && (
-                  <div style={{ fontSize:'0.82rem', color:'#ef4444', padding:'12px 16px', background:'#fef2f2', borderRadius:'8px', border:'1px solid #fee2e2', marginBottom:'16px' }}>
+                  <div style={{ fontSize:'0.9rem', color:'#ef4444', padding:'12px 16px', background:'#fef2f2', borderRadius:'8px', border:'1px solid #fee2e2', marginBottom:'16px' }}>
                     {err}
                   </div>
                 )}
@@ -1511,7 +1511,7 @@ export default function TripMindPanel({ tripData, setTripData, activeCity, aiAct
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', textAlign: 'center', padding: '0 40px' }}>
                         <BrainCircuit size={48} style={{ color: '#94a3b8', marginBottom: '12px' }}/>
                         <h3 style={{ color: '#0f172a', fontWeight: '700', fontSize: '1.1rem', margin: '0 0 6px 0' }}>Your AI Itinerary is ready to build</h3>
-                        <p style={{ fontSize: '0.85rem', margin: 0, lineHeight: 1.6 }}>
+                        <p style={{ fontSize: '0.9rem', margin: 0, lineHeight: 1.6 }}>
                           Set your profile, choose your trip style tags, and click <strong>Generate Trip Plan</strong> or <strong>Find Theme sites</strong> to start exploring.
                         </p>
                       </div>

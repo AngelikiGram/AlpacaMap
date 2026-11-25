@@ -147,7 +147,7 @@ export function TruthLensLegend({ items, topics = [], focusTopic = null, openTop
       {topicDisputes > 0 && (
         <button className="lens-cta" onClick={onOpenDebates}>⚖️ Judge {topicDisputes} possible disagreements →</button>
       )}
-      {!checked && <p className="lens-note dim">Colours come from the tone of the statements. Knowledge → Conflicts checks which ones may really contradict each other.</p>}
+      {!checked && <p className="lens-note dim">Colours come from the tone of the statements. Knowledge → Contradiction check checks which ones may really contradict each other.</p>}
       <p className="lens-note dim">Topics, colours and tone are assigned automatically and can be wrong.</p>
     </div>
   );

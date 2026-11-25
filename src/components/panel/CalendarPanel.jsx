@@ -343,17 +343,17 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
               {isEditingDay ? (
                 <div style={{flex:1, display:'flex', gap:'0.4rem', flexDirection:'column', padding:'0.2rem 0'}} onClick={e=>e.stopPropagation()}>
                   <div style={{display:'flex', gap:'0.4rem'}}>
-                    <input type="date" value={editDayDate} onChange={e=>setEditDayDate(e.target.value)} style={{fontSize:'0.8rem', padding:'0.2rem 0.4rem', flex: 1}}/>
-                    <button className="btn-primary" style={{padding:'0.2rem 0.6rem', fontSize:'0.75rem', background:color}} onClick={saveEditDay} aria-label="Save day" title="Save day"><Check size={11}/></button>
+                    <input type="date" value={editDayDate} onChange={e=>setEditDayDate(e.target.value)} style={{fontSize:'0.9rem', padding:'0.2rem 0.4rem', flex: 1}}/>
+                    <button className="btn-primary" style={{padding:'0.2rem 0.6rem', fontSize:'0.85rem', background:color}} onClick={saveEditDay} aria-label="Save day" title="Save day"><Check size={11}/></button>
                     <button className="btn-icon" style={{padding:'0.2rem 0.4rem'}} onClick={()=>setEditingDayId(null)}><X size={11}/></button>
                   </div>
-                  <input type="text" value={editDayLoc} onChange={e=>setEditDayLoc(e.target.value)} style={{fontSize:'0.8rem', padding:'0.2rem 0.4rem'}} placeholder="Location..." list="saved-locations"/>
+                  <input type="text" value={editDayLoc} onChange={e=>setEditDayLoc(e.target.value)} style={{fontSize:'0.9rem', padding:'0.2rem 0.4rem'}} placeholder="Location..." list="saved-locations"/>
                 </div>
               ) : (
                 <>
                   <div style={{flex:1}}>
-                    <div style={{fontWeight:'600',fontSize:'0.875rem'}}>{fmtDate(day.date)}</div>
-                    <div style={{fontSize:'0.7rem',color:'var(--text-secondary)',display:'flex',gap:'6px',alignItems:'center',flexWrap:'wrap'}}>
+                    <div style={{fontWeight:'600',fontSize:'0.9rem'}}>{fmtDate(day.date)}</div>
+                    <div style={{fontSize:'0.8rem',color:'var(--text-secondary)',display:'flex',gap:'6px',alignItems:'center',flexWrap:'wrap'}}>
                       <span>{day.location} · {day.events.length} event{day.events.length!==1?'s':''}</span>
                       {(()=>{ const f=forecastFor(day); if(!f)return null; const wet=isWetDay(f);
                         return <span className={`day-weather ${wet?'wet':''}`} title={`Forecast: max ${Math.round(f.tmax)}°, ${f.precipProb??0}% chance of rain`}>{wet?'🌧':'☀️'} {Math.round(f.tmax)}° · {f.precipProb??0}%</span>; })()}
@@ -374,7 +374,7 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
             </div>
             {isOpen&&(
               <div className="cal-day-body">
-                {day.events.length===0&&<div style={{fontSize:'0.78rem',color:'var(--text-secondary)',padding:'0.3rem 0 0.5rem'}}>No events yet, add one below.</div>}
+                {day.events.length===0&&<div style={{fontSize:'0.85rem',color:'var(--text-secondary)',padding:'0.3rem 0 0.5rem'}}>No events yet, add one below.</div>}
                 {isWetDay(forecastFor(day))&&(
                   <div className="rain-plan">
                     <div className="rain-plan-head">🌧 Rain likely ({forecastFor(day).precipProb??'?'}%) {!rainPlans[day.id]&&<button type="button" onClick={()=>makeRainPlan(day)}>Make a rain plan</button>}</div>
@@ -393,17 +393,17 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
                   if(isEditingThis) return(
                     <div key={evt.id} style={{padding:'6px 0',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
                       <div style={{display:'grid',gridTemplateColumns:'80px 1fr',gap:'5px',marginBottom:'4px'}}>
-                        <input type="time" value={editEvtDraft.time||''} onChange={e=>setEditEvtDraft(p=>({...p,time:e.target.value}))} style={{fontSize:'0.78rem',padding:'3px 5px'}}/>
-                        <input type="text" value={editEvtDraft.title||''} onChange={e=>setEditEvtDraft(p=>({...p,title:e.target.value}))} style={{fontSize:'0.78rem',padding:'3px 5px'}} onKeyDown={e=>e.key==='Enter'&&saveEditEvt()} autoFocus/>
+                        <input type="time" value={editEvtDraft.time||''} onChange={e=>setEditEvtDraft(p=>({...p,time:e.target.value}))} style={{fontSize:'0.85rem',padding:'3px 5px'}}/>
+                        <input type="text" value={editEvtDraft.title||''} onChange={e=>setEditEvtDraft(p=>({...p,title:e.target.value}))} style={{fontSize:'0.85rem',padding:'3px 5px'}} onKeyDown={e=>e.key==='Enter'&&saveEditEvt()} autoFocus/>
                       </div>
                       <div style={{display:'flex',gap:'4px',flexWrap:'wrap',marginBottom:'5px'}}>
                         {EVENT_TYPES.map(t=>(
-                          <button key={t.value} type="button" className={`chip ${editEvtDraft.type===t.value?'active':''}`} style={{fontSize:'0.62rem',padding:'1px 7px',...(editEvtDraft.type===t.value?{background:color,borderColor:'transparent'}:{})}} onClick={()=>setEditEvtDraft(p=>({...p,type:t.value}))}>{t.label}</button>
+                          <button key={t.value} type="button" className={`chip ${editEvtDraft.type===t.value?'active':''}`} style={{fontSize:'0.75rem',padding:'1px 7px',...(editEvtDraft.type===t.value?{background:color,borderColor:'transparent'}:{})}} onClick={()=>setEditEvtDraft(p=>({...p,type:t.value}))}>{t.label}</button>
                         ))}
                       </div>
                       <div style={{display:'flex',gap:'5px'}}>
-                        <button className="btn-primary" style={{padding:'2px 10px',fontSize:'0.76rem',background:color}} onClick={saveEditEvt}><Check size={11}/> Save</button>
-                        <button className="btn-icon" style={{padding:'2px 8px',fontSize:'0.76rem'}} onClick={()=>{setEditingEvt(null);setEditEvtDraft(null);}}>Cancel</button>
+                        <button className="btn-primary" style={{padding:'2px 10px',fontSize:'0.85rem',background:color}} onClick={saveEditEvt}><Check size={11}/> Save</button>
+                        <button className="btn-icon" style={{padding:'2px 8px',fontSize:'0.85rem'}} onClick={()=>{setEditingEvt(null);setEditEvtDraft(null);}}>Cancel</button>
                         <button className="btn-icon" style={{padding:'2px',marginLeft:'auto'}} onClick={()=>{deleteEvt(day.id,evt.id);setEditingEvt(null);}}><Trash2 size={11} color="var(--danger)"/></button>
                       </div>
                     </div>
@@ -434,7 +434,7 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
                     >
                       <GripVertical size={11} style={{ cursor: 'grab', color: 'rgba(255,255,255,0.18)', flexShrink: 0 }} />
                       <div className="time-col" style={{display:'flex',alignItems:'center',gap:'4px'}}>{EVT_EMOJI[evt.type]||'•'} {evt.time}</div>
-                      <div className="activity-col" style={{fontSize:'0.83rem'}}>{evt.title}</div>
+                      <div className="activity-col" style={{fontSize:'0.9rem'}}>{evt.title}</div>
                       <EvidenceBadge evidence={findEvidence(evt.title,evidenceMap)}/>
                       <button className="btn-icon" style={{padding:'0.2rem'}} onClick={e=>{e.stopPropagation();deleteEvt(day.id,evt.id);}}>
                         <Trash2 size={11} color="var(--danger)"/>
@@ -449,15 +449,15 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
                 {/* Always-visible add event form */}
                 <div style={{marginTop:'6px',paddingTop:'6px',borderTop:'1px dashed rgba(255,255,255,0.1)'}}>
                   <div style={{display:'grid',gridTemplateColumns:'80px 1fr',gap:'5px',marginBottom:'4px'}}>
-                    <input type="time" value={newEvent.time} onChange={e=>setNewEvent(p=>({...p,time:e.target.value}))} style={{fontSize:'0.78rem',padding:'3px 5px'}}/>
-                    <input type="text" placeholder="Add event…" value={newEvent.title} onChange={e=>setNewEvent(p=>({...p,title:e.target.value}))} style={{fontSize:'0.78rem',padding:'3px 5px'}} onKeyDown={e=>e.key==='Enter'&&saveEvent(day.id)}/>
+                    <input type="time" value={newEvent.time} onChange={e=>setNewEvent(p=>({...p,time:e.target.value}))} style={{fontSize:'0.85rem',padding:'3px 5px'}}/>
+                    <input type="text" placeholder="Add event…" value={newEvent.title} onChange={e=>setNewEvent(p=>({...p,title:e.target.value}))} style={{fontSize:'0.85rem',padding:'3px 5px'}} onKeyDown={e=>e.key==='Enter'&&saveEvent(day.id)}/>
                   </div>
                   <div style={{display:'flex',gap:'4px',flexWrap:'wrap',marginBottom:'5px'}}>
                     {EVENT_TYPES.map(t=>(
-                      <button key={t.value} type="button" className={`chip ${newEvent.type===t.value?'active':''}`} style={{fontSize:'0.62rem',padding:'1px 7px',...(newEvent.type===t.value?{background:color,borderColor:'transparent'}:{})}} onClick={()=>setNewEvent(p=>({...p,type:t.value}))}>{t.label}</button>
+                      <button key={t.value} type="button" className={`chip ${newEvent.type===t.value?'active':''}`} style={{fontSize:'0.75rem',padding:'1px 7px',...(newEvent.type===t.value?{background:color,borderColor:'transparent'}:{})}} onClick={()=>setNewEvent(p=>({...p,type:t.value}))}>{t.label}</button>
                     ))}
                   </div>
-                  <button className="btn-primary" style={{padding:'3px 12px',fontSize:'0.78rem',background:color,display:'flex',alignItems:'center',gap:'4px'}} onClick={()=>saveEvent(day.id)}>
+                  <button className="btn-primary" style={{padding:'3px 12px',fontSize:'0.85rem',background:color,display:'flex',alignItems:'center',gap:'4px'}} onClick={()=>saveEvent(day.id)}>
                     <Plus size={11}/> Add event
                   </button>
                 </div>
@@ -467,20 +467,20 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
         );
       })}
       <div className="section-divider" style={{ margin: '1.25rem 0' }}/>
-      <div className="section-label" style={{ fontSize: '0.72rem', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: '0.5rem', fontWeight: '600' }}>Add Day</div>
+      <div className="section-label" style={{ fontSize: '0.8rem', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: '0.5rem', fontWeight: '600' }}>Add Day</div>
       <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap', background: 'rgba(255,255,255,0.015)', padding: '0.65rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)'}}>
         <div style={{display:'flex', gap:'0.4rem', flex:'1 1 100%'}}>
           <div style={{flex: 1}}>
-            <div style={{fontSize:'0.65rem', color:'var(--text-secondary)', marginBottom:'2px'}}>Start Date</div>
-            <input type="date" value={newDayDate} onChange={e=>setNewDayDate(e.target.value)} style={{width: '100%', fontSize:'0.8rem',padding:'0.45rem', borderRadius: '6px', background: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff'}}/>
+            <div style={{fontSize:'0.75rem', color:'var(--text-secondary)', marginBottom:'2px'}}>Start Date</div>
+            <input type="date" value={newDayDate} onChange={e=>setNewDayDate(e.target.value)} style={{width: '100%', fontSize:'0.9rem',padding:'0.45rem', borderRadius: '6px', background: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff'}}/>
           </div>
           <div style={{flex: 1}}>
-            <div style={{fontSize:'0.65rem', color:'var(--text-secondary)', marginBottom:'2px'}}>End Date (Optional)</div>
-            <input type="date" value={newDayEndDate} onChange={e=>setNewDayEndDate(e.target.value)} style={{width: '100%', fontSize:'0.8rem',padding:'0.45rem', borderRadius: '6px', background: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff'}}/>
+            <div style={{fontSize:'0.75rem', color:'var(--text-secondary)', marginBottom:'2px'}}>End Date (Optional)</div>
+            <input type="date" value={newDayEndDate} onChange={e=>setNewDayEndDate(e.target.value)} style={{width: '100%', fontSize:'0.9rem',padding:'0.45rem', borderRadius: '6px', background: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff'}}/>
           </div>
         </div>
-        <input type="text" placeholder="Location…" value={newDayLoc} onChange={e=>setNewDayLoc(e.target.value)} style={{flex:1,fontSize:'0.8rem',padding:'0.45rem', borderRadius: '6px', background: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff'}} list="saved-locations"/>
-        <button className="btn-primary" style={{padding:'0.45rem 0.85rem',fontSize:'0.8rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '3px', alignSelf: 'flex-end'}} onClick={()=>{
+        <input type="text" placeholder="Location…" value={newDayLoc} onChange={e=>setNewDayLoc(e.target.value)} style={{flex:1,fontSize:'0.9rem',padding:'0.45rem', borderRadius: '6px', background: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff'}} list="saved-locations"/>
+        <button className="btn-primary" style={{padding:'0.45rem 0.85rem',fontSize:'0.9rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '3px', alignSelf: 'flex-end'}} onClick={()=>{
           if(!newDayDate)return;
           const start = new Date(newDayDate + 'T00:00:00');
           const end = newDayEndDate ? new Date(newDayEndDate + 'T00:00:00') : start;
@@ -509,7 +509,7 @@ export const CalendarPanel=({tripData,setTripData,expandedDays=[],setExpandedDay
       </div>
       {tripData.locations && tripData.locations.length > 0 && (
         <div style={{marginTop:'1rem'}}>
-          <button className="btn-primary" style={{width:'100%', padding:'0.5rem', fontSize:'0.8rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.4rem', background:'linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%)'}} onClick={generateDefaultItinerary}>
+          <button className="btn-primary" style={{width:'100%', padding:'0.5rem', fontSize:'0.9rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.4rem', background:'linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%)'}} onClick={generateDefaultItinerary}>
             <Sparkles size={13}/> Generate Default Itinerary
           </button>
         </div>

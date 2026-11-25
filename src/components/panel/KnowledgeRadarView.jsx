@@ -199,7 +199,7 @@ function RadarModal({ radarData, stats, maxCount, nodes, onClose }) {
             <div style={{ fontSize: '1.15rem', fontWeight: '800', color: '#1a1a2e', marginBottom: '4px' }}>
               Knowledge Radar
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#888' }}>
+            <div style={{ fontSize: '0.85rem', color: '#888' }}>
               Topic coverage across {nodes.length} claims
               {top && <> · Most documented: <strong style={{ color: top.color }}>{top.key} ({top.count})</strong></>}
             </div>
@@ -218,7 +218,7 @@ function RadarModal({ radarData, stats, maxCount, nodes, onClose }) {
                     <svg width="20" height="6">
                       <line x1="0" y1="3" x2="20" y2="3" stroke={col} strokeWidth={lbl==='Coverage'?'2':'1.5'} strokeDasharray={lbl==='Positive %'?'4 2':'none'}/>
                     </svg>
-                    <span style={{ fontSize: '0.75rem', color: '#555' }}>{lbl}</span>
+                    <span style={{ fontSize: '0.85rem', color: '#555' }}>{lbl}</span>
                   </div>
                 ))}
               </div>
@@ -241,11 +241,11 @@ function RadarModal({ radarData, stats, maxCount, nodes, onClose }) {
                         transition: 'all 0.15s',
                       }}>
                       <d.Icon size={13} color={d.color} style={{ flexShrink: 0 }}/>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#222', width: '90px', flexShrink: 0 }}>{d.key}</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#222', width: '90px', flexShrink: 0 }}>{d.key}</span>
                       <div style={{ flex: 1, height: '5px', background: 'rgba(0,0,0,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
                         <div style={{ width: `${bar}%`, height: '100%', background: d.color, borderRadius: '3px', transition: 'width 0.3s' }}/>
                       </div>
-                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: d.color, minWidth: '28px', textAlign: 'right' }}>{d.count}</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: '700', color: d.color, minWidth: '28px', textAlign: 'right' }}>{d.count}</span>
                     </div>
                   );
                 })}
@@ -254,7 +254,7 @@ function RadarModal({ radarData, stats, maxCount, nodes, onClose }) {
               {/* Hover tooltip */}
               {hov && hovStats && (
                 <div style={{ marginTop: '14px', padding: '10px 14px', background: `${hov.color}0d`, border: `1px solid ${hov.color}30`, borderRadius: '10px' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: '700', color: hov.color, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: '700', color: hov.color, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <hov.Icon size={13}/> {hov.key}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
@@ -265,17 +265,17 @@ function RadarModal({ radarData, stats, maxCount, nodes, onClose }) {
                       ['Coverage', `${Math.round((hovStats.count/maxCount)*100)}%`, '#d97706'],
                     ].map(([label, val, col]) => (
                       <div key={label} style={{ background: 'rgba(0,0,0,0.03)', borderRadius: '6px', padding: '4px 8px' }}>
-                        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: col }}>{val}</div>
-                        <div style={{ fontSize: '0.6rem', color: '#999' }}>{label}</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: '700', color: col }}>{val}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#999' }}>{label}</div>
                       </div>
                     ))}
                   </div>
                   {hovStats.sample && (
-                    <div style={{ marginTop: '8px', fontSize: '0.68rem', color: '#666', fontStyle: 'italic', lineHeight: 1.5 }}>
+                    <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#666', fontStyle: 'italic', lineHeight: 1.5 }}>
                       "{hovStats.sample.slice(0,140)}{hovStats.sample.length>140?'…':''}"
                     </div>
                   )}
-                  <div style={{ marginTop: '8px', fontSize: '0.62rem', color: hov.color, fontWeight: '600', textAlign: 'center' }}>
+                  <div style={{ marginTop: '8px', fontSize: '0.75rem', color: hov.color, fontWeight: '600', textAlign: 'center' }}>
                     Click to view all {hovStats.count} claims
                   </div>
                 </div>
@@ -305,7 +305,7 @@ function RadarModal({ radarData, stats, maxCount, nodes, onClose }) {
                 <selectedCat.Icon size={20} color={selectedCat.color}/>
                 {selectedCategoryKey}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#888' }}>
+              <div style={{ fontSize: '0.85rem', color: '#888' }}>
                 {modalFilteredClaims.length} verified traveller claims
               </div>
             </div>
@@ -320,7 +320,7 @@ function RadarModal({ radarData, stats, maxCount, nodes, onClose }) {
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   {[['#10b981', 'Positive', selectedStats.pos], ['#ef4444', 'Negative', selectedStats.neg], ['#94a3b8', 'Neutral', selectedStats.count - selectedStats.pos - selectedStats.neg]].map(([col, lbl, cnt]) => cnt > 0 && (
-                    <span key={lbl} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.62rem', color: '#555' }}>
+                    <span key={lbl} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#555' }}>
                       <span style={{ width: 6, height: 6, borderRadius: '50%', background: col, display: 'inline-block' }}/>
                       <strong>{cnt}</strong> {lbl}
                     </span>
@@ -341,15 +341,15 @@ function RadarModal({ radarData, stats, maxCount, nodes, onClose }) {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                     position: 'relative'
                   }}>
-                    <div style={{ fontSize: '0.78rem', color: '#222', lineHeight: 1.45, marginBottom: '6px' }}>{n.claim}</div>
+                    <div style={{ fontSize: '0.85rem', color: '#222', lineHeight: 1.45, marginBottom: '6px' }}>{n.claim}</div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
                       {n.place && (
-                        <span style={{ fontSize: '0.65rem', color: '#666', fontWeight: '600' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#666', fontWeight: '600' }}>
                           📍 {n.place.split(' · ')[0]}
                         </span>
                       )}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '0.62rem', fontWeight: '700', color: col, textTransform: 'capitalize' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: '700', color: col, textTransform: 'capitalize' }}>
                           {sc}
                         </span>
                         {n.source?.url && (
@@ -430,7 +430,7 @@ export default function KnowledgeRadarView({ nodes }) {
 
       {/* Temporal year filter */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.54rem', color: 'rgba(255,255,255,0.28)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '2px' }}>Since</span>
+        <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.28)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '2px' }}>Since</span>
         {[null, ...YEARS].map(y => {
           // cumulative count for "since Y": nodes with date >= y
           const cumCount = y == null ? nodes.length
@@ -446,14 +446,14 @@ export default function KnowledgeRadarView({ nodes }) {
               title={y ? `${cumCount} claims with source date ≥ ${y}` : `All ${nodes.length} claims`}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
-                fontSize: '0.54rem', padding: '2px 6px 3px', borderRadius: '8px', cursor: 'pointer',
+                fontSize: '0.72rem', padding: '2px 6px 3px', borderRadius: '8px', cursor: 'pointer',
                 background: isActive ? 'rgba(139,92,246,0.22)' : 'rgba(255,255,255,0.04)',
                 border: `1px solid ${isActive ? '#8b5cf6' : 'rgba(255,255,255,0.1)'}`,
                 color: isActive ? '#c084fc' : 'rgba(255,255,255,0.35)',
                 fontFamily: 'Inter,sans-serif', lineHeight: 1.2,
               }}>
               <span style={{ fontWeight: isActive ? '700' : '400' }}>{y ?? 'All'}</span>
-              <span style={{ fontSize: '0.44rem', color: isActive ? 'rgba(192,132,252,0.7)' : 'rgba(255,255,255,0.2)', fontWeight: '500' }}>{cumCount}</span>
+              <span style={{ fontSize: '0.72rem', color: isActive ? 'rgba(192,132,252,0.7)' : 'rgba(255,255,255,0.2)', fontWeight: '500' }}>{cumCount}</span>
             </button>
           );
         })}
@@ -463,21 +463,21 @@ export default function KnowledgeRadarView({ nodes }) {
       <div style={{ display: 'flex', gap: '5px' }}>
         <div style={{ flex: 1, background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '8px', padding: '5px 8px', textAlign: 'center' }}>
           <div style={{ fontSize: '1.05rem', fontWeight: '800', color: '#c084fc', lineHeight: 1 }}>
-            {covered.length}<span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', fontWeight: '400' }}>/{RADAR_CATEGORIES.length}</span>
+            {covered.length}<span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', fontWeight: '400' }}>/{RADAR_CATEGORIES.length}</span>
           </div>
-          <div style={{ fontSize: '0.54rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: '2px' }}>Topics</div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: '2px' }}>Topics</div>
         </div>
         <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '5px 8px', textAlign: 'center' }}>
           <div style={{ fontSize: '1.05rem', fontWeight: '800', color: '#10b981', lineHeight: 1 }}>{temporalNodes.length}</div>
-          <div style={{ fontSize: '0.54rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: '2px' }}>Claims</div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: '2px' }}>Claims</div>
         </div>
         {top && (
           <div style={{ flex: 2, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '5px 9px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: '0.54rem', color: 'var(--text-secondary)', marginBottom: '2px' }}>Most documented</div>
-            <div style={{ fontSize: '0.68rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '2px' }}>Most documented</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <top.Icon size={10} color={top.color}/>
               <span>{top.key}</span>
-              <span style={{ color: '#f59e0b', fontSize: '0.62rem' }}>({top.count})</span>
+              <span style={{ color: '#f59e0b', fontSize: '0.75rem' }}>({top.count})</span>
             </div>
           </div>
         )}
@@ -507,7 +507,7 @@ export default function KnowledgeRadarView({ nodes }) {
                 <svg width="16" height="5">
                   <line x1="0" y1="2.5" x2="16" y2="2.5" stroke={col} strokeWidth={lbl==='Coverage'?'1.8':'1.4'} strokeDasharray={lbl==='Positive %'?'4 2':'none'}/>
                 </svg>
-                <span style={{ fontSize: '0.54rem', color: 'rgba(255,255,255,0.35)' }}>{lbl}</span>
+                <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)' }}>{lbl}</span>
               </div>
             ))}
           </div>
@@ -515,7 +515,7 @@ export default function KnowledgeRadarView({ nodes }) {
           {/* Hover stats */}
           {hov && hovStats ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: '700', color: hov.color, display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: '700', color: hov.color, display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <hov.Icon size={12}/> {hov.key}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px' }}>
@@ -526,31 +526,31 @@ export default function KnowledgeRadarView({ nodes }) {
                   ['Coverage',  `${Math.round((hovStats.count/maxCount)*100)}%`, '#f59e0b'],
                 ].map(([label, val, col]) => (
                   <div key={label} style={{ background:'rgba(0,0,0,0.25)', borderRadius:'5px', padding:'3px 6px' }}>
-                    <div style={{ fontSize:'0.68rem', fontWeight:'700', color:col }}>{val}</div>
-                    <div style={{ fontSize:'0.52rem', color:'rgba(255,255,255,0.28)' }}>{label}</div>
+                    <div style={{ fontSize:'0.75rem', fontWeight:'700', color:col }}>{val}</div>
+                    <div style={{ fontSize:'0.72rem', color:'rgba(255,255,255,0.28)' }}>{label}</div>
                   </div>
                 ))}
               </div>
               {hovStats.sample && (
-                <div style={{ fontSize:'0.58rem', color:'rgba(255,255,255,0.38)', lineHeight:1.4, fontStyle:'italic', borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:'4px' }}>
+                <div style={{ fontSize:'0.72rem', color:'rgba(255,255,255,0.38)', lineHeight:1.4, fontStyle:'italic', borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:'4px' }}>
                   "{hovStats.sample.slice(0,100)}{hovStats.sample.length>100?'…':''}"
                 </div>
               )}
               <button onClick={() => setActiveKey(activeKey === hov.key ? null : hov.key)}
-                style={{ background:`${hov.color}18`, border:`1px solid ${hov.color}40`, borderRadius:'6px', color:hov.color, padding:'3px 8px', fontSize:'0.6rem', fontWeight:'600', cursor:'pointer', fontFamily:'Inter,sans-serif', marginTop:'2px' }}>
+                style={{ background:`${hov.color}18`, border:`1px solid ${hov.color}40`, borderRadius:'6px', color:hov.color, padding:'3px 8px', fontSize:'0.75rem', fontWeight:'600', cursor:'pointer', fontFamily:'Inter,sans-serif', marginTop:'2px' }}>
                 {activeKey === hov.key ? 'Hide claims' : 'View claims →'}
               </button>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', marginBottom: '2px' }}>Hover a spoke to inspect</div>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginBottom: '2px' }}>Hover a spoke to inspect</div>
               {/* Chip list, all covered categories */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
                 {radarData.filter(d => d.count > 0).sort((a, b) => b.count - a.count).map(d => (
                   <button key={d.key} onClick={() => setActiveKey(activeKey === d.key ? null : d.key)}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '3px',
-                      padding: '2px 6px', borderRadius: '10px', fontSize: '0.57rem', cursor: 'pointer',
+                      padding: '2px 6px', borderRadius: '10px', fontSize: '0.72rem', cursor: 'pointer',
                       background: activeKey === d.key ? `${d.color}22` : 'rgba(255,255,255,0.04)',
                       border: `1px solid ${activeKey === d.key ? d.color+'55' : 'rgba(255,255,255,0.08)'}`,
                       color: activeKey === d.key ? d.color : 'rgba(255,255,255,0.42)',
@@ -568,14 +568,14 @@ export default function KnowledgeRadarView({ nodes }) {
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '5px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '7px', padding: '5px 7px', marginTop: 'auto' }}>
               <AlertTriangle size={10} color="#fca5a5" style={{ flexShrink: 0, marginTop: '1px' }}/>
               <div>
-                <div style={{ fontSize: '0.55rem', color: '#fca5a5', fontWeight: '600', marginBottom: '2px' }}>Knowledge gaps</div>
+                <div style={{ fontSize: '0.72rem', color: '#fca5a5', fontWeight: '600', marginBottom: '2px' }}>Knowledge gaps</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
                   {gaps.slice(0, 4).map(c => (
-                    <span key={c.key} style={{ display: 'flex', alignItems: 'center', gap: '2px', fontSize: '0.55rem', color: 'rgba(255,255,255,0.35)' }}>
+                    <span key={c.key} style={{ display: 'flex', alignItems: 'center', gap: '2px', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)' }}>
                       <c.Icon size={7} color={c.color}/> {c.key}
                     </span>
                   ))}
-                  {gaps.length > 4 && <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.2)' }}>+{gaps.length - 4}</span>}
+                  {gaps.length > 4 && <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.2)' }}>+{gaps.length - 4}</span>}
                 </div>
               </div>
             </div>
@@ -614,13 +614,13 @@ export default function KnowledgeRadarView({ nodes }) {
             {/* Header */}
             <div style={{ padding:'6px 10px 0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px' }}>
-                <span style={{ fontSize:'0.62rem', fontWeight:'700', color:cat?.color, display:'flex', alignItems:'center', gap:'4px' }}>
+                <span style={{ fontSize:'0.75rem', fontWeight:'700', color:cat?.color, display:'flex', alignItems:'center', gap:'4px' }}>
                   {cat && <cat.Icon size={10}/>} {activeKey}
-                  <span style={{ color:'rgba(255,255,255,0.3)', fontWeight:'400', fontSize:'0.56rem' }}>
+                  <span style={{ color:'rgba(255,255,255,0.3)', fontWeight:'400', fontSize:'0.72rem' }}>
 , {total} claim{total !== 1 ? 's' : ''}{total > SHOW_MAX ? ` · top ${SHOW_MAX} shown` : ''}
                   </span>
                 </span>
-                <button onClick={() => setActiveKey(null)} style={{ background:'none', border:'none', color:'var(--text-secondary)', cursor:'pointer', fontSize:'0.75rem' }}>✕</button>
+                <button onClick={() => setActiveKey(null)} style={{ background:'none', border:'none', color:'var(--text-secondary)', cursor:'pointer', fontSize:'0.85rem' }}>✕</button>
               </div>
 
               {/* Sentiment distribution bar */}
@@ -632,13 +632,13 @@ export default function KnowledgeRadarView({ nodes }) {
                 </div>
                 <div style={{ display:'flex', gap:'10px' }}>
                   {[['#34d399','Positive',pos],['#f87171','Negative',neg],['rgba(148,163,184,0.7)','Neutral',neu]].map(([col, lbl, cnt]) => cnt > 0 && (
-                    <span key={lbl} style={{ display:'flex', alignItems:'center', gap:'3px', fontSize:'0.52rem', color:'rgba(255,255,255,0.4)' }}>
+                    <span key={lbl} style={{ display:'flex', alignItems:'center', gap:'3px', fontSize:'0.72rem', color:'rgba(255,255,255,0.4)' }}>
                       <span style={{ width:6, height:6, borderRadius:'50%', background:col, display:'inline-block' }}/>
                       {cnt} {lbl}
                     </span>
                   ))}
                   {conflictPlaces.size > 0 && (
-                    <span style={{ display:'flex', alignItems:'center', gap:'3px', fontSize:'0.52rem', color:'#fb923c', marginLeft:'auto' }}>
+                    <span style={{ display:'flex', alignItems:'center', gap:'3px', fontSize:'0.72rem', color:'#fb923c', marginLeft:'auto' }}>
                       <AlertTriangle size={8} color="#fb923c"/> {conflictPlaces.size} contested place{conflictPlaces.size > 1 ? 's' : ''}
                     </span>
                   )}
@@ -661,19 +661,19 @@ export default function KnowledgeRadarView({ nodes }) {
                     background: isConflict ? 'rgba(251,146,60,0.04)' : 'transparent',
                   }}>
                     <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontSize:'0.63rem', color:'var(--text-primary)', lineHeight:1.45 }}>{n.claim}</div>
+                      <div style={{ fontSize:'0.75rem', color:'var(--text-primary)', lineHeight:1.45 }}>{n.claim}</div>
                       <div style={{ display:'flex', alignItems:'center', gap:'5px', marginTop:'2px', flexWrap:'wrap' }}>
-                        {n.place && <span style={{ fontSize:'0.54rem', color:'rgba(255,255,255,0.26)' }}>{n.place.split(' · ')[0]}</span>}
-                        <span style={{ fontSize:'0.52rem', fontWeight:'700', color:col, letterSpacing:'0.03em' }}>
+                        {n.place && <span style={{ fontSize:'0.72rem', color:'rgba(255,255,255,0.26)' }}>{n.place.split(' · ')[0]}</span>}
+                        <span style={{ fontSize:'0.72rem', fontWeight:'700', color:col, letterSpacing:'0.03em' }}>
                           {sc === 'positive' ? '↑ positive' : sc === 'negative' ? '↓ negative' : '· neutral'}
                         </span>
                         {isConflict && (
-                          <span style={{ fontSize:'0.5rem', color:'#fb923c', display:'flex', alignItems:'center', gap:'2px', background:'rgba(251,146,60,0.12)', border:'1px solid rgba(251,146,60,0.25)', borderRadius:'4px', padding:'0 4px' }}>
+                          <span style={{ fontSize:'0.72rem', color:'#fb923c', display:'flex', alignItems:'center', gap:'2px', background:'rgba(251,146,60,0.12)', border:'1px solid rgba(251,146,60,0.25)', borderRadius:'4px', padding:'0 4px' }}>
                             <AlertTriangle size={7} color="#fb923c"/> contested
                           </span>
                         )}
                         {typeof n.credibility === 'number' && (
-                          <span style={{ fontSize:'0.5rem', color:'rgba(255,255,255,0.2)', marginLeft:'auto', display:'flex', alignItems:'center', gap:'2px' }}>
+                          <span style={{ fontSize:'0.72rem', color:'rgba(255,255,255,0.2)', marginLeft:'auto', display:'flex', alignItems:'center', gap:'2px' }}>
                             {[1,2,3,4,5].map(s => (
                               <span key={s} style={{ width:3, height:3, borderRadius:'50%', background: s <= Math.round(n.credibility) ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.1)', display:'inline-block' }}/>
                             ))}

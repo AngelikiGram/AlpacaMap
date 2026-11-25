@@ -57,7 +57,7 @@ export const WeatherWidget=({coords, startDate, endDate})=>{
   },[coords?.[0],coords?.[1],startDate,endDate]);
 
   const fmtDay=d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});};
-  if(loading)return<div style={{display:'flex',alignItems:'center',gap:'0.5rem',fontSize:'0.78rem',color:'var(--text-secondary)',padding:'0.5rem 0'}}><Loader2 size={12} className="spin"/>Loading forecast…</div>;
+  if(loading)return<div style={{display:'flex',alignItems:'center',gap:'0.5rem',fontSize:'0.85rem',color:'var(--text-secondary)',padding:'0.5rem 0'}}><Loader2 size={12} className="spin"/>Loading forecast…</div>;
   if(!forecast)return null;
   return(
     <div className="weather-widget">
@@ -65,10 +65,10 @@ export const WeatherWidget=({coords, startDate, endDate})=>{
       <div className="weather-days">
         {forecast.map(day=>(
           <div key={day.date} className="weather-day">
-            <div style={{fontSize:'0.6rem',color:'var(--text-secondary)',fontWeight:'600',whiteSpace:'nowrap'}}>{fmtDay(day.date)}</div>
+            <div style={{fontSize:'0.75rem',color:'var(--text-secondary)',fontWeight:'600',whiteSpace:'nowrap'}}>{fmtDay(day.date)}</div>
             <div style={{fontSize:'1.4rem',lineHeight:1.1}}>{wmoIcon(day.code)}</div>
-            <div style={{fontSize:'0.78rem',fontWeight:'700'}}>{day.max}°</div>
-            <div style={{fontSize:'0.65rem',color:'var(--text-secondary)'}}>{day.min}°</div>
+            <div style={{fontSize:'0.85rem',fontWeight:'700'}}>{day.max}°</div>
+            <div style={{fontSize:'0.75rem',color:'var(--text-secondary)'}}>{day.min}°</div>
           </div>
         ))}
       </div>

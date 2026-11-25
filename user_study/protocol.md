@@ -74,3 +74,18 @@ T2 is scored against the topics and places that the app's *Do sources agree?* pa
 - The app's own saved trips on the study computer are backed up before the session and restored at the end.
 - Recordings stored on encrypted storage, deleted after analysis (or per your institution's rules).
 - Check whether your institution requires ethics-board approval before running the study.
+
+## Interface version
+Sessions must all use the same app version. The redesign of November 2026 changed what participants see:
+- **Study mode** (`?study=` in the app URL, set by the runner): the destination is fixed, the app loads no
+  further statements on its own (so S stays Wikivoyage-only), and the tour, example trip and My trips are hidden.
+  The one-sentence planner adds to the prepared trip instead of starting a new one.
+- **Debates**: one pair at a time under a plain question ("How busy is …?"), the two statements side by side with
+  equal weight, a line on how they relate (context-dependent / possible contradiction / different views, not
+  checked) and the answers "They really disagree", "Both can be true", "Different things" (stored as before:
+  `disagree`, `both`, `unrelated`; for model-checked pairs `a`, `both`, `b`). Swiping was removed.
+- **Knowledge** tabs were renamed (Add sources, Statements, Charts, Contradiction check).
+- **Rating scales** in the runner: all values on one row with the end labels under the endpoints. Wording,
+  range and stored values are unchanged.
+- `analysis/analyze.py` recognises both the old and the new labels when mapping clicks to views.
+Do not mix sessions run before and after this version in one analysis without reporting it.

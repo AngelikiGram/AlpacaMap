@@ -17,7 +17,7 @@ export const MapClickBar = ({ info, onAddDestination, onClose }) => {
         </div>
       </div>
       <div className="mcb-actions">
-        <button className="btn-primary" style={{padding:'0.4rem 0.85rem',fontSize:'0.8rem',whiteSpace:'nowrap'}} onClick={()=>onAddDestination(info)}>
+        <button className="btn-primary" style={{padding:'0.4rem 0.85rem',fontSize:'0.9rem',whiteSpace:'nowrap'}} onClick={()=>onAddDestination(info)}>
           <Plus size={12}/> Add to trip
         </button>
         <button className="btn-icon" onClick={onClose} style={{padding:'0.35rem'}}><X size={14}/></button>

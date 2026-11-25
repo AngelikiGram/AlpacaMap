@@ -16,11 +16,11 @@ export const SearchResultMarker = ({ target }) => {
     <Marker ref={markerRef} position={[target.lat, target.lon]} icon={createSearchResultIcon()} zIndexOffset={1000}>
       <Popup closeButton={false} className="search-result-popup">
         <div style={{ fontFamily: 'Inter,sans-serif', minWidth: '120px', maxWidth: '200px' }}>
-          <div style={{ fontWeight: '700', fontSize: '0.92rem', lineHeight: '1.3' }}>{target.name}</div>
+          <div style={{ fontWeight: '700', fontSize: '1rem', lineHeight: '1.3' }}>{target.name}</div>
           {target.fullName && target.fullName !== target.name && (
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '3px', lineHeight: '1.4' }}>{target.fullName}</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '3px', lineHeight: '1.4' }}>{target.fullName}</div>
           )}
-          <div style={{ fontSize: '0.68rem', color: 'var(--accent-primary)', marginTop: '5px', opacity: 0.8 }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', marginTop: '5px', opacity: 0.8 }}>
             {target.lat.toFixed(4)}°, {target.lon.toFixed(4)}°
           </div>
         </div>

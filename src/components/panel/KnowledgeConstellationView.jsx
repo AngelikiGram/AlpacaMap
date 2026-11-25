@@ -129,9 +129,9 @@ function TimelineView({ nodes, w, h }) {
   }).length;
 
   if (yearData.length === 0) return (
-    <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.3)', fontSize: '0.72rem' }}>
+    <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>
       No source dates found in extracted claims.<br/>
-      <span style={{ fontSize: '0.62rem', opacity: 0.7 }}>Source dates appear on Wikipedia & Reddit content.</span>
+      <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>Source dates appear on Wikipedia & Reddit content.</span>
     </div>
   );
 
@@ -153,7 +153,7 @@ function TimelineView({ nodes, w, h }) {
     <div style={{ position: 'relative', userSelect: 'none' }}>
       {/* Freshness indicator */}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '6px 8px 10px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.62rem', color: 'var(--text-secondary)' }}>
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
           Source freshness:
           <strong style={{ color: freshnessColor, marginLeft: '4px' }}>{freshnessPct}% recent</strong>
           <span style={{ color: 'rgba(255,255,255,0.25)', marginLeft: '4px' }}>({recentCount} of {nodesWithDates} dated claims from last 3 years)</span>
@@ -242,14 +242,14 @@ function TimelineView({ nodes, w, h }) {
                 borderRadius: '10px', padding: '9px 11px', width: tipW + 'px',
                 boxShadow: '0 6px 28px rgba(0,0,0,0.8)', fontFamily: 'Inter,sans-serif',
               }}>
-                <div style={{ fontWeight: '700', color: col, fontSize: '0.72rem', marginBottom: '4px' }}>
+                <div style={{ fontWeight: '700', color: col, fontSize: '0.8rem', marginBottom: '4px' }}>
                   {hovData.year} · {hovData.count} claims
                 </div>
-                <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)', marginBottom: '6px' }}>
+                <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', marginBottom: '6px' }}>
                   {hovData.pos}✓ positive · {hovData.neg}⚠ negative
                 </div>
                 {hovData.claims.slice(0, 3).map((n, ci) => (
-                  <div key={ci} style={{ fontSize: '0.6rem', lineHeight: 1.4, marginBottom: '3px',
+                  <div key={ci} style={{ fontSize: '0.75rem', lineHeight: 1.4, marginBottom: '3px',
                     color: n.evaluation?.sentiment === 'positive' ? '#34d399' : n.evaluation?.sentiment === 'negative' ? '#f87171' : '#94a3b8' }}>
                     {n.evaluation?.sentiment === 'positive' ? '✓' : n.evaluation?.sentiment === 'negative' ? '⚠' : '·'} {(n.claim || '').slice(0, 72)}
                   </div>
@@ -265,12 +265,12 @@ function TimelineView({ nodes, w, h }) {
         {[['#10b981', 'Mostly positive'], ['#f59e0b', 'Cautionary'], ['#8b5cf6', 'Mixed']].map(([c, l]) => (
           <div key={l} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: c, opacity: 0.8 }} />
-            <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{l}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{l}</span>
           </div>
         ))}
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
           <svg width="16" height="8"><circle cx="4" cy="4" r="3" fill="#10b981" opacity="0.7" /><circle cx="12" cy="4" r="3" fill="#f97316" opacity="0.7" /></svg>
-          <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>+/– dots</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>+/– dots</span>
         </div>
       </div>
     </div>
@@ -416,19 +416,19 @@ function ConstellationSVG({ places, layout, placeColors, seqLinks, stars, city, 
               borderRadius: '11px', padding: '10px 12px', width: tipW + 'px',
               boxShadow: `0 6px 28px rgba(0,0,0,0.85)`, fontFamily: 'Inter,sans-serif',
             }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: '700', color: col, marginBottom: '6px' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: col, marginBottom: '6px' }}>
                 {hovPlace.name}
-                <span style={{ fontSize: '0.58rem', fontWeight: '400', color: 'rgba(255,255,255,0.3)', marginLeft: '6px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: '400', color: 'rgba(255,255,255,0.3)', marginLeft: '6px' }}>
                   {hovPlace.nodes.length} claims
                 </span>
               </div>
               {claims.map((n, i) => (
-                <div key={i} style={{ fontSize: '0.6rem', lineHeight: 1.4, marginBottom: '4px',
+                <div key={i} style={{ fontSize: '0.75rem', lineHeight: 1.4, marginBottom: '4px',
                   color: n.evaluation?.sentiment === 'positive' ? '#34d399' : n.evaluation?.sentiment === 'negative' ? '#f87171' : '#94a3b8' }}>
                   {n.evaluation?.sentiment === 'positive' ? '✓' : n.evaluation?.sentiment === 'negative' ? '⚠' : '·'} {(n.claim || '').slice(0, 90)}
                 </div>
               ))}
-              <div style={{ fontSize: '0.56rem', color: 'rgba(255,255,255,0.2)', marginTop: '5px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.2)', marginTop: '5px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
                 Click → details
               </div>
             </div>
@@ -620,9 +620,9 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
   const { w, h } = dims;
 
   if (allPlaces.length === 0) return (
-    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
+    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
       No specific places extracted yet.<br/>
-      <span style={{ fontSize: '0.68rem', opacity: 0.6 }}>Fetch knowledge to see the constellation.</span>
+      <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>Fetch knowledge to see the constellation.</span>
     </div>
   );
 
@@ -630,19 +630,19 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
     <div ref={containerRef} style={{ width: '100%', position: 'relative', userSelect: 'none' }}>
       <style>{`
         @keyframes cst-orbit { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:.1;transform:scale(1.6)} }
-        .cst-tab{background:none;border:none;cursor:pointer;padding:5px 13px;border-radius:20px;font-size:0.67rem;font-family:Inter,sans-serif;transition:background .15s}
+        .cst-tab{background:none;border:none;cursor:pointer;padding:5px 13px;border-radius:20px;font-size:0.75rem;font-family:Inter,sans-serif;transition:background .15s}
         .cst-tab.active{background:rgba(139,92,246,.22);color:#c4b5fd}
         .cst-tab:not(.active){color:rgba(255,255,255,.32)}
         .cst-tab:not(.active):hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.6)}
         .cst-row{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:7px;cursor:pointer;transition:background .1s}
         .cst-row:hover{background:rgba(255,255,255,.06)}
-        .cst-input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:4px 9px;font-size:0.68rem;color:rgba(255,255,255,.7);outline:none;width:140px;font-family:Inter,sans-serif}
+        .cst-input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:4px 9px;font-size:0.75rem;color:rgba(255,255,255,.7);outline:none;width:140px;font-family:Inter,sans-serif}
         .cst-input::placeholder{color:rgba(255,255,255,.22)}
         .cst-input:focus{border-color:rgba(139,92,246,.45)}
-        .cst-pag-btn{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.22);border-radius:6px;color:#a78bfa;font-size:0.7rem;padding:3px 10px;cursor:pointer;transition:background .15s}
+        .cst-pag-btn{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.22);border-radius:6px;color:#a78bfa;font-size:0.8rem;padding:3px 10px;cursor:pointer;transition:background .15s}
         .cst-pag-btn:disabled{background:rgba(255,255,255,.03);color:rgba(255,255,255,.18);border-color:rgba(255,255,255,.06);cursor:default}
         .cst-pag-btn:not(:disabled):hover{background:rgba(139,92,246,.24)}
-        .cst-expand-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:6px;color:rgba(255,255,255,.5);cursor:pointer;padding:3px 8px;font-size:0.67rem;transition:background .15s;font-family:Inter,sans-serif}
+        .cst-expand-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:6px;color:rgba(255,255,255,.5);cursor:pointer;padding:3px 8px;font-size:0.75rem;transition:background .15s;font-family:Inter,sans-serif}
         .cst-expand-btn:hover{background:rgba(139,92,246,.2);color:#c4b5fd}
       `}</style>
 
@@ -650,7 +650,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
       <div style={{ display: 'flex', gap: '4px', padding: '4px 4px 6px', alignItems: 'center', flexWrap: 'wrap' }}>
         <button className={`cst-tab${viewMode === 'constellation' ? ' active' : ''}`} onClick={() => setViewMode('constellation')}>⬤ Constellation</button>
         <button className={`cst-tab${viewMode === 'list' ? ' active' : ''}`} onClick={() => setViewMode('list')}>
-          ≡ All Places {allPlaces.length > 0 && <span style={{ opacity: 0.55, fontSize: '0.6rem' }}>({allPlaces.length})</span>}
+          ≡ All Places {allPlaces.length > 0 && <span style={{ opacity: 0.55, fontSize: '0.75rem' }}>({allPlaces.length})</span>}
         </button>
         <button className={`cst-tab${viewMode === 'timeline' ? ' active' : ''}`} onClick={() => setViewMode('timeline')}>⏱ Source Age</button>
         {viewMode === 'constellation' && (
@@ -666,7 +666,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
       </div>
 
       {viewMode === 'constellation' && (
-        <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)', padding: '0 4px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', padding: '0 4px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
           <span>✦</span>
           <span>Most mentioned places are placed closer to the center, radiating outward to less mentioned ones.</span>
         </div>
@@ -702,7 +702,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
                 {l.startsWith('- - -')
                   ? <svg width="16" height="12"><circle cx="8" cy="6" r="5" fill="none" stroke={c} strokeWidth="1.5" strokeDasharray="3 2"/></svg>
                   : <svg width="12" height="12"><circle cx="6" cy="6" r="5" fill={c} opacity="0.85"/></svg>}
-                <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{l.replace('- - -  ', '')}</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{l.replace('- - -  ', '')}</span>
               </div>
             ))}
           </div>
@@ -711,14 +711,14 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
           {!searchLower && totalPages > 1 && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '5px 0 2px' }}>
               <button className="cst-pag-btn" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>← Prev</button>
-              <span style={{ fontSize: '0.63rem', color: 'var(--text-secondary)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                 {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, allPlaces.length)} of {allPlaces.length}
               </span>
               <button className="cst-pag-btn" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>Next →</button>
             </div>
           )}
           {!searchLower && totalPages <= 1 && (
-            <div style={{ textAlign: 'center', fontSize: '0.6rem', color: 'rgba(255,255,255,0.16)', padding: '3px 0' }}>
+            <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'rgba(255,255,255,0.16)', padding: '3px 0' }}>
               {allPlaces.length} unique places
             </div>
           )}
@@ -730,7 +730,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
             placeholder={`Search ${allPlaces.length} places…`} value={listFilter} onChange={e => setListFilter(e.target.value)}/>
           <div style={{ maxHeight: `${h - 60}px`, overflowY: 'auto', paddingRight: '2px' }}>
             {filteredList.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '1.5rem', color: 'rgba(255,255,255,0.28)', fontSize: '0.7rem' }}>No matches for "{listFilter}"</div>
+              <div style={{ textAlign: 'center', padding: '1.5rem', color: 'rgba(255,255,255,0.28)', fontSize: '0.8rem' }}>No matches for "{listFilter}"</div>
             )}
             {filteredList.map((p, idx) => {
               const col = placeColors[p.name.toLowerCase()] || '#8b5cf6';
@@ -740,21 +740,21 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
                 : p.nodes.some(n => { const t = (n.claim || '').toLowerCase(); return t.includes('scam') || t.includes('avoid'); }) ? '⚠' : '·';
               return (
                 <div key={p.name} className="cst-row" onClick={() => handleClick(p)}>
-                  <span style={{ fontSize: '0.56rem', color: 'rgba(255,255,255,0.16)', minWidth: '18px', textAlign: 'right' }}>{idx + 1}</span>
+                  <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.16)', minWidth: '18px', textAlign: 'right' }}>{idx + 1}</span>
                   <svg width="10" height="10" style={{ flexShrink: 0 }}>
                     {isCat
                       ? <circle cx="5" cy="5" r="4" fill="none" stroke={col} strokeWidth="1.2" strokeDasharray="2 1.5"/>
                       : <circle cx="5" cy="5" r="4" fill={col} opacity="0.9"/>}
                   </svg>
-                  <span style={{ flex: 1, fontSize: '0.68rem', color: 'rgba(255,255,255,0.76)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
-                  <span style={{ fontSize: '0.63rem', color: col, flexShrink: 0 }}>{sentiment}</span>
-                  <span style={{ fontSize: '0.6rem', background: `${col}22`, color: col, border: `1px solid ${col}40`, borderRadius: '10px', padding: '1px 5px', flexShrink: 0, minWidth: '22px', textAlign: 'center' }}>{p.nodes.length}</span>
+                  <span style={{ flex: 1, fontSize: '0.75rem', color: 'rgba(255,255,255,0.76)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                  <span style={{ fontSize: '0.75rem', color: col, flexShrink: 0 }}>{sentiment}</span>
+                  <span style={{ fontSize: '0.75rem', background: `${col}22`, color: col, border: `1px solid ${col}40`, borderRadius: '10px', padding: '1px 5px', flexShrink: 0, minWidth: '22px', textAlign: 'center' }}>{p.nodes.length}</span>
                 </div>
               );
             })}
           </div>
           {filteredList.length > 0 && (
-            <div style={{ textAlign: 'center', fontSize: '0.56rem', color: 'rgba(255,255,255,0.18)', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '4px' }}>
+            <div style={{ textAlign: 'center', fontSize: '0.72rem', color: 'rgba(255,255,255,0.18)', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '4px' }}>
               {listFilter ? `${filteredList.length} of ${allPlaces.length}` : `${allPlaces.length} places`} · click to navigate on map
             </div>
           )}
@@ -766,7 +766,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(2,3,12,0.98)', display: 'flex', flexDirection: 'column', userSelect: 'none' }}>
           <style>{`
             @keyframes cst-orbit { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:.1;transform:scale(1.6)} }
-            .exp-input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:8px;padding:4px 10px;font-size:0.7rem;color:rgba(255,255,255,.75);outline:none;width:200px;font-family:Inter,sans-serif}
+            .exp-input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:8px;padding:4px 10px;font-size:0.8rem;color:rgba(255,255,255,.75);outline:none;width:200px;font-family:Inter,sans-serif}
             .exp-input::placeholder{color:rgba(255,255,255,.25)}
             .exp-input:focus{border-color:rgba(139,92,246,.5)}
             .exp-slider{-webkit-appearance:none;appearance:none;height:4px;background:rgba(139,92,246,.25);border-radius:4px;outline:none;cursor:pointer;accent-color:#8b5cf6;}
@@ -775,20 +775,20 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '7px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
-            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', fontFamily: 'Inter,sans-serif' }}>
+            <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', fontFamily: 'Inter,sans-serif' }}>
               ⬤ <strong style={{ color: '#c4b5fd' }}>{expandedPlaces.length}</strong>
               <span style={{ color: 'rgba(255,255,255,0.25)', marginLeft: '3px' }}>of {allPlaces.length} places shown</span>
               <span style={{ color: 'rgba(255,255,255,0.18)', marginLeft: '6px' }}>{(city || '').split(',')[0]}</span>
             </span>
             <input className="exp-input" placeholder="Search nodes…" value={expandedSearch} onChange={e => setExpandedSearch(e.target.value)}/>
             {expandedSearch && (
-              <span style={{ fontSize: '0.65rem', color: '#a78bfa', fontFamily: 'Inter,sans-serif' }}>
+              <span style={{ fontSize: '0.75rem', color: '#a78bfa', fontFamily: 'Inter,sans-serif' }}>
                 {expandedPlaces.filter(p => p.name.toLowerCase().includes(expandedSearch.toLowerCase())).length} match
               </span>
             )}
             <div style={{ flex: 1 }}/>
-            <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)', fontFamily: 'Inter,sans-serif' }}>Esc · scroll to zoom · drag to pan</span>
-            <button onClick={() => setExpanded(false)} style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '6px', color: 'rgba(255,255,255,0.55)', cursor: 'pointer', padding: '4px 12px', fontSize: '0.7rem', fontFamily: 'Inter,sans-serif' }}>
+            <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', fontFamily: 'Inter,sans-serif' }}>Esc · scroll to zoom · drag to pan</span>
+            <button onClick={() => setExpanded(false)} style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '6px', color: 'rgba(255,255,255,0.55)', cursor: 'pointer', padding: '4px 12px', fontSize: '0.8rem', fontFamily: 'Inter,sans-serif' }}>
               ✕ Close
             </button>
           </div>
@@ -805,7 +805,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
           >
             {/* Zoom indicator */}
             {expZoom !== 1 && (
-              <div style={{ position: 'absolute', top: 10, right: 14, zIndex: 5, fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', background: 'rgba(0,0,0,0.5)', borderRadius: '6px', padding: '2px 7px', fontFamily: 'Inter,sans-serif', pointerEvents: 'none' }}>
+              <div style={{ position: 'absolute', top: 10, right: 14, zIndex: 5, fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', background: 'rgba(0,0,0,0.5)', borderRadius: '6px', padding: '2px 7px', fontFamily: 'Inter,sans-serif', pointerEvents: 'none' }}>
                 {Math.round(expZoom * 100)}%
               </div>
             )}
@@ -829,22 +829,22 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
           {/* Bottom filter bar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '8px 18px', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.4)', flexShrink: 0, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', fontFamily: 'Inter,sans-serif', whiteSpace: 'nowrap' }}>Min mentions:</span>
+              <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', fontFamily: 'Inter,sans-serif', whiteSpace: 'nowrap' }}>Min mentions:</span>
               <input type="range" className="exp-slider" min={1} max={Math.max(1, Math.ceil(allPlaces[Math.floor(allPlaces.length * 0.25)]?.nodes.length || 1))} value={expMinClaims}
                 onChange={e => { setExpMinClaims(Number(e.target.value)); setExpZoom(1); setExpPan({ x: 0, y: 0 }); }}
                 style={{ width: '120px' }}/>
-              <span style={{ fontSize: '0.65rem', fontWeight: '700', color: '#a78bfa', fontFamily: 'Inter,sans-serif', minWidth: '20px' }}>{expMinClaims}</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#a78bfa', fontFamily: 'Inter,sans-serif', minWidth: '20px' }}>{expMinClaims}</span>
             </div>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               {[['#10b981','Positive'],['#f59e0b','Caution'],['#8b5cf6','Mixed']].map(([c, l]) => (
                 <div key={l} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: c, opacity: 0.85 }}/>
-                  <span style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontFamily: 'Inter,sans-serif' }}>{l}</span>
+                  <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', fontFamily: 'Inter,sans-serif' }}>{l}</span>
                 </div>
               ))}
             </div>
             <div style={{ flex: 1 }}/>
-            <span style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.18)', fontFamily: 'Inter,sans-serif' }}>
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.18)', fontFamily: 'Inter,sans-serif' }}>
               Node size = mention count · Showing top {expandedPlaces.length} most-mentioned places
             </span>
           </div>
@@ -865,30 +865,30 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                   <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: '700', color: col }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '700', color: col }}>
                       {expandedSelected.name}
                     </div>
-                    <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
                       {expandedSelected.nodes.length} claim{expandedSelected.nodes.length !== 1 ? 's' : ''}
                       {expandedSelected.isCategory ? ' · general category' : ''}
                     </div>
                   </div>
                   <button onClick={() => setExpandedSelected(null)}
-                    style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: '50%', width: '22px', height: '22px', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: '50%', width: '22px', height: '22px', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     ✕
                   </button>
                 </div>
 
                 <div style={{ maxHeight: '200px', overflowY: 'auto', paddingRight: '2px', marginBottom: '10px' }}>
                   {claims.map((n, i) => (
-                    <div key={i} style={{ fontSize: '0.63rem', lineHeight: 1.45, marginBottom: '6px', paddingBottom: '5px', borderBottom: i < claims.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                    <div key={i} style={{ fontSize: '0.75rem', lineHeight: 1.45, marginBottom: '6px', paddingBottom: '5px', borderBottom: i < claims.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
                       color: n.evaluation?.sentiment === 'positive' ? '#34d399' : n.evaluation?.sentiment === 'negative' ? '#f87171' : '#94a3b8' }}>
                       {n.evaluation?.sentiment === 'positive' ? '✓' : n.evaluation?.sentiment === 'negative' ? '⚠' : '·'} {n.claim}
-                      {n.advice && <span style={{ color: '#c084fc', display: 'block', paddingLeft: '10px', fontSize: '0.58rem', marginTop: '2px' }}>→ {n.advice}</span>}
+                      {n.advice && <span style={{ color: '#c084fc', display: 'block', paddingLeft: '10px', fontSize: '0.72rem', marginTop: '2px' }}>→ {n.advice}</span>}
                     </div>
                   ))}
                   {expandedSelected.nodes.length > 7 && (
-                    <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.25)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.25)', textAlign: 'center' }}>
                       + {expandedSelected.nodes.length - 7} more claims
                     </div>
                   )}
@@ -896,7 +896,7 @@ export default function KnowledgeConstellationView({ nodes, triggerPlaceInfo, tr
 
                 <button
                   onClick={() => { handleClick(expandedSelected); setExpanded(false); }}
-                  style={{ width: '100%', background: `${col}22`, border: `1px solid ${col}40`, borderRadius: '8px', color: col, cursor: 'pointer', padding: '7px', fontSize: '0.68rem', fontWeight: '600', fontFamily: 'Inter,sans-serif', transition: 'background .15s' }}
+                  style={{ width: '100%', background: `${col}22`, border: `1px solid ${col}40`, borderRadius: '8px', color: col, cursor: 'pointer', padding: '7px', fontSize: '0.75rem', fontWeight: '600', fontFamily: 'Inter,sans-serif', transition: 'background .15s' }}
                   onMouseEnter={e => e.currentTarget.style.background = `${col}38`}
                   onMouseLeave={e => e.currentTarget.style.background = `${col}22`}>
                   Navigate on map →

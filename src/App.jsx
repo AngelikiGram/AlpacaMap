@@ -23,6 +23,8 @@ import { RouteSpacePanel } from "./components/panel/RouteSpacePanel.jsx";
 import { MenuPanel } from "./components/panel/MenuPanel.jsx";
 import { AboutPanel } from "./components/panel/AboutPanel.jsx";
 import { GuidedTour } from "./components/shared/GuidedTour.jsx";
+import { DestinationSwitcher } from "./components/shared/DestinationSwitcher.jsx";
+import { STUDY_MODE } from "./studyMode";
 import { DebatesPanel } from "./components/panel/DebatesPanel.jsx";
 import { bundledKeyFor, hasBundled, loadBundledKnowledge, mergeStatements } from "./knowledge/bundled";
 import { buildDebates, answeredKeys } from "./knowledge/debates";
@@ -149,7 +151,7 @@ export default function App(){
   // Load bundled knowledge automatically when a city that has it is in the trip (London, Paris, Rome, …)
   const bundledCityKeys = [...new Set((tripData.locations||[]).map(l=>bundledKeyFor(l.name)).filter(Boolean))].join('|');
   useEffect(()=>{
-    if(kgReadyFor!==currentTripId||!bundledCityKeys)return;
+    if(STUDY_MODE||kgReadyFor!==currentTripId||!bundledCityKeys)return;
     const done=tripData.knowledgeAuto||{};
     const nodes=tripData.knowledgeGraph?.nodes||[];
     const keys=bundledCityKeys.split('|').filter(k=>!done[k]&&!hasBundled(nodes,k));
@@ -330,7 +332,8 @@ export default function App(){
   };
 
   // One-box planner → a real trip (new, or merged into the current one)
-  const applyQuickPlan=({parsed,city,plan},mode)=>{
+  const applyQuickPlan=({parsed,city,plan},chosenMode)=>{
+    const mode=STUDY_MODE?'add':chosenMode;
     const cityShort=city.name.split(',')[0];
     const base=Date.now();
     const places=[]; const seen=new Set();
@@ -365,6 +368,16 @@ export default function App(){
     setCalendarExpandedDays(days.map(d=>d.id));
     setActiveTab('calendar');
     setPreviewFlyTarget({lat:city.coords[0],lon:city.coords[1],zoom:13,duration:1});
+  };
+
+  // Destination switcher: add a city to the current trip (other cities and their data stay) and open it
+  const addDestination=({name,coords})=>{
+    const existing=tripData.locations.find(l=>l.name.split(',')[0].toLowerCase()===name.split(',')[0].toLowerCase());
+    if(existing){ setActiveCity(existing); return; }
+    const loc={id:Date.now(),name,coords,zoomLevel:13,places:[],recommendations:[]};
+    setTripData(prev=>({...prev,locations:[...prev.locations,loc]}));
+    setActiveCity(loc);
+    window.dispatchEvent(new CustomEvent('alpacamap-notice',{detail:`${name.split(',')[0]} added to your trip. Your other cities stay in it.`}));
   };
 
   const loadDemoTrip=()=>{
@@ -430,44 +443,11 @@ export default function App(){
     if(id===currentTripId&&trips.length>0)loadTrip(trips[0]);
   };
 
-  const totalSaved=tripData.locations.reduce((s,c)=>s+c.places.length,0);
-  const totalKm = (() => {
-    // 1. Try to compute sequential distance along the itinerary path
-    const visitedCoords = [];
-    const sortedItinerary = [...(tripData.itinerary || [])].sort((a,b) => a.date.localeCompare(b.date));
-    sortedItinerary.forEach(day => {
-      const loc = tripData.locations.find(l => l.name === day.location || l.name.split(',')[0] === day.location.split(',')[0]);
-      if (loc) {
-        const last = visitedCoords[visitedCoords.length - 1];
-        if (!last || last[0] !== loc.coords[0] || last[1] !== loc.coords[1]) {
-          visitedCoords.push(loc.coords);
-        }
-      }
-    });
-
-    let sum = 0;
-    if (visitedCoords.length > 1) {
-      for (let i = 1; i < visitedCoords.length; i++) {
-        sum += getDistanceKm(visitedCoords[i-1][0], visitedCoords[i-1][1], visitedCoords[i][0], visitedCoords[i][1]);
-      }
-    }
-
-    // 2. Fallback to location list sequence if itinerary is empty
-    if (sum === 0 && tripData.locations && tripData.locations.length > 1) {
-      for (let i = 1; i < tripData.locations.length; i++) {
-        sum += getDistanceKm(
-          tripData.locations[i-1].coords[0], tripData.locations[i-1].coords[1],
-          tripData.locations[i].coords[0], tripData.locations[i].coords[1]
-        );
-      }
-    }
-    return Math.round(sum);
-  })();
 
   const renderPanel=()=>{
     switch(activeTab){
-      case 'menu':     return<MenuPanel     activeTab={activeTab} setActiveTab={setActiveTab} gcUndiscovered={gcUndiscovered} debateCount={debateCount} onApplyQuickPlan={applyQuickPlan} hasTrip={tripData.locations.length>0} isDemo={!!tripData.demo} onLoadDemo={loadDemoTrip} onNewTrip={createNewTrip} onStartTour={startTour} hasKnowledge={(tripData.knowledgeGraph?.nodes?.length||0)>0}/>;
-      case 'debates':  return<DebatesPanel  tripData={tripData} setTripData={setTripData} onOpenTab={setActiveTab}/>;
+      case 'menu':     return<MenuPanel     activeTab={activeTab} setActiveTab={setActiveTab} gcUndiscovered={gcUndiscovered} debateCount={debateCount} onApplyQuickPlan={applyQuickPlan} hasTrip={tripData.locations.length>0} isDemo={!!tripData.demo} onLoadDemo={STUDY_MODE?undefined:loadDemoTrip} onStartTour={STUDY_MODE?undefined:startTour} hasKnowledge={(tripData.knowledgeGraph?.nodes?.length||0)>0}/>;
+      case 'debates':  return<DebatesPanel  tripData={tripData} setTripData={setTripData} onOpenTab={setActiveTab} activeCity={activeCity||tripData.locations?.[0]||null}/>;
       case 'about':    return<AboutPanel/>;
       case 'locations':return null;
       case 'route':    return<ExportPanel   tripData={tripData}/>;
@@ -479,8 +459,8 @@ export default function App(){
       case 'tripmind': return<><p className="ai-generated-note">Plans and texts here are <b>written by an AI model</b> and can contain mistakes, closed places or wrong times. Check before you go.</p><TripMindPanel tripData={tripData} setTripData={setTripData} activeCity={activeCity} aiActiveDay={aiActiveDay} onDayChange={setAiActiveDay} triggerPlaceInfo={triggerPlaceInfo} onPreviewPlaces={setTripMindPreviewPlaces} onFlyTo={coords=>setPreviewFlyTarget({lat:coords[0],lon:coords[1],zoom:16,duration:0.7})} /></>;
       case 'analyze':  return<CoherencePanel tripData={tripData}/>;
       case 'routespace': return<RouteSpacePanel tripData={tripData} setTripData={setTripData} activeCity={activeCity} routeSpaceRoute={routeSpaceRoute} setRouteSpaceRoute={setRouteSpaceRoute} setStopStabilityMap={setStopStabilityMap} triggerPlaceInfo={triggerPlaceInfo} aiInterests={aiInterests} onSwitchToCalendar={()=>setActiveTab('calendar')} showRouteOnMap={showRouteOnMap} setShowRouteOnMap={setShowRouteOnMap} onOpenTab={setActiveTab} />;
-      case 'knowledge':  return<Suspense fallback={<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'200px',color:'rgba(255,255,255,0.4)',fontSize:'0.8rem'}}>Loading Knowledge Graph…</div>}><KnowledgePanel tripData={tripData} setTripData={setTripData} triggerPlaceInfo={triggerPlaceInfo} activeCity={activeCity} /></Suspense>;
-      case 'analytics':  return<Suspense fallback={<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'200px',color:'rgba(255,255,255,0.4)',fontSize:'0.8rem'}}>Loading Analytics…</div>}><AnalyticsPanel tripData={tripData} setTripData={setTripData} tripId={currentTripId} activeCity={activeCity} /></Suspense>;
+      case 'knowledge':  return<Suspense fallback={<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'200px',color:'rgba(255,255,255,0.4)',fontSize:'0.9rem'}}>Loading Knowledge Graph…</div>}><KnowledgePanel tripData={tripData} setTripData={setTripData} triggerPlaceInfo={triggerPlaceInfo} activeCity={activeCity} /></Suspense>;
+      case 'analytics':  return<Suspense fallback={<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'200px',color:'rgba(255,255,255,0.4)',fontSize:'0.9rem'}}>Loading Analytics…</div>}><AnalyticsPanel tripData={tripData} setTripData={setTripData} tripId={currentTripId} activeCity={activeCity} /></Suspense>;
       default:return null;
     }
   };
@@ -529,8 +509,8 @@ export default function App(){
                 <b>Show me around</b><span>A one-minute tour of the main features</span></button>
               <button type="button" className="start-choice" onClick={dismissWelcome}>
                 <b>Look at an example</b><span>A long weekend in London, ready to explore</span></button>
-              <button type="button" className="start-choice" onClick={()=>{ dismissWelcome(); createNewTrip(); openPanel('menu'); setTimeout(()=>document.querySelector('.quickplan-form input')?.focus(),50); }}>
-                <b>Plan my own trip</b><span>Start empty and describe your trip in one sentence</span></button>
+              <button type="button" className="start-choice" onClick={()=>{ dismissWelcome(); openPanel('menu'); setTimeout(()=>document.querySelector('.quickplan-form input')?.focus(),50); }}>
+                <b>Plan my own trip</b><span>Describe it in one sentence, for example “3 days in Rome”</span></button>
             </div>
             <p className="welcome-privacy">No account, no cookies, no tracking: your trips stay in this browser. Maps and texts are loaded from public services. <button type="button" className="link-btn" onClick={()=>{ dismissWelcome(); setActiveTab('about'); setPanelOpen(true); }}>About &amp; privacy</button></p>
           </div>
@@ -578,28 +558,27 @@ export default function App(){
               {editingTitle?(
                 <input autoFocus type="text" value={titleInput} onChange={e=>setTitleInput(e.target.value)}
                   onBlur={saveTitle} onKeyDown={e=>{if(e.key==='Enter')saveTitle();if(e.key==='Escape')setEditingTitle(false);}}
-                  style={{fontSize:'0.9rem',fontWeight:'700',padding:'0.1rem 0.3rem',width:'100%',fontFamily:'Outfit,sans-serif'}}
+                  style={{fontSize:'1rem',fontWeight:'700',padding:'0.1rem 0.3rem',width:'100%',fontFamily:'Outfit,sans-serif'}}
                 />
               ):(
                 <div role="button" tabIndex={0} title="Rename trip" style={{display:'flex',alignItems:'center',gap:'0.3rem',cursor:'pointer'}}
                   onClick={()=>{setTitleInput(tripData.title);setEditingTitle(true);}}
                   onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setTitleInput(tripData.title);setEditingTitle(true);}}}>
-                  <span style={{fontWeight:'700',fontSize:'0.9rem',fontFamily:'Outfit,sans-serif',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tripData.title}</span>
+                  <span style={{fontWeight:'700',fontSize:'1rem',fontFamily:'Outfit,sans-serif',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tripData.title}</span>
                   <Pencil size={10} color="var(--text-secondary)" style={{flexShrink:0}}/>
                 </div>
               )}
-              <div className="panel-trip-meta">
-                {tripData.locations.length} {tripData.locations.length===1?'stop':'stops'} · {totalSaved} saved{totalKm>0?` · ${totalKm>999?`${(totalKm/1000).toFixed(1)}k`:totalKm} km`:''}
-              </div>
+              <DestinationSwitcher locations={tripData.locations} activeCity={activeCity} locked={STUDY_MODE}
+                onSelect={(c)=>setActiveCity(c)} onAdd={addDestination}/>
             </div>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:'0.4rem',flexShrink:0}}>
             {storageError
               ? <span className="saved-badge" role="alert" title={storageError} style={{background:'rgba(239,68,68,0.15)',color:'#fca5a5',borderColor:'rgba(239,68,68,0.4)'}}>⚠ Not saved</span>
               : savedAt&&<span className="saved-badge" title="All changes saved in this browser"><Check size={12}/></span>}
-            <button className="btn-icon" title="My trips" aria-label="My trips" onClick={()=>setShowTripsPanel(true)} style={{padding:'0.35rem'}}>
+            {!STUDY_MODE&&<button className="btn-icon" title="My trips" aria-label="My trips" onClick={()=>setShowTripsPanel(true)} style={{padding:'0.35rem'}}>
               <FolderOpen size={15}/>
-            </button>
+            </button>}
             <button className="btn-icon hide-on-mobile" title="Print / save as PDF" aria-label="Print or save as PDF" onClick={()=>window.print()} style={{padding:'0.35rem'}}>
               <FileText size={15}/>
             </button>

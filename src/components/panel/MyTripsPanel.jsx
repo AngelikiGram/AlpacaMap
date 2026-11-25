@@ -31,24 +31,24 @@ export const MyTripsPanel = ({ savedTrips, currentTripId, onLoad, onNew, onDelet
           </button>
         )}
         {savedTrips.length === 0 && (
-          <p style={{ fontSize:'0.82rem', color:'var(--text-secondary)', margin:'1rem 0', lineHeight:1.5 }}>
+          <p style={{ fontSize:'0.9rem', color:'var(--text-secondary)', margin:'1rem 0', lineHeight:1.5 }}>
             No saved trips yet. Start planning, your trips auto-save every few seconds.
           </p>
         )}
         {savedTrips.map(trip => (
           <div key={trip.id} className={`trip-card ${trip.id === currentTripId ? 'active' : ''}`} onClick={() => onLoad(trip)}>
             <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontWeight:'600', fontSize:'0.9rem', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{trip.title}</div>
-              <div style={{ fontSize:'0.71rem', color:'var(--text-secondary)', marginTop:'2px' }}>
+              <div style={{ fontWeight:'600', fontSize:'1rem', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{trip.title}</div>
+              <div style={{ fontSize:'0.8rem', color:'var(--text-secondary)', marginTop:'2px' }}>
                 {trip.data.locations?.length ?? 0} stops · saved {fmt(trip.lastModified)}
               </div>
               <div style={{ display:'flex', gap:'4px', marginTop:'5px', flexWrap:'wrap' }}>
                 {(trip.data.locations ?? []).slice(0,4).map(l => (
-                  <span key={l.id} style={{ fontSize:'0.62rem', padding:'1px 7px', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'10px' }}>
+                  <span key={l.id} style={{ fontSize:'0.75rem', padding:'1px 7px', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'10px' }}>
                     {l.name.split(',')[0]}
                   </span>
                 ))}
-                {(trip.data.locations?.length ?? 0) > 4 && <span style={{ fontSize:'0.62rem', color:'var(--text-secondary)' }}>+{trip.data.locations.length - 4}</span>}
+                {(trip.data.locations?.length ?? 0) > 4 && <span style={{ fontSize:'0.75rem', color:'var(--text-secondary)' }}>+{trip.data.locations.length - 4}</span>}
               </div>
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:'0.4rem', alignItems:'center', flexShrink:0 }}>

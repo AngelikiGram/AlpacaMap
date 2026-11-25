@@ -112,7 +112,7 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
         <div style={{flex:1,minWidth:0}}>
           <h3 style={{fontSize:'1.05rem',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{place.name}</h3>
           {!isLoading&&place.rating&&(
-            <div style={{display:'flex',gap:'0.5rem',fontSize:'0.78rem',color:'var(--text-secondary)',marginTop:'0.2rem',flexWrap:'wrap'}}>
+            <div style={{display:'flex',gap:'0.5rem',fontSize:'0.85rem',color:'var(--text-secondary)',marginTop:'0.2rem',flexWrap:'wrap'}}>
               <span style={{display:'flex', alignItems:'center', gap:'3px'}}>{place.rating} <Star size={11} color="#facc15" fill="#facc15"/> ({Number(place.reviewsCount||0).toLocaleString()} reviews)</span>
               {place.priceRange&&<><span>·</span><span style={{color:'var(--success)'}}>{place.priceRange}</span></>}
               <span>· <span style={{textTransform:'capitalize'}}>{place.type}</span></span>
@@ -128,7 +128,7 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
         {isLoading?(
           <div style={{display:'flex',flexDirection:'column',gap:'1rem',alignItems:'center',justifyContent:'center',height:'180px',color:'var(--text-secondary)'}}>
             <Loader2 size={28} className="spin"/>
-            <p style={{fontSize:'0.85rem'}}>Fetching place info…</p>
+            <p style={{fontSize:'0.9rem'}}>Fetching place info…</p>
           </div>
         ):(
           <>
@@ -145,7 +145,7 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
                 return (
                   <div style={{width:'100%',height:'100%',background:`linear-gradient(135deg,${pColor}30,${pColor}10)`,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:'8px'}}>
                     <div style={{color:pColor,opacity:0.6,transform:'scale(2.5)'}}>{pIcon}</div>
-                    <span style={{color:'var(--text-secondary)',fontSize:'0.7rem',textTransform:'capitalize'}}>{place.type}</span>
+                    <span style={{color:'var(--text-secondary)',fontSize:'0.8rem',textTransform:'capitalize'}}>{place.type}</span>
                   </div>
                 );
               })()}
@@ -154,8 +154,8 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
             {place.isCity && <WeatherWidget coords={place.coords}/>}
             {place.highlights?.length>0&&(
               <div className="highlights-box">
-                <h4 style={{fontSize:'0.85rem',marginBottom:'0.6rem'}}>Highlights</h4>
-                <ul style={{margin:0,paddingLeft:'1.1rem',color:'var(--text-secondary)',fontSize:'0.8rem',lineHeight:'1.6'}}>
+                <h4 style={{fontSize:'0.9rem',marginBottom:'0.6rem'}}>Highlights</h4>
+                <ul style={{margin:0,paddingLeft:'1.1rem',color:'var(--text-secondary)',fontSize:'0.9rem',lineHeight:'1.6'}}>
                   {place.highlights.map((h,i)=><li key={i}>{h}</li>)}
                 </ul>
               </div>
@@ -167,10 +167,10 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
                   <div className="osm-row"><MapPin size={12} color="var(--accent-primary)"/><span>{place.osmTags.address}</span></div>
                 )}
                 {place.osmTags.cuisine&&(
-                  <div className="osm-row"><span style={{fontSize:'0.8rem',fontWeight:'500',color:'var(--text-secondary)'}}>Cuisine</span><span>{place.osmTags.cuisine}</span></div>
+                  <div className="osm-row"><span style={{fontSize:'0.9rem',fontWeight:'500',color:'var(--text-secondary)'}}>Cuisine</span><span>{place.osmTags.cuisine}</span></div>
                 )}
                 {place.osmTags.hours&&(
-                  <div className="osm-row"><Clock size={12} color="var(--accent-primary)"/><span style={{fontFamily:'monospace',fontSize:'0.75rem'}}>{place.osmTags.hours}</span></div>
+                  <div className="osm-row"><Clock size={12} color="var(--accent-primary)"/><span style={{fontFamily:'monospace',fontSize:'0.85rem'}}>{place.osmTags.hours}</span></div>
                 )}
                 {place.osmTags.phone&&(
                   <div className="osm-row"><Phone size={12} color="var(--accent-primary)"/><a href={`tel:${place.osmTags.phone}`} style={{color:'var(--accent-primary)',textDecoration:'none'}}>{place.osmTags.phone}</a></div>
@@ -183,18 +183,18 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
                   </div>
                 )}
                 {place.osmTags.wheelchair&&place.osmTags.wheelchair!=='no'&&(
-                  <div className="osm-row"><Accessibility size={12} color="var(--success)"/><span style={{color:'var(--success)',fontSize:'0.78rem'}}>Wheelchair accessible</span></div>
+                  <div className="osm-row"><Accessibility size={12} color="var(--success)"/><span style={{color:'var(--success)',fontSize:'0.85rem'}}>Wheelchair accessible</span></div>
                 )}
                 {place.osmTags.fee&&(
-                  <div className="osm-row"><span style={{fontSize:'0.75rem',color:'var(--text-secondary)'}}>Fee</span><span style={{fontSize:'0.78rem'}}>{place.osmTags.fee}</span></div>
+                  <div className="osm-row"><span style={{fontSize:'0.85rem',color:'var(--text-secondary)'}}>Fee</span><span style={{fontSize:'0.85rem'}}>{place.osmTags.fee}</span></div>
                 )}
               </div>
             )}
 
-            {place.extract&&<p style={{color:'var(--text-secondary)',fontSize:'0.8rem',lineHeight:'1.7',marginBottom:'1.1rem'}}>{place.extract}</p>}
+            {place.extract&&<p style={{color:'var(--text-secondary)',fontSize:'0.9rem',lineHeight:'1.7',marginBottom:'1.1rem'}}>{place.extract}</p>}
 
             {placeEvidence && placeEvidence.level !== 'solid' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.8rem', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.8rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                 <EvidenceBadge evidence={placeEvidence} /> <span>{placeEvidence.statements} statements from {placeEvidence.sources.length} source{placeEvidence.sources.length === 1 ? '' : 's'}</span>
               </div>
             )}
@@ -233,9 +233,9 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                   <Brain size={14} color="var(--text-secondary)"/>
-                  <h4 style={{ fontSize: '0.82rem', margin: 0, color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'Outfit, sans-serif' }}>
+                  <h4 style={{ fontSize: '0.9rem', margin: 0, color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'Outfit, sans-serif' }}>
                     What travellers say
-                    <span style={{ fontSize: '0.65rem', fontWeight: '400', color: 'var(--text-secondary)', marginLeft: '6px' }}>{kgInsights.length} claim{kgInsights.length !== 1 ? 's' : ''} from knowledge graph</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '400', color: 'var(--text-secondary)', marginLeft: '6px' }}>{kgInsights.length} claim{kgInsights.length !== 1 ? 's' : ''} from knowledge graph</span>
                   </h4>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -253,7 +253,7 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
                           border: '1px solid rgba(255,255,255,0.04)',
                           padding: '8px 10px',
                           borderRadius: '8px',
-                          fontSize: '0.74rem',
+                          fontSize: '0.8rem',
                           cursor: insight.source?.url ? 'pointer' : 'default',
                           transition: 'background-color 0.15s, border-color 0.15s',
                         }}
@@ -263,7 +263,7 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
                           <span style={{
-                            fontSize: '0.57rem',
+                            fontSize: '0.72rem',
                             padding: '2px 6px',
                             borderRadius: '6px',
                             background: bgSentColor,
@@ -274,7 +274,7 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
                           }}>
                             {isWarning ? '⚠️ warning' : sentiment}
                           </span>
-                          <span style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             Credibility: <strong style={{ color: sentColor }}>{Math.round((insight.credibility || 0.75) * 100)}%</strong>
                           </span>
                         </div>
@@ -282,12 +282,12 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
                           "{insight.claim}"
                         </p>
                         {insight.advice && (
-                          <div style={{ margin: '6px 0 0 0', color: '#c084fc', fontSize: '0.7rem', display: 'flex', alignItems: 'flex-start', gap: '4px', background: 'rgba(192,132,252,0.07)', padding: '4px 8px', borderRadius: '4px' }}>
+                          <div style={{ margin: '6px 0 0 0', color: '#c084fc', fontSize: '0.8rem', display: 'flex', alignItems: 'flex-start', gap: '4px', background: 'rgba(192,132,252,0.07)', padding: '4px 8px', borderRadius: '4px' }}>
                             <span style={{ flexShrink: 0 }}>💡</span> <span>{insight.advice}</span>
                           </div>
                         )}
                         {insight.source && (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '7px', fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '7px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                             <span>via {insight.source.sourceType || 'source'}</span>
                             {insight.source.url && (
                               <span style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '2px', fontWeight: 'bold' }}>
@@ -306,12 +306,12 @@ export const InfoWindow = ({ place, isLoading, onClose, onAdd, canAdd, onAddToAc
             {place.reviews?.length>0&&place.reviews.map((r,i)=>(
               <div key={i} className="review-block">
                 <div style={{display:'flex',justifyContent:'space-between',marginBottom:'0.2rem'}}>
-                  <span style={{fontWeight:'600',fontSize:'0.8rem'}}>{r.name}</span>
-                  <span style={{fontSize:'0.75rem', display:'flex', gap:'2px'}}>
+                  <span style={{fontWeight:'600',fontSize:'0.9rem'}}>{r.name}</span>
+                  <span style={{fontSize:'0.85rem', display:'flex', gap:'2px'}}>
                     {Array.from({ length: Math.round(r.rating) }).map((_, i) => <Star key={i} size={10} color="#facc15" fill="#facc15"/>)}
                   </span>
                 </div>
-                <p style={{fontSize:'0.75rem',color:'var(--text-secondary)',margin:0}}>"{r.text}"</p>
+                <p style={{fontSize:'0.85rem',color:'var(--text-secondary)',margin:0}}>"{r.text}"</p>
               </div>
             ))}
             {canAdd&&!place.isCity&&(

@@ -33,17 +33,12 @@ const SECTIONS = [
 const badgeFor = (id, { gcUndiscovered, debateCount }) =>
   id === 'analytics' ? gcUndiscovered : id === 'debates' ? debateCount : 0;
 
-export const MenuPanel = ({ setActiveTab, gcUndiscovered, debateCount = 0, onApplyQuickPlan, hasTrip, isDemo, onLoadDemo, onNewTrip, onStartTour, hasKnowledge = false }) => {
+export const MenuPanel = ({ setActiveTab, gcUndiscovered, debateCount = 0, onApplyQuickPlan, hasTrip, isDemo, onLoadDemo, onStartTour, hasKnowledge = false }) => {
   return (
   <nav className="menu-panel" aria-label="Main menu">
     {onStartTour && <button type="button" className="menu-tour-btn" onClick={onStartTour}><Compass size={15} /> New here? Take the one-minute tour</button>}
     {onApplyQuickPlan && <QuickPlanBox onApply={onApplyQuickPlan} hasTrip={hasTrip} />}
-    {isDemo && (
-      <div className="demo-ribbon">
-        <span>🦙 You're looking at the London example.</span>
-        <button type="button" onClick={onNewTrip}>Start empty</button>
-      </div>
-    )}
+    {isDemo && <p className="menu-example-note">This is an example trip. Use <b>Destination</b> at the top to explore another city, or describe your own trip above.</p>}
     <AskSources hasKnowledge={hasKnowledge} />
     {SECTIONS.map(section => (
       <section key={section.title} className="menu-section">

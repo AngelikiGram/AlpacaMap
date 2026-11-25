@@ -15,7 +15,7 @@ export const SOURCE_CREDITS = [
 
 export default function SourcesCredits() {
   return (
-    <details style={{ marginTop: '16px', fontSize: '0.68rem', color: 'var(--text-secondary)' }}>
+    <details style={{ marginTop: '16px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
       <summary style={{ cursor: 'pointer' }}>Sources &amp; licenses</summary>
       <p style={{ margin: '6px 0' }}>
         Statements are sentences taken from the sources below, split and classified automatically.
