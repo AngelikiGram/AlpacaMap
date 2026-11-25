@@ -677,7 +677,29 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
   const evidenceLevelFor = useCallback((name) => (HIDE_CONFLICTS ? null : findEvidence(name, evidenceMap)?.level || null), [evidenceMap]);
 
   // ── Lenses ──
-  const lensPts = useMemo(() => (lensMode ? lensPoints(locations, activeCity) : []), [lensMode, locations, activeCity]);
+  // The places shown on the map: inside the blue circle, after the type, quality and density settings
+  // (places with statements always included). Pins, the Time lens and the Truth lens all use this list,
+  // so what is coloured is exactly what is pinned.
+  const visibleRecs = useMemo(() => {
+    const recs = activeCity?.recommendations || [];
+    if (!recs.length) return [];
+    const c = mapCenter ? [mapCenter.lat, mapCenter.lng] : activeCity.coords;
+    const query = (recFilterText || '').toLowerCase();
+    const inCircle = recs.filter((r) => Array.isArray(r.coords) && r.name.toLowerCase().includes(query)
+      && (!c || !searchRadius || getDistanceKm(c[0], c[1], r.coords[0], r.coords[1]) <= searchRadius));
+    const isAll = categoryDisplayLimit >= 100 || mapMarkerLimitFactor >= 10;
+    const limit = isAll ? Infinity : Math.max(1, Math.round(categoryDisplayLimit * mapMarkerLimitFactor));
+    const shown = new Map();
+    for (const cat of INTEREST_CATEGORIES) {
+      let list = spreadByQuality(inCircle.filter((r) => r.type === cat.value));
+      if (poiQualityThreshold > 0) list = list.filter((r) => (r._qualityScore || 0) >= poiQualityThreshold);
+      list.slice(0, limit).forEach((r) => shown.set(r.id, r));
+    }
+    for (const r of inCircle) if (getClaimsForPlace(r.name) > 0) shown.set(r.id, r);
+    return [...shown.values()];
+  }, [activeCity, mapCenter, searchRadius, recFilterText, categoryDisplayLimit, mapMarkerLimitFactor, poiQualityThreshold, getClaimsForPlace]);
+
+  const lensPts = useMemo(() => (lensMode ? lensPoints(locations, activeCity, visibleRecs) : []), [lensMode, locations, activeCity, visibleRecs]);
   const truthItems = useTruthLens(lensPts, evidenceMap, lensMode === 'truth');
   const topicDisputes = useMemo(() => (lensMode === 'truth' && knowledgeGraph?.nodes?.length
     ? buildDebates(knowledgeGraph.nodes, knowledgeGraph.verified, { answered: answeredKeys(knowledgeGraph.verified) }).length : 0),
@@ -1061,32 +1083,7 @@ export const MapView = ({ locations, routes, activeCity, mapBounds, setMapBounds
             {/* Show exactly the same POIs on the map as in the left menu, per category, for the full search radius */}
             {(() => {
               const markers = [];
-              const visibleCats = INTEREST_CATEGORIES.filter(cat => activeCity.recommendations.some(r => r.type === cat.value));
-
-              // Let's identify recommendations with claims to always include them on the map
-              const recsWithClaims = activeCity.recommendations.filter(r => getClaimsForPlace(r.name) > 0);
-              const recsToShow = new Map();
-
-              visibleCats.forEach(cat => {
-                let recsForCat = activeCity.recommendations.filter(r => r.type === cat.value && r.name.toLowerCase().includes(recFilterText.toLowerCase()));
-                // Best places first, spread over the whole search area (see spreadByQuality)
-                recsForCat = spreadByQuality(recsForCat);
-                // Filter by quality threshold (0 = show all)
-                if (poiQualityThreshold > 0) {
-                  recsForCat = recsForCat.filter(r => (r._qualityScore || 0) >= poiQualityThreshold);
-                }
-                // When sliders are at max, show everything; otherwise cap by limit
-                const isAll = categoryDisplayLimit >= 100 || mapMarkerLimitFactor >= 10;
-                const limit = isAll ? Infinity : Math.max(1, Math.round(categoryDisplayLimit * mapMarkerLimitFactor));
-                recsForCat.slice(0, limit).forEach(r => recsToShow.set(r.id, r));
-              });
-
-              // Bypassing filter/density limits for any recommendation that has active claims
-              recsWithClaims.forEach(r => {
-                if (r.name.toLowerCase().includes(recFilterText.toLowerCase())) {
-                  recsToShow.set(r.id, r);
-                }
-              });
+              const recsToShow = new Map(visibleRecs.map((r) => [r.id, r]));
 
               recsToShow.forEach(r => {
                 const claimsCount = getClaimsForPlace(r.name);

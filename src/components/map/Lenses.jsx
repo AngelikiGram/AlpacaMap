@@ -159,6 +159,7 @@ const TIME_STYLE = {
   closed: { color: '#64748b', fill: 0.35, r: 4 },
   busy: { color: '#fb923c', fill: 0.9, r: 7 },
   golden: { color: '#facc15', fill: 0.95, r: 9 },
+  unknown: { color: '#94a3b8', fill: 0, r: 3.5 },   // no opening hours in OpenStreetMap: hollow
 };
 
 export function TimeLensLayer({ items, onPick }) {
@@ -166,10 +167,10 @@ export function TimeLensLayer({ items, onPick }) {
     const s = TIME_STYLE[p.status];
     return (
       <CircleMarker key={`tm-${p.name}`} center={p.coords} radius={s.r}
-        pathOptions={{ color: p.status === 'golden' ? '#fde68a' : '#0b1020', weight: p.status === 'golden' ? 3 : 1, fillColor: s.color, fillOpacity: s.fill, dashArray: p.status === 'closed' ? '2,2' : null }}
+        pathOptions={{ color: p.status === 'golden' ? '#fde68a' : p.status === 'unknown' ? s.color : '#0b1020', weight: p.status === 'golden' ? 3 : p.status === 'unknown' ? 1.5 : 1, fillColor: s.color, fillOpacity: s.fill, dashArray: p.status === 'closed' ? '2,2' : null }}
         eventHandlers={{ click: () => onPick?.(p) }}>
         <Tooltip direction="top" offset={[0, -6]}>
-          <b>{p.name}</b><br />{{ open: 'Open', closed: 'Closed', busy: 'Busy', golden: 'Golden hour' }[p.status]}{p.note ? `, ${p.note}` : ''}
+          <b>{p.name}</b><br />{{ open: 'Open', closed: 'Closed', busy: 'Busy', golden: 'Golden hour', unknown: 'Opening hours not known' }[p.status]}{p.note ? `, ${p.note}` : ''}
         </Tooltip>
       </CircleMarker>
     );
@@ -197,6 +198,7 @@ export function TimeLensControl({ date, setDate, minutes, setMinutes, dates, len
         <span><i style={{ background: TIME_STYLE.open.color }} />{counts.open || 0} open</span>
         <span><i style={{ background: TIME_STYLE.closed.color }} />{counts.closed || 0} closed</span>
         <span><i style={{ background: TIME_STYLE.busy.color }} />{counts.busy || 0} busy</span>
+        {counts.unknown > 0 && <span><i style={{ background: 'transparent', border: '1px solid ' + TIME_STYLE.unknown.color }} />{counts.unknown} hours unknown</span>}
         {golden && <span><i style={{ background: TIME_STYLE.golden.color }} />golden hour ✨</span>}
       </div>
       {!lens.items.length && <p className="lens-note">🦙 No opening hours known for places here yet, open Explore to load the city's places.</p>}
